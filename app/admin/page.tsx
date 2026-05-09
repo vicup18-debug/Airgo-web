@@ -227,30 +227,30 @@ export default function SuperadminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vehicle Name</label>
-                                    <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#87CEEB] outline-none" placeholder="e.g. Lexus LX 570" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} />
+                                    <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#87CEEB] outline-none" placeholder="e.g. Lexus LX 570" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Vehicle Type</label>
-                                    <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#87CEEB] outline-none" placeholder="e.g. Premium SUV" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} />
+                                    <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#87CEEB] outline-none" placeholder="e.g. Premium SUV" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Daily Price (₦)</label>
-                                    <input required type="number" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#87CEEB] outline-none" placeholder="e.g. 250000" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} />
+                                    <input required type="number" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#87CEEB] outline-none" placeholder="e.g. 250000" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} />
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Capacity</label>
-                                    <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#87CEEB] outline-none" placeholder="e.g. 7 Seats" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} />
+                                    <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#87CEEB] outline-none" placeholder="e.g. 7 Seats" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} />
                                 </div>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Image URL (Unsplash/Cloudinary)</label>
-                                <input required type="url" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#87CEEB] outline-none" placeholder="https://..." value={newCar.image} onChange={e => setNewCar({ ...newCar, image: e.target.value })} />
+                                <input required type="url" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#87CEEB] outline-none" placeholder="https://..." value={newCar.image} onChange={e => setNewCar({ ...newCar, image: e.target.value })} />
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Features Summary</label>
-                                <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#87CEEB] outline-none" placeholder="e.g. Chauffeur Included • Armored" value={newCar.features} onChange={e => setNewCar({ ...newCar, features: e.target.value })} />
+                                <input required type="text" className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#87CEEB] outline-none" placeholder="e.g. Chauffeur Included • Armored" value={newCar.features} onChange={e => setNewCar({ ...newCar, features: e.target.value })} />
                             </div>
 
                             <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
