@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-// 🟢 PREMIUM CAR DATA WITH CORRECTED REAL IMAGES
-const carFleet = [
+// 🟢 FALLBACK DATA (Will only show if the database is empty or loading)
+const fallbackFleet = [
     {
         id: 1,
         name: "Mercedes-Benz G-Wagon",
@@ -31,38 +31,36 @@ const carFleet = [
         image: "https://images.unsplash.com/photo-1593013820725-ca0b69824de4?q=80&w=800&auto=format&fit=crop",
         capacity: "7 Seats",
         features: "Self-Drive/Chauffeur • Off-Road Capable"
-    },
-    {
-        id: 4,
-        name: "Lexus LX 570",
-        type: "Premium SUV",
-        price: "₦250,000",
-        image: "https://images.unsplash.com/photo-1626668893632-6ea7bdc62ebc?q=80&w=800&auto=format&fit=crop",
-        capacity: "7 Seats",
-        features: "Chauffeur Included • Rear Entertainment"
-    },
-    {
-        id: 5,
-        name: "Mercedes-Benz S-Class",
-        type: "Luxury Sedan",
-        price: "₦400,000",
-        image: "https://images.unsplash.com/photo-1617531653332-bd46c24f2068?q=80&w=800&auto=format&fit=crop",
-        capacity: "4 Seats",
-        features: "Executive Chauffeur • Massaging Seats"
-    },
-    {
-        id: 6,
-        name: "Toyota Camry (2022)",
-        type: "Executive Sedan",
-        price: "₦80,000",
-        image: "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?q=80&w=800&auto=format&fit=crop",
-        capacity: "5 Seats",
-        features: "Self-Drive Available • Fuel Efficient"
     }
 ];
 
 export default function CarsPage() {
     const [selectedCar, setSelectedCar] = useState<any>(null);
+    const [carFleet, setCarFleet] = useState<any[]>(fallbackFleet);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // 🟢 FETCH REAL CARS FROM DATABASE
+    useEffect(() => {
+        const fetchCars = async () => {
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+                const res = await fetch(`${apiUrl}/api/cars`);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.length > 0) {
+                        setCarFleet(data); // Overwrite fallback with real database cars
+                    }
+                }
+            } catch (error) {
+                console.log("Using fallback fleet data (Backend route not ready yet)");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchCars();
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
@@ -76,10 +74,7 @@ export default function CarsPage() {
                         </div>
                     </Link>
                     <div className="hidden md:flex space-x-6 font-semibold text-sm items-center">
-                        <Link href="/hotels" className="hover:text-[#FFB81C] transition">Hotels</Link>
-                        <span className="text-blue-300 flex items-center cursor-not-allowed">
-                            Flights <span className="ml-1.5 text-[9px] uppercase tracking-wider bg-blue-800 text-blue-200 px-1.5 py-0.5 rounded-sm">Soon</span>
-                        </span>
+                        <Link href="/" className="hover:text-[#FFB81C] transition">Hotels</Link>
                         <Link href="/cars" className="text-[#FFB81C] border-b-2 border-[#FFB81C] pb-1">Car Rentals</Link>
                     </div>
                 </div>
@@ -104,45 +99,52 @@ export default function CarsPage() {
 
             {/* 🟢 FLEET GRID */}
             <div className="max-w-7xl mx-auto px-6 mt-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {carFleet.map((car) => (
-                        <div key={car.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-shadow duration-300 group">
-                            <div className="relative h-56 overflow-hidden">
-                                <img
-                                    src={car.image}
-                                    alt={car.name}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                />
-                                <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
-                                    {car.type}
-                                </div>
-                            </div>
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-gray-900">{car.name}</h3>
-                                <p className="text-sm text-gray-500 mt-1 mb-4 flex items-center gap-1">
-                                    <span>👤 {car.capacity}</span>
-                                </p>
-
-                                <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100">
-                                    <p className="text-xs text-gray-600 font-medium">{car.features}</p>
-                                </div>
-
-                                <div className="flex justify-between items-center">
-                                    <div>
-                                        <p className="text-2xl font-black text-[#004A99]">{car.price}</p>
-                                        <p className="text-xs text-gray-500">per day</p>
+                {isLoading ? (
+                    <div className="text-center py-20 text-gray-500 font-bold animate-pulse">Loading Live Fleet...</div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {carFleet.map((car) => (
+                            <div key={car._id || car.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-shadow duration-300 group">
+                                <div className="relative h-56 overflow-hidden">
+                                    <img
+                                        src={car.image}
+                                        alt={car.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                    />
+                                    <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                                        {car.type}
                                     </div>
-                                    <button
-                                        onClick={() => setSelectedCar(car)}
-                                        className="bg-[#FFB81C] text-[#004A99] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
-                                    >
-                                        Book Now
-                                    </button>
+                                </div>
+                                <div className="p-6">
+                                    <h3 className="text-xl font-bold text-gray-900">{car.name}</h3>
+                                    <p className="text-sm text-gray-500 mt-1 mb-4 flex items-center gap-1">
+                                        <span>👤 {car.capacity}</span>
+                                    </p>
+
+                                    <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100">
+                                        <p className="text-xs text-gray-600 font-medium">{car.features}</p>
+                                    </div>
+
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <p className="text-2xl font-black text-[#004A99]">
+                                                {/* Formats number if from DB, or uses string if fallback */}
+                                                {typeof car.price === 'number' ? `₦${car.price.toLocaleString()}` : car.price}
+                                            </p>
+                                            <p className="text-xs text-gray-500">per day</p>
+                                        </div>
+                                        <button
+                                            onClick={() => setSelectedCar(car)}
+                                            className="bg-[#FFB81C] text-[#004A99] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
+                                        >
+                                            Book Now
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* 🟢 LIVE CAR BOOKING MODAL */}
@@ -151,12 +153,11 @@ export default function CarsPage() {
                 onClose={() => setSelectedCar(null)}
                 car={selectedCar}
             />
-
         </div>
     );
 }
 
-// 🟢 INTERNAL MODAL COMPONENT
+// 🟢 INTERNAL MODAL COMPONENT (NOW CONNECTED TO REAL BACKEND)
 function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: () => void, car: any }) {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -164,16 +165,50 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
     if (!isOpen || !car) return null;
 
-    const numericPrice = parseInt(car.price.replace(/[^0-9]/g, ''));
+    // Handle string (fallback) or number (database) price
+    const numericPrice = typeof car.price === 'string'
+        ? parseInt(car.price.replace(/[^0-9]/g, ''))
+        : car.price;
+
     const refundAmount = numericPrice * 0.7;
 
-    const handlePayment = (e: React.FormEvent) => {
+    // 🟢 REAL DATABASE SUBMISSION
+    const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsProcessing(true);
-        setTimeout(() => {
+
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
+            const payload = {
+                userId: 'guest_' + Math.random().toString(36).substr(2, 9), // Generates a random guest ID
+                name: guestInfo.name,
+                address: guestInfo.address,
+                bookingType: 'car',
+                itemName: car.name,
+                totalAmount: numericPrice,
+                status: 'pending' // Ready for Escrow
+            };
+
+            const response = await fetch(`${apiUrl}/api/bookings`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) throw new Error("Booking failed");
+
+            const data = await response.json();
+            console.log("✅ Booking Saved:", data);
+
+            setStep(3); // Show Success UI
+
+        } catch (error) {
+            console.error("❌ Checkout Error:", error);
+            alert("There was an error processing your booking. Please try again.");
+        } finally {
             setIsProcessing(false);
-            setStep(3);
-        }, 2500);
+        }
     };
 
     const handleClose = () => {
@@ -201,7 +236,7 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                             <div>
                                 <h3 className="text-lg font-bold text-[#004A99]">{car.name}</h3>
                                 <p className="text-sm text-gray-500 mt-1">1 Vehicle • 1 Day</p>
-                                <p className="text-xl font-black text-gray-900 mt-2">{car.price}</p>
+                                <p className="text-xl font-black text-gray-900 mt-2">₦{numericPrice.toLocaleString()}</p>
                             </div>
                         </div>
 
@@ -213,11 +248,6 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                             <p className="text-sm text-yellow-700 leading-relaxed mb-3">
                                 Your funds are held securely. The fleet manager will only receive payment after your vehicle is delivered to your location.
                             </p>
-                            <div className="bg-white bg-opacity-50 p-3 rounded-lg border border-yellow-200">
-                                <p className="text-xs text-yellow-800 font-medium">
-                                    <span className="font-bold text-red-600">Cancellation:</span> Eligible for a <strong className="text-green-700">70% refund (₦{refundAmount.toLocaleString()})</strong> if cancelled before dispatch.
-                                </p>
-                            </div>
                         </div>
 
                         <button
@@ -263,9 +293,9 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                             <button
                                 type="submit"
                                 disabled={isProcessing}
-                                className={`w-full py-4 rounded-xl font-black text-lg transition shadow-lg mt-4 flex justify-center items-center ${isProcessing ? 'bg-gray-300 text-gray-500' : 'bg-[#FFB81C] text-[#004A99] hover:bg-yellow-400'}`}
+                                className={`w-full py-4 rounded-xl font-black text-lg transition shadow-lg mt-4 flex justify-center items-center ${isProcessing ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#004A99] hover:bg-yellow-400'}`}
                             >
-                                {isProcessing ? 'Processing Securely...' : `Pay ${car.price}`}
+                                {isProcessing ? 'Processing Securely...' : `Pay ₦${numericPrice.toLocaleString()}`}
                             </button>
                         </form>
                     </div>
@@ -298,7 +328,6 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                         </button>
                     </div>
                 )}
-
             </div>
         </div>
     );
