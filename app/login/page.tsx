@@ -1,112 +1,120 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
+    const router = useRouter();
 
-    // 🟢 DYNAMIC VALIDATION: Matches our mobile app!
-    const isFormValid = email.includes('@') && password.length >= 6;
-
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!isFormValid) return;
-        alert("Login successful! Welcome to Airgo.");
+        setIsLoading(true);
+        setError('');
+
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const res = await fetch(`${apiUrl}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) throw new Error(data.message || 'Login failed');
+
+            // 🟢 MATCHES YOUR BACKEND EXACTLY
+            localStorage.setItem('airgo_token', data.token);
+            localStorage.setItem('airgo_user', JSON.stringify({
+                id: data.userId,
+                name: data.name,
+                email: data.email,
+                role: data.role
+            }));
+
+            // 🟢 SMART REDIRECT BASED ON ROLE
+            if (data.role === 'admin') {
+                router.push('/admin');
+            } else if (data.role === 'partner') {
+                router.push('/partner');
+            } else {
+                router.push('/dashboard'); // Client Dashboard
+            }
+
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
-        <div className="min-h-screen flex font-sans bg-white">
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-6 lg:px-8 font-sans">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
+                <Link href="/">
+                    <h2 className="text-4xl font-black text-[#000080] tracking-tighter">
+                        Airgo<span className="text-[#FFB81C]">.ng</span>
+                    </h2>
+                </Link>
+                <h2 className="mt-6 text-2xl font-bold text-gray-900">Sign in to your account</h2>
+            </div>
 
-            {/* 🟢 LEFT SIDE: FORM */}
-            <div className="w-full md:w-1/2 flex flex-col justify-center items-center p-8 md:p-20">
-                <div className="w-full max-w-md">
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-6 shadow-xl rounded-3xl border border-gray-100">
+                    <form className="space-y-6" onSubmit={handleLogin}>
+                        {error && (
+                            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
+                                ⚠️ {error}
+                            </div>
+                        )}
 
-                    <Link href="/">
-                        <div className="text-3xl font-black tracking-tight cursor-pointer mb-12 text-[#004A99]">
-                            Airgo<span className="text-[#FFB81C]">.ng</span>
-                        </div>
-                    </Link>
-
-                    <h1 className="text-4xl font-black text-gray-900 mb-2 tracking-tight">Sign in</h1>
-                    <p className="text-gray-500 mb-8">Welcome back! Please enter your details.</p>
-
-                    <button className="w-full flex items-center justify-center space-x-3 border border-gray-200 py-3 rounded-lg text-sm font-bold text-gray-700 hover:bg-gray-50 transition mb-6">
-                        <span className="text-xl">G</span>
-                        <span>Continue with Google</span>
-                    </button>
-
-                    <div className="flex items-center my-6">
-                        <div className="flex-1 border-t border-gray-200"></div>
-                        <span className="px-4 text-sm text-gray-400 font-medium">OR</span>
-                        <div className="flex-1 border-t border-gray-200"></div>
-                    </div>
-
-                    <form onSubmit={handleLogin} className="space-y-5">
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Email Address</label>
                             <input
+                                required
                                 type="email"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none transition"
+                                placeholder="name@company.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#004A99] transition"
-                                placeholder="Enter your email"
                             />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? "text" : "password"}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#004A99] transition"
-                                    placeholder="••••••••"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-4 top-3 text-sm text-gray-500 font-bold hover:text-gray-700"
-                                >
-                                    {showPassword ? "Hide" : "Show"}
-                                </button>
-                            </div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Password</label>
+                            <input
+                                required
+                                type="password"
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none transition"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
                         </div>
 
-                        <div className="flex justify-between items-center text-sm">
-                            <label className="flex items-center space-x-2 cursor-pointer">
-                                <input type="checkbox" className="rounded text-[#004A99]" />
-                                <span className="text-gray-600 font-medium">Remember for 30 days</span>
-                            </label>
-                            <a href="#" className="text-[#004A99] font-bold hover:underline">Forgot password?</a>
-                        </div>
-
-                        {/* 🟢 DYNAMIC BUTTON */}
                         <button
+                            disabled={isLoading}
                             type="submit"
-                            disabled={!isFormValid}
-                            className={`w-full py-4 rounded-lg font-black text-lg transition-all duration-300 ${isFormValid ? 'bg-[#004A99] text-white shadow-lg hover:bg-blue-800' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                            className={`w-full flex justify-center py-4 px-4 rounded-xl shadow-lg text-lg font-black text-white transition ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}
                         >
-                            Sign In
+                            {isLoading ? 'Verifying...' : 'Sign In'}
                         </button>
                     </form>
 
-                    <p className="text-center text-gray-600 mt-8 text-sm">
-                        Don't have an account? <a href="#" className="text-[#004A99] font-bold hover:underline">Sign up</a>
-                    </p>
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600">
+                            Don't have an account?{' '}
+                            <Link href="/register" className="font-bold text-[#000080] hover:underline">
+                                Create one for free
+                            </Link>
+                        </p>
+                    </div>
                 </div>
-            </div>
-
-            {/* 🟢 RIGHT SIDE: IMAGE */}
-            <div className="hidden md:block w-1/2 relative bg-gray-100">
-                <div
-                    className="absolute inset-0 bg-cover bg-center"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1542314831-c6a4d27ce66f?q=80&w=1500')" }}
-                ></div>
-                <div className="absolute inset-0 bg-[#004A99] bg-opacity-20 mix-blend-multiply"></div>
             </div>
         </div>
     );
