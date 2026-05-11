@@ -74,7 +74,6 @@ export default function PartnerDashboard() {
                 formData.append('file', imageFile);
                 formData.append('upload_preset', 'airgo_fleet');
 
-                // ⚠️ REPLACE 'YOUR_CLOUD_NAME' WITH YOUR ACTUAL CLOUDINARY NAME
                 const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
                     method: 'POST',
                     body: formData
@@ -120,7 +119,32 @@ export default function PartnerDashboard() {
         }
     };
 
+    // 🟢 GLOBAL LOGOUT FUNCTION
+    const handleLogout = () => {
+        localStorage.removeItem('airgo_token');
+        localStorage.removeItem('airgo_user');
+        window.location.href = '/login'; // Force full page reload to clear cache
+    };
+
     if (!user) return null;
+
+    // 🟢 THE APPROVAL SHIELD: Blocks unapproved partners!
+    if (user && user.isApproved === false) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 font-sans">
+                <div className="bg-white p-10 rounded-3xl shadow-sm border border-gray-200 text-center max-w-md m-4">
+                    <div className="text-6xl mb-6">🛡️</div>
+                    <h2 className="text-2xl font-black text-[#000080] mb-3">Pending Approval</h2>
+                    <p className="text-gray-600 mb-8 font-medium leading-relaxed">
+                        Your account is currently under review by the Airgo compliance team. You will be able to upload your fleet once approved.
+                    </p>
+                    <button onClick={handleLogout} className="w-full bg-gray-100 text-gray-700 px-6 py-4 rounded-xl font-bold hover:bg-gray-200 transition">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 font-sans">
@@ -156,7 +180,7 @@ export default function PartnerDashboard() {
                     </button>
                 </nav>
                 <div className="p-4 border-t border-blue-800/50">
-                    <button onClick={() => { localStorage.removeItem('airgo_token'); localStorage.removeItem('airgo_user'); router.push('/login'); }} className="w-full bg-blue-900 text-white px-4 py-3 rounded-xl text-sm font-bold border border-blue-700 hover:bg-blue-800 transition">
+                    <button onClick={handleLogout} className="w-full bg-blue-900 text-white px-4 py-3 rounded-xl text-sm font-bold border border-blue-700 hover:bg-blue-800 transition">
                         Sign Out
                     </button>
                 </div>
@@ -241,7 +265,7 @@ export default function PartnerDashboard() {
                 </div>
             </main>
 
-            {/* 🟢 ADD CAR MODAL (SAME AS ADMIN WITH CLOUDINARY) */}
+            {/* 🟢 ADD CAR MODAL */}
             {isCarModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000080]/40 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
