@@ -29,7 +29,7 @@ export default function HotelHomepage() {
         <div>
           <Link href="/login">
             <button className="bg-white text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition shadow-md">
-              Sign In
+              Sign In / Dashboard
             </button>
           </Link>
         </div>
@@ -40,9 +40,11 @@ export default function HotelHomepage() {
         <div className="text-xl font-black tracking-tight">
           Airgo<span className="text-[#FFB81C]">.ng</span>
         </div>
-        <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#004A99] font-bold">
-          V
-        </div>
+        <Link href="/login">
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#004A99] font-bold shadow-sm">
+            👤
+          </div>
+        </Link>
       </div>
 
       {/* 🟢 HERO & SEARCH ENGINE */}
@@ -92,7 +94,6 @@ export default function HotelHomepage() {
       <div className="max-w-4xl mx-auto px-6 mt-12 mb-8">
         <h2 className="text-xl font-black text-gray-900 mb-6">Popular Destinations</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {/* Placeholder cards - you can expand these with real data later */}
           <div className="bg-white rounded-2xl h-48 bg-[url('https://images.unsplash.com/photo-1551882547-ff40c0d5e9af?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center relative overflow-hidden shadow-sm">
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
             <div className="absolute bottom-4 left-4 text-white">
@@ -110,7 +111,7 @@ export default function HotelHomepage() {
         </div>
       </div>
 
-      {/* 🟢 MOBILE BOTTOM NAVIGATION (Visible only on mobile) */}
+      {/* 🟢 MOBILE BOTTOM NAVIGATION (Fixed the Profile link!) */}
       <div className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <Link href="/" className="flex flex-col items-center text-[#004A99]">
           <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L4 9v12h5v-7h6v7h5V9z" /></svg>
@@ -120,9 +121,9 @@ export default function HotelHomepage() {
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
           <span className="text-[10px] font-bold">Cars</span>
         </Link>
-        <Link href="/profile" className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
+        <Link href="/login" className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-          <span className="text-[10px] font-bold">Profile</span>
+          <span className="text-[10px] font-bold">Account</span>
         </Link>
       </div>
 
