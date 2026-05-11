@@ -157,11 +157,20 @@ export default function CarsPage() {
     );
 }
 
-// 🟢 INTERNAL MODAL COMPONENT (NOW CONNECTED TO REAL BACKEND)
+// 🟢 INTERNAL MODAL COMPONENT (ALIGNED WITH BACKEND SCHEMA)
 function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: () => void, car: any }) {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [guestInfo, setGuestInfo] = useState({ name: '', email: '', phone: '', address: '' });
+
+    // We need dates to match the backend schema
+    const [bookingDetails, setBookingDetails] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        checkIn: '',
+        checkOut: ''
+    });
 
     if (!isOpen || !car) return null;
 
@@ -170,7 +179,16 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
         ? parseInt(car.price.replace(/[^0-9]/g, ''))
         : car.price;
 
-    const refundAmount = numericPrice * 0.7;
+    // Optional: Calculate price based on days
+    const calculateTotal = () => {
+        if (!bookingDetails.checkIn || !bookingDetails.checkOut) return numericPrice;
+        const start = new Date(bookingDetails.checkIn);
+        const end = new Date(bookingDetails.checkOut);
+        const days = Math.max((end.getTime() - start.getTime()) / (1000 * 3600 * 24), 1);
+        return numericPrice * days;
+    };
+
+    const finalPrice = calculateTotal();
 
     // 🟢 REAL DATABASE SUBMISSION
     const handlePayment = async (e: React.FormEvent) => {
@@ -178,16 +196,23 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
         setIsProcessing(true);
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            const apiUrl = 'https://airgo-backend.onrender.com';
 
+            // Generate a guest ID since they aren't logged in via the Client Dashboard
+            const guestId = 'guest_' + Math.random().toString(36).substr(2, 9);
+
+            // 🟢 THIS PAYLOAD NOW PERFECTLY MATCHES YOUR BACKEND SCHEMA
             const payload = {
-                userId: 'guest_' + Math.random().toString(36).substr(2, 9), // Generates a random guest ID
-                name: guestInfo.name,
-                address: guestInfo.address,
-                bookingType: 'car',
+                userId: guestId,
+                itemId: car._id || car.id,
                 itemName: car.name,
-                totalAmount: numericPrice,
-                status: 'pending' // Ready for Escrow
+                itemType: 'car',
+                partnerId: car.partnerId || 'airgo_direct', // Assign to partner if available
+                checkIn: bookingDetails.checkIn || new Date().toISOString().split('T')[0], // Default to today if empty
+                checkOut: bookingDetails.checkOut || new Date(Date.now() + 86400000).toISOString().split('T')[0], // Default to tomorrow
+                guests: 1,
+                totalPrice: finalPrice.toLocaleString(),
+                status: 'Pending Escrow'
             };
 
             const response = await fetch(`${apiUrl}/api/bookings`, {
@@ -196,16 +221,17 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error("Booking failed");
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || "Booking failed on server");
+            }
 
-            const data = await response.json();
-            console.log("✅ Booking Saved:", data);
-
+            console.log("✅ Booking Saved Successfully");
             setStep(3); // Show Success UI
 
-        } catch (error) {
+        } catch (error: any) {
             console.error("❌ Checkout Error:", error);
-            alert("There was an error processing your booking. Please try again.");
+            alert(`Error: ${error.message}`);
         } finally {
             setIsProcessing(false);
         }
@@ -213,7 +239,7 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
     const handleClose = () => {
         setStep(1);
-        setGuestInfo({ name: '', email: '', phone: '', address: '' });
+        setBookingDetails({ name: '', email: '', phone: '', address: '', checkIn: '', checkOut: '' });
         onClose();
     };
 
@@ -226,17 +252,15 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                     <div className="p-8">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="text-2xl font-black text-gray-900 leading-tight">Confirm Vehicle</h2>
-                            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition">
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
+                            <button onClick={handleClose} className="text-gray-400 hover:text-gray-600 transition">✕</button>
                         </div>
 
                         <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
                             <img src={car.image} alt={car.name} className="w-24 h-24 rounded-xl object-cover" />
                             <div>
                                 <h3 className="text-lg font-bold text-[#004A99]">{car.name}</h3>
-                                <p className="text-sm text-gray-500 mt-1">1 Vehicle • 1 Day</p>
-                                <p className="text-xl font-black text-gray-900 mt-2">₦{numericPrice.toLocaleString()}</p>
+                                <p className="text-sm text-gray-500 mt-1">Daily Rate</p>
+                                <p className="text-xl font-black text-gray-900 mt-1">₦{numericPrice.toLocaleString()}</p>
                             </div>
                         </div>
 
@@ -245,15 +269,12 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                                 <span className="text-xl">🛡️</span>
                                 <h4 className="text-sm font-black text-yellow-800 uppercase tracking-wide">Airgo Escrow Protection</h4>
                             </div>
-                            <p className="text-sm text-yellow-700 leading-relaxed mb-3">
+                            <p className="text-sm text-yellow-700 leading-relaxed">
                                 Your funds are held securely. The fleet manager will only receive payment after your vehicle is delivered to your location.
                             </p>
                         </div>
 
-                        <button
-                            onClick={() => setStep(2)}
-                            className="w-full bg-[#004A99] text-white py-4 rounded-xl font-black text-lg hover:bg-blue-800 transition shadow-lg"
-                        >
+                        <button onClick={() => setStep(2)} className="w-full bg-[#004A99] text-white py-4 rounded-xl font-black text-lg hover:bg-blue-800 transition shadow-lg">
                             Accept & Continue
                         </button>
                     </div>
@@ -261,41 +282,49 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
                 {/* STEP 2: PAYMENT & DETAILS */}
                 {step === 2 && (
-                    <div className="p-8">
-                        <div className="flex justify-between items-center mb-6">
-                            <button onClick={() => setStep(1)} className="text-[#004A99] font-bold text-sm flex items-center gap-1 hover:underline">
-                                <span>←</span> Back
-                            </button>
+                    <div className="p-8 max-h-[80vh] overflow-y-auto">
+                        <div className="flex items-center mb-6">
+                            <button onClick={() => setStep(1)} className="text-[#004A99] font-bold text-sm mr-4">← Back</button>
                             <h2 className="text-xl font-black text-gray-900">Delivery Details</h2>
                         </div>
 
                         <form onSubmit={handlePayment} className="space-y-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Full Name</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99]" value={guestInfo.name} onChange={e => setGuestInfo({ ...guestInfo, name: e.target.value })} />
+                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99]" value={bookingDetails.name} onChange={e => setBookingDetails({ ...bookingDetails, name: e.target.value })} />
                             </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Start Date</label>
+                                    <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99]" value={bookingDetails.checkIn} onChange={e => setBookingDetails({ ...bookingDetails, checkIn: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">End Date</label>
+                                    <input required type="date" min={bookingDetails.checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99]" value={bookingDetails.checkOut} onChange={e => setBookingDetails({ ...bookingDetails, checkOut: e.target.value })} />
+                                </div>
+                            </div>
+
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Delivery Address / Hotel</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99]" placeholder="Where should we bring the car?" value={guestInfo.address} onChange={e => setGuestInfo({ ...guestInfo, address: e.target.value })} />
+                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99]" placeholder="Where should we bring the car?" value={bookingDetails.address} onChange={e => setBookingDetails({ ...bookingDetails, address: e.target.value })} />
                             </div>
 
                             <div className="pt-4 border-t border-gray-100">
                                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Card Information</label>
                                 <div className="relative">
-                                    <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 mb-2" placeholder="0000 0000 0000 0000" maxLength={19} />
-                                    <div className="flex gap-2">
-                                        <input required type="text" className="w-1/2 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="MM/YY" maxLength={5} />
-                                        <input required type="text" className="w-1/2 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50" placeholder="CVC" maxLength={3} />
-                                    </div>
+                                    <input type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 mb-2 opacity-50 cursor-not-allowed" placeholder="Card processing disabled in demo mode" disabled />
                                 </div>
+                                <p className="text-xs text-blue-600 font-bold mt-2">Testing Mode: This will create the booking without charging a card.</p>
                             </div>
 
-                            <button
-                                type="submit"
-                                disabled={isProcessing}
-                                className={`w-full py-4 rounded-xl font-black text-lg transition shadow-lg mt-4 flex justify-center items-center ${isProcessing ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#004A99] hover:bg-yellow-400'}`}
-                            >
-                                {isProcessing ? 'Processing Securely...' : `Pay ₦${numericPrice.toLocaleString()}`}
+                            <div className="flex justify-between items-end pt-2">
+                                <span className="text-gray-500 font-bold">Total Escrow</span>
+                                <span className="text-2xl font-black text-[#004A99]">₦{finalPrice.toLocaleString()}</span>
+                            </div>
+
+                            <button type="submit" disabled={isProcessing} className={`w-full py-4 rounded-xl font-black text-lg transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#004A99] hover:bg-yellow-400'}`}>
+                                {isProcessing ? 'Processing...' : 'Confirm Booking'}
                             </button>
                         </form>
                     </div>
@@ -305,26 +334,19 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                 {step === 3 && (
                     <div className="p-10 text-center flex flex-col items-center">
                         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>
+                            <span className="text-4xl text-green-600">✓</span>
                         </div>
-
                         <h2 className="text-3xl font-black text-gray-900 mb-2">Booking Confirmed!</h2>
-                        <p className="text-gray-600 mb-8">
-                            Your <span className="font-bold text-[#004A99]">{car.name}</span> has been reserved successfully.
-                        </p>
+                        <p className="text-gray-600 mb-8">Your <span className="font-bold text-[#004A99]">{car.name}</span> has been reserved.</p>
 
                         <div className="bg-gray-50 border border-gray-200 p-5 rounded-2xl w-full text-left mb-8">
                             <h4 className="font-bold text-gray-900 text-sm mb-1">Dispatch Scheduled</h4>
                             <p className="text-xs text-gray-500 leading-relaxed">
-                                Your assigned chauffeur and dispatch manager will contact you shortly to confirm the delivery time to your provided address.
+                                Our dispatch manager will contact you shortly at the details provided to confirm delivery.
                             </p>
                         </div>
-
-                        <button
-                            onClick={handleClose}
-                            className="w-full bg-[#004A99] text-white py-4 rounded-xl font-black text-lg hover:bg-blue-800 transition shadow-lg"
-                        >
-                            Done
+                        <button onClick={handleClose} className="w-full bg-[#004A99] text-white py-4 rounded-xl font-black text-lg hover:bg-blue-800 transition shadow-lg">
+                            Close
                         </button>
                     </div>
                 )}
