@@ -16,13 +16,14 @@ export default function RegisterPage() {
         setError('');
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+            // Hardcoded Render URL to guarantee connection
+            const apiUrl = 'https://airgo-backend.onrender.com';
             const res = await fetch(`${apiUrl}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
-                    role: 'admin' // ⚠️ We are forcing this to 'admin' just for you to create your account! You should change this to 'client' or 'partner' later.
+                    role: 'client' // 🟢 AUTOMATICALLY SECURES THIS ACCOUNT AS A STANDARD CLIENT
                 }),
             });
 
@@ -30,7 +31,7 @@ export default function RegisterPage() {
 
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-            alert("Account created successfully! Please log in.");
+            alert("✅ Account created successfully! Please log in.");
             router.push('/login');
 
         } catch (err: any) {
@@ -48,7 +49,7 @@ export default function RegisterPage() {
                         Airgo<span className="text-[#FFB81C]">.ng</span>
                     </h2>
                 </Link>
-                <h2 className="mt-6 text-2xl font-bold text-gray-900">Create an Account</h2>
+                <h2 className="mt-6 text-2xl font-bold text-gray-900">Create a Client Account</h2>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
@@ -84,6 +85,15 @@ export default function RegisterPage() {
                             {isLoading ? 'Creating...' : 'Create Account'}
                         </button>
                     </form>
+
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600">
+                            Already have an account? <Link href="/login" className="font-bold text-[#000080] hover:underline">Sign in</Link>
+                        </p>
+                        <p className="text-sm text-gray-600 mt-2">
+                            Want to list your fleet? <Link href="/join" className="font-bold text-[#FFB81C] hover:underline">Become a Partner</Link>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
