@@ -5,13 +5,21 @@ import { useRouter } from 'next/navigation';
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals' | 'fleet' | 'hotels'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // Data States
+    // 🟢 ALL SYSTEM DATA STATES
     const [allBookings, setAllBookings] = useState<any[]>([]);
     const [partners, setPartners] = useState<any[]>([]);
+    const [cars, setCars] = useState<any[]>([]);
+    const [hotels, setHotels] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    // Form States for Cars
+    const [isCarModalOpen, setIsCarModalOpen] = useState(false);
+    const [newCar, setNewCar] = useState({ name: '', type: '', price: '', image: '', capacity: '', features: '', previewImage: '' });
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
 
     const router = useRouter();
 
@@ -35,18 +43,23 @@ export default function SuperadminDashboard() {
         fetchAllSystemData();
     }, [router]);
 
+    // 🟢 FETCH ABSOLUTELY EVERYTHING FROM THE DATABASE
     const fetchAllSystemData = async () => {
         setIsLoading(true);
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-            // Fetch Bookings
-            const bookingsRes = await fetch(`${apiUrl}/api/bookings`);
-            if (bookingsRes.ok) setAllBookings(await bookingsRes.json());
+            const [bookingsRes, partnersRes, carsRes, hotelsRes] = await Promise.all([
+                fetch(`${apiUrl}/api/bookings`),
+                fetch(`${apiUrl}/api/auth/partners`),
+                fetch(`${apiUrl}/api/cars`),
+                fetch(`${apiUrl}/api/hotels`)
+            ]);
 
-            // Fetch Partners
-            const partnersRes = await fetch(`${apiUrl}/api/auth/partners`);
+            if (bookingsRes.ok) setAllBookings(await bookingsRes.json());
             if (partnersRes.ok) setPartners(await partnersRes.json());
+            if (carsRes.ok) setCars(await carsRes.json());
+            if (hotelsRes.ok) setHotels(await hotelsRes.json());
 
         } catch (error) {
             console.error("Error fetching system data:", error);
@@ -55,6 +68,7 @@ export default function SuperadminDashboard() {
         }
     };
 
+    // --- ESCROW ACTIONS ---
     const handleDisburse = (bookingId: string) => {
         const confirmPayout = window.confirm(`Authorize payout?`);
         if (confirmPayout) {
@@ -63,44 +77,90 @@ export default function SuperadminDashboard() {
         }
     };
 
-    // 🟢 APPROVE PARTNER
+    // --- PARTNER ACTIONS ---
     const handleApprovePartner = async (partnerId: string) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/auth/approve-partner/${partnerId}`, {
-                method: 'PUT'
-            });
+            const res = await fetch(`${apiUrl}/api/auth/approve-partner/${partnerId}`, { method: 'PUT' });
             if (res.ok) {
-                alert("✅ Partner Approved! They can now upload fleets.");
+                alert("✅ Partner Approved!");
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isApproved: true } : p));
-            } else {
-                alert("❌ Failed to approve partner.");
             }
-        } catch (error) {
-            alert("❌ Error communicating with the server.");
-        }
+        } catch (error) { alert("❌ Error connecting to server."); }
     };
 
-    // 🟢 NEW: DEACTIVATE / REACTIVATE PARTNER
     const handleToggleStatus = async (partnerId: string) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/auth/toggle-status/${partnerId}`, {
-                method: 'PUT'
-            });
+            const res = await fetch(`${apiUrl}/api/auth/toggle-status/${partnerId}`, { method: 'PUT' });
             if (res.ok) {
                 const data = await res.json();
                 alert(`✅ ${data.message}`);
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isActive: data.isActive } : p));
-            } else {
-                alert("❌ Failed to change partner status.");
             }
-        } catch (error) {
-            alert("❌ Error communicating with the server.");
+        } catch (error) { alert("❌ Error changing partner status."); }
+    };
+
+    // --- FLEET ACTIONS ---
+    const handleImageSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => setNewCar((prev) => ({ ...prev, previewImage: reader.result as string }));
+            reader.readAsDataURL(file);
         }
     };
 
-    // 🟢 LOGOUT FUNCTION
+    const handleAddCar = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsUploading(true);
+        try {
+            let finalImageUrl = newCar.image;
+            if (imageFile) {
+                const formData = new FormData();
+                formData.append('file', imageFile);
+                formData.append('upload_preset', 'airgo_fleet');
+
+                const cloudinaryRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
+                    method: 'POST', body: formData
+                });
+                const cloudData = await cloudinaryRes.json();
+                if (cloudData.secure_url) finalImageUrl = cloudData.secure_url;
+                else throw new Error("Failed to upload image");
+            }
+
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const response = await fetch(`${apiUrl}/api/cars`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...newCar, image: finalImageUrl, price: Number(newCar.price), partnerId: 'airgo_direct' })
+            });
+
+            if (response.ok) {
+                alert("✅ Vehicle deployed successfully!");
+                setIsCarModalOpen(false);
+                setNewCar({ name: '', type: '', price: '', image: '', capacity: '', features: '', previewImage: '' });
+                setImageFile(null);
+                fetchAllSystemData(); // Refresh Data
+            }
+        } catch (error) {
+            alert("❌ Error adding vehicle.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleDeleteCar = async (id: string) => {
+        if (!confirm("Are you sure you want to remove this vehicle?")) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const response = await fetch(`${apiUrl}/api/cars/${id}`, { method: 'DELETE' });
+            if (response.ok) fetchAllSystemData();
+        } catch (error) { console.error("Error deleting vehicle:", error); }
+    };
+
+    // --- LOGOUT ---
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
@@ -108,13 +168,10 @@ export default function SuperadminDashboard() {
     };
 
     const calculateTotalEscrow = () => {
-        return allBookings
-            .filter(b => b.status === 'Pending Escrow')
-            .reduce((sum, b) => {
-                const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
-                return sum + (num || 0);
-            }, 0)
-            .toLocaleString();
+        return allBookings.filter(b => b.status === 'Pending Escrow').reduce((sum, b) => {
+            const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
+            return sum + (num || 0);
+        }, 0).toLocaleString();
     };
 
     if (!user) return null;
@@ -122,7 +179,7 @@ export default function SuperadminDashboard() {
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 font-sans">
 
-            {/* 🟢 MOBILE HEADER */}
+            {/* MOBILE HEADER */}
             <div className="md:hidden bg-gray-900 text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
                 <h2 className="text-xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.HQ</span></h2>
                 <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-2">
@@ -132,7 +189,7 @@ export default function SuperadminDashboard() {
 
             {isMobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)} />}
 
-            {/* 🟢 SIDEBAR COMMAND CENTER */}
+            {/* SIDEBAR COMMAND CENTER */}
             <aside className={`fixed md:relative top-0 left-0 h-full w-64 bg-gray-900 text-white flex-col shadow-xl z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} flex`}>
                 <div className="p-6 border-b border-gray-800 flex justify-between items-center">
                     <div>
@@ -141,7 +198,7 @@ export default function SuperadminDashboard() {
                     </div>
                     <button className="md:hidden text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
-                <nav className="flex-1 p-4 space-y-2">
+                <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'overview' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>
                         📊 Global Overview
                     </button>
@@ -151,6 +208,13 @@ export default function SuperadminDashboard() {
                     <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'approvals' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>
                         🛡️ Partner Approvals
                     </button>
+                    <div className="my-2 border-b border-gray-800"></div>
+                    <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>
+                        🚘 Manage Fleet
+                    </button>
+                    <button onClick={() => { setActiveTab('hotels'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'hotels' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>
+                        🏨 Manage Hotels
+                    </button>
                 </nav>
                 <div className="p-4 border-t border-gray-800">
                     <button onClick={handleLogout} className="w-full bg-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900 hover:text-white transition">
@@ -159,7 +223,7 @@ export default function SuperadminDashboard() {
                 </div>
             </aside>
 
-            {/* 🟢 MAIN CONTENT */}
+            {/* MAIN CONTENT */}
             <main className="flex-1 flex flex-col h-screen overflow-y-auto relative w-full bg-gray-100">
                 <header className="bg-white px-6 md:px-8 py-5 flex justify-between items-center border-b border-gray-200 sticky top-0 z-10 hidden md:flex">
                     <h1 className="text-2xl font-black text-gray-900 capitalize">{activeTab}</h1>
@@ -178,15 +242,19 @@ export default function SuperadminDashboard() {
                         <>
                             {/* OVERVIEW TAB */}
                             {activeTab === 'overview' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    <div className="bg-gradient-to-br from-[#000080] to-blue-900 p-8 rounded-3xl shadow-lg text-white">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                                    <div className="bg-gradient-to-br from-[#000080] to-blue-900 p-6 rounded-3xl shadow-lg text-white col-span-1 lg:col-span-2">
                                         <p className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-2">Funds in Escrow</p>
-                                        <p className="text-5xl font-black mb-2">₦{calculateTotalEscrow()}</p>
+                                        <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalEscrow()}</p>
                                         <p className="text-xs text-blue-300">Awaiting partner disbursement</p>
                                     </div>
-                                    <div className="bg-white p-8 rounded-3xl shadow-sm border border-gray-200">
+                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Bookings</p>
-                                        <p className="text-5xl font-black text-gray-900">{allBookings.length}</p>
+                                        <p className="text-4xl font-black text-gray-900">{allBookings.length}</p>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
+                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Active Vehicles</p>
+                                        <p className="text-4xl font-black text-[#000080]">{cars.length}</p>
                                     </div>
                                 </div>
                             )}
@@ -194,9 +262,7 @@ export default function SuperadminDashboard() {
                             {/* ESCROW TAB */}
                             {activeTab === 'escrow' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                                        <h2 className="text-lg font-black text-gray-900">Live Escrow Ledger</h2>
-                                    </div>
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-black text-gray-900">Live Escrow Ledger</h2></div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
@@ -213,11 +279,7 @@ export default function SuperadminDashboard() {
                                                 ) : allBookings.map((booking) => (
                                                     <tr key={booking._id} className="hover:bg-gray-50 transition">
                                                         <td className="p-4 font-black text-gray-900">{booking.itemName}</td>
-                                                        <td className="p-4">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                                                {booking.status}
-                                                            </span>
-                                                        </td>
+                                                        <td className="p-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{booking.status}</span></td>
                                                         <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                         <td className="p-4 text-center">
                                                             {booking.status === 'Pending Escrow' && (
@@ -232,12 +294,10 @@ export default function SuperadminDashboard() {
                                 </div>
                             )}
 
-                            {/* 🟢 UPDATED: PARTNER APPROVALS TAB */}
+                            {/* PARTNER APPROVALS TAB */}
                             {activeTab === 'approvals' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                                        <h2 className="text-lg font-black text-gray-900">Partner Registrations</h2>
-                                    </div>
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-black text-gray-900">Partner Registrations</h2></div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
@@ -252,62 +312,82 @@ export default function SuperadminDashboard() {
                                             <tbody className="divide-y divide-gray-100">
                                                 {partners.length === 0 ? (
                                                     <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found.</td></tr>
-                                                ) : (
-                                                    partners.map((partner) => (
-                                                        <tr key={partner._id} className={`transition ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-gray-50'}`}>
-                                                            {/* Name & Type */}
-                                                            <td className="p-4">
-                                                                <p className="font-bold text-gray-900">{partner.name}</p>
-                                                                <p className="text-[10px] uppercase font-black text-blue-600">
-                                                                    {partner.partnerType === 'car' ? '🚘 Fleet Manager' : partner.partnerType === 'hotel' ? '🏨 Hotelier' : 'Partner'}
-                                                                </p>
-                                                            </td>
-
-                                                            {/* Business Name */}
-                                                            <td className="p-4 text-gray-600 font-medium">
-                                                                {partner.businessName || 'N/A'}
-                                                            </td>
-
-                                                            {/* Contact Info */}
-                                                            <td className="p-4">
-                                                                <p className="text-sm text-gray-900">{partner.email}</p>
-                                                                <p className="text-xs text-gray-500">{partner.phoneNumber || 'No phone provided'}</p>
-                                                            </td>
-
-                                                            {/* Status */}
-                                                            <td className="p-4">
-                                                                <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                                                    {partner.isApproved ? 'Approved' : 'Pending'}
-                                                                </span>
-                                                                {partner.isActive === false && (
-                                                                    <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>
-                                                                )}
-                                                            </td>
-
-                                                            {/* Actions */}
-                                                            <td className="p-4 flex flex-wrap gap-2 justify-center">
-                                                                {!partner.isApproved && (
-                                                                    <button
-                                                                        onClick={() => handleApprovePartner(partner._id)}
-                                                                        className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm"
-                                                                    >
-                                                                        Approve
-                                                                    </button>
-                                                                )}
-
-                                                                {/* 🟢 DEACTIVATE / REACTIVATE BUTTON */}
-                                                                <button
-                                                                    onClick={() => handleToggleStatus(partner._id)}
-                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}
-                                                                >
-                                                                    {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
-                                                                </button>
-                                                            </td>
-                                                        </tr>
-                                                    ))
-                                                )}
+                                                ) : partners.map((partner) => (
+                                                    <tr key={partner._id} className={`transition ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-gray-50'}`}>
+                                                        <td className="p-4">
+                                                            <p className="font-bold text-gray-900">{partner.name}</p>
+                                                            <p className="text-[10px] uppercase font-black text-blue-600">{partner.partnerType === 'car' ? '🚘 Fleet' : partner.partnerType === 'hotel' ? '🏨 Hotel' : 'Partner'}</p>
+                                                        </td>
+                                                        <td className="p-4 text-gray-600 font-medium">{partner.businessName || 'N/A'}</td>
+                                                        <td className="p-4"><p className="text-sm text-gray-900">{partner.email}</p><p className="text-xs text-gray-500">{partner.phoneNumber || 'No phone'}</p></td>
+                                                        <td className="p-4">
+                                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{partner.isApproved ? 'Approved' : 'Pending'}</span>
+                                                            {partner.isActive === false && <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>}
+                                                        </td>
+                                                        <td className="p-4 flex flex-wrap gap-2 justify-center">
+                                                            {!partner.isApproved && <button onClick={() => handleApprovePartner(partner._id)} className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">Approve</button>}
+                                                            <button onClick={() => handleToggleStatus(partner._id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}>
+                                                                {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* FLEET MANAGEMENT TAB */}
+                            {activeTab === 'fleet' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                        <h2 className="text-lg font-bold text-gray-800">Global Fleet</h2>
+                                        <button onClick={() => setIsCarModalOpen(true)} className="bg-[#000080] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-900 transition">+ Add Vehicle</button>
+                                    </div>
+                                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                        {cars.length === 0 ? (
+                                            <p className="col-span-full text-center text-gray-500 py-10">No vehicles in the database.</p>
+                                        ) : cars.map(car => (
+                                            <div key={car._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                                                <img src={car.image} alt={car.name} className="w-full h-40 object-cover" />
+                                                <div className="p-4">
+                                                    <h3 className="font-black text-gray-900">{car.name}</h3>
+                                                    <p className="text-sm text-gray-500 mb-2">{car.type}</p>
+                                                    <div className="flex justify-between items-center mt-4">
+                                                        <p className="font-bold text-[#000080]">₦{car.price?.toLocaleString()}</p>
+                                                        <button onClick={() => handleDeleteCar(car._id)} className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-3 py-1 rounded">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* HOTEL MANAGEMENT TAB */}
+                            {activeTab === 'hotels' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
+                                    <div className="p-4 md:p-6 border-b border-gray-100 bg-gray-50">
+                                        <h2 className="text-lg font-bold text-gray-800">Global Hotels</h2>
+                                    </div>
+                                    <div className="p-6">
+                                        {hotels.length === 0 ? (
+                                            <div className="text-center py-12">
+                                                <div className="text-4xl mb-4">🏨</div>
+                                                <h3 className="text-xl font-bold text-gray-800">No Properties Listed Yet</h3>
+                                                <p className="text-gray-500 text-sm mt-2">Hotel partners have not uploaded inventory.</p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {hotels.map(hotel => (
+                                                    <div key={hotel._id} className="border border-gray-100 rounded-2xl p-4 shadow-sm">
+                                                        <h3 className="font-bold">{hotel.name}</h3>
+                                                        <p className="text-sm text-gray-500">{hotel.location}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -315,6 +395,36 @@ export default function SuperadminDashboard() {
                     )}
                 </div>
             </main>
+
+            {/* ADD CAR MODAL (FOR SUPERADMIN DIRECT UPLOAD) */}
+            {isCarModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                            <h2 className="text-xl font-black text-[#000080]">Add Global Vehicle</h2>
+                            <button onClick={() => setIsCarModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl">✕</button>
+                        </div>
+                        <form onSubmit={handleAddCar} className="p-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Type</label><input required type="text" className="w-full px-4 py-2 border rounded-xl" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Price (₦)</label><input required type="number" className="w-full px-4 py-2 border rounded-xl" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Capacity</label><input required type="text" className="w-full px-4 py-2 border rounded-xl" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Upload Photo</label>
+                                <input required type="file" accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#000080]" onChange={handleImageSelection} />
+                            </div>
+                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Features</label><input required type="text" className="w-full px-4 py-2 border rounded-xl" value={newCar.features} onChange={e => setNewCar({ ...newCar, features: e.target.value })} /></div>
+
+                            <div className="pt-4 flex justify-end gap-3">
+                                <button type="button" onClick={() => setIsCarModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600">Cancel</button>
+                                <button disabled={isUploading} type="submit" className={`px-6 py-2 rounded-xl font-bold text-white ${isUploading ? 'bg-gray-400' : 'bg-[#000080]'}`}>{isUploading ? 'Deploying...' : 'Deploy Vehicle'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

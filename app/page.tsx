@@ -5,25 +5,45 @@ import Link from 'next/link';
 
 export default function HotelHomepage() {
   const [location, setLocation] = useState('');
-  // 🟢 SPLIT INTO CHECK-IN AND CHECK-OUT
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
-
-  // 🟢 SMART USER STATE
+  
   const [user, setUser] = useState<any>(null);
+  
+  // 🟢 NEW: Live Database States
+  const [liveHotels, setLiveHotels] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if the user is already logged in
+    // 1. Check for logged-in user
     const userData = localStorage.getItem('airgo_user');
     if (userData) {
       setUser(JSON.parse(userData));
     }
+
+    // 2. 🟢 Fetch Real Hotels from Database
+    const fetchHotels = async () => {
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+        const res = await fetch(`${apiUrl}/api/hotels`);
+        if (res.ok) {
+          const data = await res.json();
+          setLiveHotels(data);
+        }
+      } catch (error) {
+        console.error("Error fetching properties:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHotels();
   }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-20 md:pb-0">
 
-      {/* 🟢 SMART DESKTOP NAVIGATION */}
+      {/* SMART DESKTOP NAVIGATION */}
       <nav className="hidden md:flex bg-[#004A99] text-white py-4 px-8 justify-between items-center shadow-lg sticky top-0 z-40">
         <div className="flex items-center space-x-12">
           <Link href="/">
@@ -40,7 +60,6 @@ export default function HotelHomepage() {
           </div>
         </div>
         <div>
-          {/* 🟢 DYNAMIC BUTTON: Shows Dashboard if logged in, Sign In if not */}
           {user ? (
             <Link href={user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard'}>
               <button className="bg-[#FFB81C] text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-yellow-400 transition shadow-md">
@@ -57,7 +76,7 @@ export default function HotelHomepage() {
         </div>
       </nav>
 
-      {/* 🟢 SMART MOBILE TOP BAR */}
+      {/* SMART MOBILE TOP BAR */}
       <div className="md:hidden bg-[#004A99] text-white py-4 px-6 sticky top-0 z-40 shadow-md flex justify-between items-center">
         <div className="text-xl font-black tracking-tight">
           Airgo<span className="text-[#FFB81C]">.ng</span>
@@ -77,45 +96,24 @@ export default function HotelHomepage() {
         </div>
       </header>
 
-      {/* 🟢 UPDATED FLOATING SEARCH BOX (SPLIT DATES) */}
+      {/* SEARCH BOX */}
       <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-10">
         <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
           <form className="flex flex-col md:flex-row gap-4">
             <div className="flex-[2]">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Where to?</label>
-              <input
-                type="text"
-                placeholder="City, Hotel, or Neighborhood"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] focus:ring-2 outline-none"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-              />
+              <input type="text" placeholder="City, Hotel, or Neighborhood" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] focus:ring-2 outline-none" value={location} onChange={(e) => setLocation(e.target.value)} />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check In</label>
-              <input
-                type="date"
-                min={new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none"
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-              />
+              <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check Out</label>
-              <input
-                type="date"
-                min={checkIn || new Date().toISOString().split('T')[0]}
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none"
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-              />
+              <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
             </div>
             <div className="flex items-end">
-              <button
-                type="button"
-                className="w-full md:w-auto bg-[#FFB81C] text-[#004A99] px-8 py-3.5 rounded-xl font-black hover:bg-yellow-400 transition shadow-md"
-              >
+              <button type="button" className="w-full md:w-auto bg-[#FFB81C] text-[#004A99] px-8 py-3.5 rounded-xl font-black hover:bg-yellow-400 transition shadow-md">
                 Search
               </button>
             </div>
@@ -123,25 +121,38 @@ export default function HotelHomepage() {
         </div>
       </div>
 
-      {/* FEATURED HOTELS PREVIEW */}
-      <div className="max-w-4xl mx-auto px-6 mt-12 mb-8">
-        <h2 className="text-xl font-black text-gray-900 mb-6">Popular Destinations</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl h-48 bg-[url('https://images.unsplash.com/photo-1551882547-ff40c0d5e9af?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center relative overflow-hidden shadow-sm">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-            <div className="absolute bottom-4 left-4 text-white">
-              <p className="font-bold text-lg">Lagos</p>
-              <p className="text-xs text-gray-300">124 Properties</p>
+      {/* 🟢 LIVE FEATURED PROPERTIES */}
+      <div className="max-w-5xl mx-auto px-6 mt-12 mb-8">
+        <h2 className="text-xl font-black text-gray-900 mb-6">Featured Properties</h2>
+        
+        {isLoading ? (
+            <div className="text-center py-12 text-gray-500 font-bold animate-pulse">Connecting to live inventory...</div>
+        ) : liveHotels.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center shadow-sm">
+                <div className="text-4xl mb-4">🏗️</div>
+                <h3 className="text-xl font-black text-[#004A99] mb-2">Curating Premium Stays</h3>
+                <p className="text-gray-500 max-w-md mx-auto">
+                    Our hotel partners are currently onboarding their properties. Please check back shortly to view our exclusive inventory.
+                </p>
             </div>
-          </div>
-          <div className="bg-white rounded-2xl h-48 bg-[url('https://images.unsplash.com/photo-1542314831-c6a4d27ece11?q=80&w=600&auto=format&fit=crop')] bg-cover bg-center relative overflow-hidden shadow-sm">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-            <div className="absolute bottom-4 left-4 text-white">
-              <p className="font-bold text-lg">Abuja</p>
-              <p className="text-xs text-gray-300">86 Properties</p>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {liveHotels.slice(0, 3).map((hotel) => (
+                    <div key={hotel._id || hotel.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition group cursor-pointer">
+                        <div className="h-48 overflow-hidden relative">
+                            <img src={hotel.image || 'https://via.placeholder.com/600'} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
+                                <p className="text-xs font-black text-[#004A99]">₦{typeof hotel.price === 'number' ? hotel.price.toLocaleString() : hotel.price}</p>
+                            </div>
+                        </div>
+                        <div className="p-4">
+                            <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{hotel.name}</h3>
+                            <p className="text-sm text-gray-500 flex items-center gap-1">📍 {hotel.location}</p>
+                        </div>
+                    </div>
+                ))}
             </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* MOBILE BOTTOM NAVIGATION */}
