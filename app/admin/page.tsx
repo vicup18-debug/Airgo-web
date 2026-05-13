@@ -63,7 +63,7 @@ export default function SuperadminDashboard() {
         }
     };
 
-    // 🟢 APPROVE PARTNER FUNCTION
+    // 🟢 APPROVE PARTNER
     const handleApprovePartner = async (partnerId: string) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -72,10 +72,28 @@ export default function SuperadminDashboard() {
             });
             if (res.ok) {
                 alert("✅ Partner Approved! They can now upload fleets.");
-                // Update UI instantly without reloading
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isApproved: true } : p));
             } else {
                 alert("❌ Failed to approve partner.");
+            }
+        } catch (error) {
+            alert("❌ Error communicating with the server.");
+        }
+    };
+
+    // 🟢 NEW: DEACTIVATE / REACTIVATE PARTNER
+    const handleToggleStatus = async (partnerId: string) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/toggle-status/${partnerId}`, {
+                method: 'PUT'
+            });
+            if (res.ok) {
+                const data = await res.json();
+                alert(`✅ ${data.message}`);
+                setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isActive: data.isActive } : p));
+            } else {
+                alert("❌ Failed to change partner status.");
             }
         } catch (error) {
             alert("❌ Error communicating with the server.");
@@ -86,7 +104,7 @@ export default function SuperadminDashboard() {
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
-        window.location.href = '/login'; // Force reload
+        window.location.href = '/login';
     };
 
     const calculateTotalEscrow = () => {
@@ -214,7 +232,7 @@ export default function SuperadminDashboard() {
                                 </div>
                             )}
 
-                            {/* PARTNER APPROVALS TAB */}
+                            {/* 🟢 UPDATED: PARTNER APPROVALS TAB */}
                             {activeTab === 'approvals' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                                     <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
@@ -224,11 +242,11 @@ export default function SuperadminDashboard() {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <th className="p-4 font-bold border-b">Partner Name</th>
+                                                    <th className="p-4 font-bold border-b">Partner / Type</th>
                                                     <th className="p-4 font-bold border-b">Business Name</th>
-                                                    <th className="p-4 font-bold border-b">Email</th>
+                                                    <th className="p-4 font-bold border-b">Contact Info</th>
                                                     <th className="p-4 font-bold border-b">Status</th>
-                                                    <th className="p-4 font-bold border-b text-center">Action</th>
+                                                    <th className="p-4 font-bold border-b text-center">Actions</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
@@ -236,24 +254,54 @@ export default function SuperadminDashboard() {
                                                     <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found.</td></tr>
                                                 ) : (
                                                     partners.map((partner) => (
-                                                        <tr key={partner._id} className="hover:bg-gray-50 transition">
-                                                            <td className="p-4 font-bold text-gray-900">{partner.name}</td>
-                                                            <td className="p-4 text-gray-600">{partner.businessName || 'N/A'}</td>
-                                                            <td className="p-4 text-gray-600">{partner.email}</td>
+                                                        <tr key={partner._id} className={`transition ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-gray-50'}`}>
+                                                            {/* Name & Type */}
                                                             <td className="p-4">
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${partner.isApproved ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                    {partner.isApproved ? 'Active' : 'Pending'}
-                                                                </span>
+                                                                <p className="font-bold text-gray-900">{partner.name}</p>
+                                                                <p className="text-[10px] uppercase font-black text-blue-600">
+                                                                    {partner.partnerType === 'car' ? '🚘 Fleet Manager' : partner.partnerType === 'hotel' ? '🏨 Hotelier' : 'Partner'}
+                                                                </p>
                                                             </td>
-                                                            <td className="p-4 text-center">
+
+                                                            {/* Business Name */}
+                                                            <td className="p-4 text-gray-600 font-medium">
+                                                                {partner.businessName || 'N/A'}
+                                                            </td>
+
+                                                            {/* Contact Info */}
+                                                            <td className="p-4">
+                                                                <p className="text-sm text-gray-900">{partner.email}</p>
+                                                                <p className="text-xs text-gray-500">{partner.phoneNumber || 'No phone provided'}</p>
+                                                            </td>
+
+                                                            {/* Status */}
+                                                            <td className="p-4">
+                                                                <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                                    {partner.isApproved ? 'Approved' : 'Pending'}
+                                                                </span>
+                                                                {partner.isActive === false && (
+                                                                    <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>
+                                                                )}
+                                                            </td>
+
+                                                            {/* Actions */}
+                                                            <td className="p-4 flex flex-wrap gap-2 justify-center">
                                                                 {!partner.isApproved && (
                                                                     <button
                                                                         onClick={() => handleApprovePartner(partner._id)}
-                                                                        className="bg-[#000080] text-white px-4 py-2 rounded-lg text-xs font-black shadow-sm"
+                                                                        className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm"
                                                                     >
                                                                         Approve
                                                                     </button>
                                                                 )}
+
+                                                                {/* 🟢 DEACTIVATE / REACTIVATE BUTTON */}
+                                                                <button
+                                                                    onClick={() => handleToggleStatus(partner._id)}
+                                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}
+                                                                >
+                                                                    {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     ))

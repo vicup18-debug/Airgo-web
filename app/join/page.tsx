@@ -1,17 +1,27 @@
 "use client";
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-export default function PartnerRegisterPage() {
-    const [formData, setFormData] = useState({ firstName: '', lastName: '', businessName: '', email: '', propertyType: 'Hotel', password: '' });
+export default function JoinPartnerPage() {
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+        businessName: '',
+        partnerType: 'car' // 🟢 Default to car
+    });
+    const [agreed, setAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!agreed) return setError("You must agree to the Terms & Conditions.");
+
         setIsLoading(true);
         setError('');
 
@@ -21,18 +31,15 @@ export default function PartnerRegisterPage() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: `${formData.firstName} ${formData.lastName}`,
-                    email: formData.email,
-                    password: formData.password,
-                    businessName: formData.businessName, // Saved for partner records
-                    role: 'partner' // 🟢 AUTOMATICALLY TAGS AS A PARTNER
+                    ...formData,
+                    role: 'partner'
                 }),
             });
 
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-            alert("✅ Partner Account Created! Please log in to access your dashboard.");
+            alert("✅ Application Submitted! Airgo Admin will review your business details shortly.");
             router.push('/login');
         } catch (err: any) {
             setError(err.message);
@@ -42,51 +49,51 @@ export default function PartnerRegisterPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans">
-            <nav className="bg-[#004A99] text-white py-4 px-8 flex justify-between items-center shadow-md">
+        <div className="min-h-screen bg-[#000080] flex flex-col justify-center py-12 px-6 lg:px-8 font-sans">
+            <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
                 <Link href="/">
-                    <div className="text-2xl font-black tracking-tight cursor-pointer">Airgo<span className="text-[#FFB81C]">.ng</span></div>
+                    <h2 className="text-4xl font-black text-white tracking-tighter">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                 </Link>
-            </nav>
+                <h2 className="mt-6 text-2xl font-bold text-blue-100">Partner with the Elite</h2>
+            </div>
 
-            <div className="max-w-4xl mx-auto py-16 px-6">
-                <div className="bg-white rounded-3xl p-8 md:p-12 shadow-sm border border-gray-100">
-                    <div className="text-center mb-10">
-                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-4">List Your Property on Airgo</h1>
-                        <p className="text-gray-600 text-lg">Reach thousands of travelers and corporate clients daily. Partner with Nigeria's fastest-growing OTA.</p>
-                    </div>
-
-                    <form onSubmit={handleRegister} className="space-y-6 max-w-2xl mx-auto">
+            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+                <div className="bg-white py-8 px-6 shadow-2xl rounded-3xl">
+                    <form className="space-y-4" onSubmit={handleRegister}>
                         {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">⚠️ {error}</div>}
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#004A99]" value={formData.firstName} onChange={e => setFormData({ ...formData, firstName: e.target.value })} />
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Partner Type</label>
+                                <select
+                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#000080] outline-none"
+                                    value={formData.partnerType}
+                                    onChange={(e) => setFormData({ ...formData, partnerType: e.target.value })}
+                                >
+                                    <option value="car">Fleet Manager</option>
+                                    <option value="hotel">Hotelier</option>
+                                </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#004A99]" value={formData.lastName} onChange={e => setFormData({ ...formData, lastName: e.target.value })} />
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Name</label>
+                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none" value={formData.businessName} onChange={(e) => setFormData({ ...formData, businessName: e.target.value })} />
                             </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Business / Property Name</label>
-                            <input required type="text" className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#004A99]" value={formData.businessName} onChange={e => setFormData({ ...formData, businessName: e.target.value })} />
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Name</label><input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Email</label><input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label><input required type="tel" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} /></div>
+                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label><input required type="password" minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 outline-none" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
+
+                        <div className="flex items-start mt-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <input type="checkbox" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 mr-3 w-5 h-5 accent-[#000080] cursor-pointer" />
+                            <label htmlFor="terms" className="text-xs text-blue-900 cursor-pointer leading-relaxed">
+                                I agree to the <span className="font-bold underline">Airgo Partnership Agreement</span>. I certify that my business is registered and all assets provided will be verified for quality assurance.
+                            </label>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-                            <input required type="email" className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#004A99]" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-bold text-gray-700 mb-2">Account Password</label>
-                            <input required type="password" minLength={6} className="w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-[#004A99]" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
-                        </div>
-
-                        <button disabled={isLoading} type="submit" className={`w-full mt-8 text-white py-4 rounded-lg font-black text-lg transition shadow-lg ${isLoading ? 'bg-gray-400' : 'bg-[#004A99] hover:bg-blue-800'}`}>
-                            {isLoading ? 'Creating Account...' : 'Start Registration'}
+                        <button disabled={isLoading || !agreed} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                            {isLoading ? 'Processing...' : 'Start Registration'}
                         </button>
                     </form>
                 </div>
