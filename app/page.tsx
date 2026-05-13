@@ -1,16 +1,29 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function HotelHomepage() {
   const [location, setLocation] = useState('');
-  const [dates, setDates] = useState('');
+  // 🟢 SPLIT INTO CHECK-IN AND CHECK-OUT
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+
+  // 🟢 SMART USER STATE
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    // Check if the user is already logged in
+    const userData = localStorage.getItem('airgo_user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-20 md:pb-0">
 
-      {/* 🟢 DESKTOP NAVIGATION (Hidden on Mobile) */}
+      {/* 🟢 SMART DESKTOP NAVIGATION */}
       <nav className="hidden md:flex bg-[#004A99] text-white py-4 px-8 justify-between items-center shadow-lg sticky top-0 z-40">
         <div className="flex items-center space-x-12">
           <Link href="/">
@@ -27,27 +40,36 @@ export default function HotelHomepage() {
           </div>
         </div>
         <div>
-          <Link href="/login">
-            <button className="bg-white text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition shadow-md">
-              Sign In / Dashboard
-            </button>
-          </Link>
+          {/* 🟢 DYNAMIC BUTTON: Shows Dashboard if logged in, Sign In if not */}
+          {user ? (
+            <Link href={user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard'}>
+              <button className="bg-[#FFB81C] text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-yellow-400 transition shadow-md">
+                Dashboard
+              </button>
+            </Link>
+          ) : (
+            <Link href="/login">
+              <button className="bg-white text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition shadow-md">
+                Sign In
+              </button>
+            </Link>
+          )}
         </div>
       </nav>
 
-      {/* 🟢 MOBILE TOP BAR (App-like Header) */}
+      {/* 🟢 SMART MOBILE TOP BAR */}
       <div className="md:hidden bg-[#004A99] text-white py-4 px-6 sticky top-0 z-40 shadow-md flex justify-between items-center">
         <div className="text-xl font-black tracking-tight">
           Airgo<span className="text-[#FFB81C]">.ng</span>
         </div>
-        <Link href="/login">
+        <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'}>
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#004A99] font-bold shadow-sm">
-            👤
+            {user ? user.name.charAt(0).toUpperCase() : '👤'}
           </div>
         </Link>
       </div>
 
-      {/* 🟢 HERO & SEARCH ENGINE */}
+      {/* HERO & SEARCH ENGINE */}
       <header className="bg-[#004A99] pt-8 pb-32 px-6 rounded-b-[2.5rem] md:rounded-none relative">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-3xl md:text-5xl font-black text-white mb-3">Find Your Perfect Stay</h1>
@@ -55,11 +77,11 @@ export default function HotelHomepage() {
         </div>
       </header>
 
-      {/* 🟢 FLOATING SEARCH BOX */}
-      <div className="max-w-4xl mx-auto px-4 -mt-24 relative z-10">
+      {/* 🟢 UPDATED FLOATING SEARCH BOX (SPLIT DATES) */}
+      <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-10">
         <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
           <form className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
+            <div className="flex-[2]">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Where to?</label>
               <input
                 type="text"
@@ -70,12 +92,23 @@ export default function HotelHomepage() {
               />
             </div>
             <div className="flex-1">
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Dates</label>
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check In</label>
               <input
                 type="date"
-                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] focus:ring-2 outline-none"
-                value={dates}
-                onChange={(e) => setDates(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none"
+                value={checkIn}
+                onChange={(e) => setCheckIn(e.target.value)}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check Out</label>
+              <input
+                type="date"
+                min={checkIn || new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none"
+                value={checkOut}
+                onChange={(e) => setCheckOut(e.target.value)}
               />
             </div>
             <div className="flex items-end">
@@ -83,14 +116,14 @@ export default function HotelHomepage() {
                 type="button"
                 className="w-full md:w-auto bg-[#FFB81C] text-[#004A99] px-8 py-3.5 rounded-xl font-black hover:bg-yellow-400 transition shadow-md"
               >
-                Search Hotels
+                Search
               </button>
             </div>
           </form>
         </div>
       </div>
 
-      {/* 🟢 FEATURED HOTELS PREVIEW */}
+      {/* FEATURED HOTELS PREVIEW */}
       <div className="max-w-4xl mx-auto px-6 mt-12 mb-8">
         <h2 className="text-xl font-black text-gray-900 mb-6">Popular Destinations</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -111,7 +144,7 @@ export default function HotelHomepage() {
         </div>
       </div>
 
-      {/* 🟢 MOBILE BOTTOM NAVIGATION (Fixed the Profile link!) */}
+      {/* MOBILE BOTTOM NAVIGATION */}
       <div className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <Link href="/" className="flex flex-col items-center text-[#004A99]">
           <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L4 9v12h5v-7h6v7h5V9z" /></svg>
@@ -121,7 +154,7 @@ export default function HotelHomepage() {
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
           <span className="text-[10px] font-bold">Cars</span>
         </Link>
-        <Link href="/login" className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
+        <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'} className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
           <span className="text-[10px] font-bold">Account</span>
         </Link>

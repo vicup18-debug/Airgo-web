@@ -6,12 +6,21 @@ import Link from 'next/link';
 
 export default function RegisterPage() {
     const [formData, setFormData] = useState({ name: '', email: '', password: '', phone: '' });
+    // 🟢 ADDED: T&C State
+    const [agreed, setAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // 🟢 BLOCK if they bypass the UI somehow
+        if (!agreed) {
+            setError("You must agree to the Terms & Conditions.");
+            return;
+        }
+
         setIsLoading(true);
         setError('');
 
@@ -23,7 +32,7 @@ export default function RegisterPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     ...formData,
-                    role: 'client' // 🟢 AUTOMATICALLY SECURES THIS ACCOUNT AS A STANDARD CLIENT
+                    role: 'client' // AUTOMATICALLY SECURES THIS ACCOUNT AS A STANDARD CLIENT
                 }),
             });
 
@@ -81,12 +90,32 @@ export default function RegisterPage() {
                             <input required type="password" minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none transition" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                         </div>
 
-                        <button disabled={isLoading} type="submit" className={`w-full flex justify-center py-4 px-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                        {/* 🟢 T&C Checkbox */}
+                        <div className="flex items-start mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                checked={agreed}
+                                onChange={(e) => setAgreed(e.target.checked)}
+                                className="mt-1 mr-3 cursor-pointer w-5 h-5 accent-[#000080]"
+                            />
+                            <label htmlFor="terms" className="text-xs text-gray-600 cursor-pointer leading-relaxed">
+                                I agree to Airgo's <span className="text-[#000080] font-bold">Terms of Service</span> and <span className="text-[#000080] font-bold">Privacy Policy</span>. I understand that all vehicle bookings are subject to the Airgo Escrow framework for platform security.
+                            </label>
+                        </div>
+
+                        {/* 🟢 BUTTON DISABLED IF T&C NOT CHECKED */}
+                        <button
+                            disabled={isLoading || !agreed}
+                            type="submit"
+                            className={`w-full flex justify-center py-4 px-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400 cursor-not-allowed opacity-70' : 'bg-[#000080] hover:bg-blue-900'
+                                }`}
+                        >
                             {isLoading ? 'Creating...' : 'Create Account'}
                         </button>
                     </form>
 
-                    <div className="mt-6 text-center">
+                    <div className="mt-6 text-center pt-6 border-t border-gray-100">
                         <p className="text-sm text-gray-600">
                             Already have an account? <Link href="/login" className="font-bold text-[#000080] hover:underline">Sign in</Link>
                         </p>
