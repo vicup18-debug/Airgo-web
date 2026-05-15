@@ -12,11 +12,12 @@ export default function JoinPartnerPage() {
         phone: '',
         businessName: '',
         businessAddress: '',
-        cacNumber: '',
+        cacNumber: '', // Will only be enforced if 'hotel' is selected
         partnerType: 'car'
     });
 
-    const [idFile, setIdFile] = useState<File | null>(null);
+    // 🟢 DYNAMIC UPLOAD STATE: Holds either the CAC or Driver's License
+    const [verificationFile, setVerificationFile] = useState<File | null>(null);
     const [agreed, setAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -26,16 +27,17 @@ export default function JoinPartnerPage() {
         e.preventDefault();
 
         if (!agreed) return setError("You must agree to the Terms & Conditions.");
-        if (!idFile) return setError("Please upload a Valid ID document.");
+        if (!verificationFile) return setError("Please upload the required verification document.");
         if (!formData.phone) return setError("Phone number is required.");
 
         setIsLoading(true);
         setError('');
 
         try {
-            let finalIdUrl = "";
+            // 1. UPLOAD DOCUMENT TO CLOUDINARY
+            let finalFileUrl = "";
             const imgData = new FormData();
-            imgData.append('file', idFile);
+            imgData.append('file', verificationFile);
             imgData.append('upload_preset', 'airgo_fleet');
 
             const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
@@ -45,20 +47,24 @@ export default function JoinPartnerPage() {
             const cloudData = await cloudRes.json();
 
             if (cloudData.secure_url) {
-                finalIdUrl = cloudData.secure_url;
+                finalFileUrl = cloudData.secure_url;
             } else {
-                throw new Error("Failed to upload ID document. Please try again.");
+                throw new Error("Failed to upload document. Please try again.");
             }
+
+            // 2. ASSIGN URL BASED ON PARTNER TYPE
+            const payload = {
+                ...formData,
+                role: 'partner',
+                cacCertificateUrl: formData.partnerType === 'hotel' ? finalFileUrl : '',
+                driversLicenseUrl: formData.partnerType === 'car' ? finalFileUrl : '',
+            };
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const res = await fetch(`${apiUrl}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    ...formData,
-                    idDocumentUrl: finalIdUrl, // The secure Cloudinary link
-                    role: 'partner'
-                }),
+                body: JSON.stringify(payload),
             });
 
             const data = await res.json();
@@ -81,7 +87,7 @@ export default function JoinPartnerPage() {
                     <h2 className="text-4xl font-black text-white tracking-tighter">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                 </Link>
                 <h2 className="mt-6 text-2xl font-bold text-blue-100">Partner with the Elite</h2>
-                <p className="mt-2 text-sm text-blue-200">Strict verification required for all fleet and hotel managers.</p>
+                <p className="mt-2 text-sm text-blue-200">Strict verification required for all car rental and hotel partners.</p>
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl">
@@ -96,10 +102,14 @@ export default function JoinPartnerPage() {
                                 <select
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none"
                                     value={formData.partnerType}
-                                    onChange={(e) => setFormData({ ...formData, partnerType: e.target.value })}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, partnerType: e.target.value, cacNumber: '' });
+                                        setVerificationFile(null); // Reset file if they switch types
+                                    }}
                                 >
-                                    <option value="car">Fleet Manager</option>
-                                    <option value="hotel">Hotelier</option>
+                                    {/* 🟢 FIXED: Updated Dropdown Text */}
+                                    <option value="car">Car Rental</option>
+                                    <option value="hotel">Hotel</option>
                                 </select>
                             </div>
                             <div>
@@ -108,23 +118,32 @@ export default function JoinPartnerPage() {
                             </div>
                         </div>
 
-                        {/* ADDRESS & CAC */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Address *</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.businessAddress} onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })} />
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration Number *</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
-                            </div>
+                        {/* BUSINESS ADDRESS */}
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Address *</label>
+                            <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.businessAddress} onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })} />
                         </div>
 
-                        {/* ID UPLOAD */}
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Valid ID (Driver's License / NIN / Passport) *</label>
-                            <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setIdFile(e.target.files?.[0] || null)} />
-                        </div>
+                        {/* 🟢 CONDITIONAL FIELDS: HOTEL vs CAR RENTAL */}
+                        {formData.partnerType === 'hotel' && (
+                            <>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration Number *</label>
+                                    <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC Certificate *</label>
+                                    <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
+                                </div>
+                            </>
+                        )}
+
+                        {formData.partnerType === 'car' && (
+                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Driver's License *</label>
+                                <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
+                            </div>
+                        )}
 
                         {/* CONTACT INFO */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

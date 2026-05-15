@@ -158,6 +158,32 @@ export default function HotelHomepage() {
         )}
       </div>
 
+      {/* 🟢 NEW: FULL FOOTER */}
+      <footer className="bg-[#000080] text-white py-12 px-6">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 className="text-2xl font-black mb-4">Airgo<span className="text-[#FFB81C]">.ng</span></h3>
+            <p className="text-blue-200 text-sm leading-relaxed max-w-sm">Premium executive fleet and luxury hotel reservations across Nigeria, secured by our verified escrow framework.</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm">24/7 Concierge & Support</h4>
+            <p className="text-sm text-blue-200 mb-2 font-medium flex items-center gap-2"><span>📞</span> +234 806 605 8930</p>
+            <p className="text-sm text-blue-200 font-medium flex items-center gap-2"><span>📞</span> +234 802 669 6170</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm">Quick Links</h4>
+            <ul className="text-sm text-blue-200 space-y-3 font-medium">
+              <li><Link href="/cars" className="hover:text-white transition">Book Car Rentals</Link></li>
+              <li><Link href="/" className="hover:text-white transition">Book Luxury Hotels</Link></li>
+              <li><Link href="/join" className="hover:text-[#FFB81C] transition">Partner with us</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-blue-900 text-center text-xs text-blue-300 font-medium">
+          &copy; {new Date().getFullYear()} Airgo.ng Platform. All rights reserved.
+        </div>
+      </footer>
+
       {/* MOBILE BOTTOM NAVIGATION */}
       <div className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <Link href="/" className="flex flex-col items-center text-[#004A99]">
