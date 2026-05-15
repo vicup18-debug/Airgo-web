@@ -7,10 +7,10 @@ export default function HotelHomepage() {
   const [location, setLocation] = useState('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
-  
+
   const [user, setUser] = useState<any>(null);
-  
-  // 🟢 NEW: Live Database States
+
+  // 🟢 Live Database States
   const [liveHotels, setLiveHotels] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,7 +21,7 @@ export default function HotelHomepage() {
       setUser(JSON.parse(userData));
     }
 
-    // 2. 🟢 Fetch Real Hotels from Database
+    // 2. Fetch Real Hotels from Database
     const fetchHotels = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -102,15 +102,18 @@ export default function HotelHomepage() {
           <form className="flex flex-col md:flex-row gap-4">
             <div className="flex-[2]">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Where to?</label>
-              <input type="text" placeholder="City, Hotel, or Neighborhood" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] focus:ring-2 outline-none" value={location} onChange={(e) => setLocation(e.target.value)} />
+              {/* 🟢 ADDED text-gray-900 to fix invisible text */}
+              <input type="text" placeholder="City, Hotel, or Neighborhood" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] focus:ring-2 outline-none" value={location} onChange={(e) => setLocation(e.target.value)} />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check In</label>
-              <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+              {/* 🟢 ADDED text-gray-900 to fix invisible text */}
+              <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] outline-none" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
             </div>
             <div className="flex-1">
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check Out</label>
-              <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:border-[#004A99] outline-none" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+              {/* 🟢 ADDED text-gray-900 to fix invisible text */}
+              <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] outline-none" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
             </div>
             <div className="flex items-end">
               <button type="button" className="w-full md:w-auto bg-[#FFB81C] text-[#004A99] px-8 py-3.5 rounded-xl font-black hover:bg-yellow-400 transition shadow-md">
@@ -121,37 +124,37 @@ export default function HotelHomepage() {
         </div>
       </div>
 
-      {/* 🟢 LIVE FEATURED PROPERTIES */}
+      {/* LIVE FEATURED PROPERTIES */}
       <div className="max-w-5xl mx-auto px-6 mt-12 mb-8">
         <h2 className="text-xl font-black text-gray-900 mb-6">Featured Properties</h2>
-        
+
         {isLoading ? (
-            <div className="text-center py-12 text-gray-500 font-bold animate-pulse">Connecting to live inventory...</div>
+          <div className="text-center py-12 text-gray-500 font-bold animate-pulse">Connecting to live inventory...</div>
         ) : liveHotels.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center shadow-sm">
-                <div className="text-4xl mb-4">🏗️</div>
-                <h3 className="text-xl font-black text-[#004A99] mb-2">Curating Premium Stays</h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                    Our hotel partners are currently onboarding their properties. Please check back shortly to view our exclusive inventory.
-                </p>
-            </div>
+          <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center shadow-sm">
+            <div className="text-4xl mb-4">🏗️</div>
+            <h3 className="text-xl font-black text-[#004A99] mb-2">Curating Premium Stays</h3>
+            <p className="text-gray-500 max-w-md mx-auto">
+              Our hotel partners are currently onboarding their properties. Please check back shortly to view our exclusive inventory.
+            </p>
+          </div>
         ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {liveHotels.slice(0, 3).map((hotel) => (
-                    <div key={hotel._id || hotel.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition group cursor-pointer">
-                        <div className="h-48 overflow-hidden relative">
-                            <img src={hotel.image || 'https://via.placeholder.com/600'} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
-                                <p className="text-xs font-black text-[#004A99]">₦{typeof hotel.price === 'number' ? hotel.price.toLocaleString() : hotel.price}</p>
-                            </div>
-                        </div>
-                        <div className="p-4">
-                            <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{hotel.name}</h3>
-                            <p className="text-sm text-gray-500 flex items-center gap-1">📍 {hotel.location}</p>
-                        </div>
-                    </div>
-                ))}
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {liveHotels.slice(0, 3).map((hotel) => (
+              <div key={hotel._id || hotel.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-lg transition group cursor-pointer">
+                <div className="h-48 overflow-hidden relative">
+                  <img src={hotel.image || 'https://via.placeholder.com/600'} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                  <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">
+                    <p className="text-xs font-black text-[#004A99]">₦{typeof hotel.price === 'number' ? hotel.price.toLocaleString() : hotel.price}</p>
+                  </div>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-bold text-gray-900 text-lg mb-1 truncate">{hotel.name}</h3>
+                  <p className="text-sm text-gray-500 flex items-center gap-1">📍 {hotel.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
@@ -163,7 +166,8 @@ export default function HotelHomepage() {
         </Link>
         <Link href="/cars" className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-          <span className="text-[10px] font-bold">Cars</span>
+          {/* 🟢 CHANGED from "Cars" to "Car Rental" */}
+          <span className="text-[10px] font-bold">Car Rental</span>
         </Link>
         <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'} className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>

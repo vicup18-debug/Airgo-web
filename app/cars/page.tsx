@@ -8,18 +8,19 @@ export default function CarsPage() {
     const [carFleet, setCarFleet] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 🟢 NEW: Search Bar State
+    // 🟢 SEARCH BAR STATES (Now matching the Hotel layout)
     const [searchQuery, setSearchQuery] = useState('');
+    const [pickupDate, setPickupDate] = useState('');
+    const [returnDate, setReturnDate] = useState('');
+
     const [user, setUser] = useState<any>(null);
 
     useEffect(() => {
-        // Check for logged in user
         const userData = localStorage.getItem('airgo_user');
         if (userData) {
             setUser(JSON.parse(userData));
         }
 
-        // Fetch Cars
         const fetchCars = async () => {
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -41,7 +42,7 @@ export default function CarsPage() {
         fetchCars();
     }, []);
 
-    // 🟢 NEW: Live Filtering Logic
+    // 🟢 LIVE FILTERING LOGIC
     const filteredCars = carFleet.filter(car => {
         const searchLower = searchQuery.toLowerCase();
         return (
@@ -100,7 +101,7 @@ export default function CarsPage() {
             </div>
 
             {/* HEADER */}
-            <header className="bg-[#004A99] pb-24 pt-12 px-6 rounded-b-[2.5rem] md:rounded-none relative text-center">
+            <header className="bg-[#004A99] pb-32 pt-12 px-6 rounded-b-[2.5rem] md:rounded-none relative text-center">
                 <div className="max-w-4xl mx-auto">
                     <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Premium Executive Fleet</h1>
                     <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto">
@@ -109,17 +110,47 @@ export default function CarsPage() {
                 </div>
             </header>
 
-            {/* 🟢 NEW: FLOATING SEARCH BAR */}
-            <div className="max-w-3xl mx-auto px-4 -mt-10 relative z-10 mb-12">
-                <div className="bg-white p-2 md:p-3 rounded-2xl shadow-xl border border-gray-100 flex items-center">
-                    <span className="pl-4 text-2xl">🔍</span>
-                    <input
-                        type="text"
-                        placeholder="Search vehicles, types, or features (e.g., SUV, Bulletproof)..."
-                        className="w-full px-4 py-3 bg-transparent text-gray-900 focus:outline-none font-medium placeholder-gray-400"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+            {/* 🟢 NEW: 3-PART FLOATING SEARCH BAR (Matches Hotel UI) */}
+            <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-10 mb-12">
+                <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
+                    <form className="flex flex-col md:flex-row gap-4">
+                        <div className="flex-[2]">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Where to / Vehicle?</label>
+                            {/* 🟢 FIXED: text-gray-900 added for visibility */}
+                            <input
+                                type="text"
+                                placeholder="City, SUV, Bulletproof..."
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] focus:ring-2 outline-none"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Pickup</label>
+                            <input
+                                type="date"
+                                min={new Date().toISOString().split('T')[0]}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] outline-none"
+                                value={pickupDate}
+                                onChange={(e) => setPickupDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex-1">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Return</label>
+                            <input
+                                type="date"
+                                min={pickupDate || new Date().toISOString().split('T')[0]}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] outline-none"
+                                value={returnDate}
+                                onChange={(e) => setReturnDate(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-end">
+                            <button type="button" className="w-full md:w-auto bg-[#FFB81C] text-[#004A99] px-8 py-3.5 rounded-xl font-black hover:bg-yellow-400 transition shadow-md">
+                                Search
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -194,7 +225,8 @@ export default function CarsPage() {
                 </Link>
                 <Link href="/cars" className="flex flex-col items-center text-[#004A99]">
                     <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-3.3-1.8c-.5-.1-1.1-.2-1.7-.2H9c-.6 0-1.2.1-1.7.2C3.6 8.6 2.3 10 2.3 10S-.3 10.6.2 11.1C.2 11.9 0 12.8 0 13v3c0 .6.4 1 1 1h2c0 1.7 1.3 3 3 3s3-1.3 3-3h6c0 1.7 1.3 3 3 3s3-1.3 3-3zm-13 1c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1zm10 0c-.6 0-1-.4-1-1s.4-1 1-1 1 .4 1 1-.4 1-1 1z" /></svg>
-                    <span className="text-[10px] font-bold">Cars</span>
+                    {/* 🟢 FIXED: Updated mobile nav text to "Car Rental" */}
+                    <span className="text-[10px] font-bold">Car Rental</span>
                 </Link>
                 <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'} className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
                     <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -329,7 +361,6 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
                         <form onSubmit={handlePayment} className="space-y-4">
                             <div>
-                                {/* 🟢 FORCED text-gray-900 TO PREVENT INVISIBLE TEXT */}
                                 <label className="block text-xs font-bold text-gray-900 uppercase tracking-wide mb-1">Full Name</label>
                                 <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99]" value={bookingDetails.name} onChange={e => setBookingDetails({ ...bookingDetails, name: e.target.value })} />
                             </div>
