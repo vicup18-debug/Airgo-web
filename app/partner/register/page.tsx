@@ -14,6 +14,9 @@ export default function PartnerDashboard() {
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // 🟢 EXPANDABLE ROW STATE
+    const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+
     // 🟢 MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -28,7 +31,6 @@ export default function PartnerDashboard() {
     const router = useRouter();
 
     useEffect(() => {
-        // 1. SECURITY & ROLE CHECK
         const token = localStorage.getItem('airgo_token');
         const userData = localStorage.getItem('airgo_user');
 
@@ -40,7 +42,6 @@ export default function PartnerDashboard() {
             return router.push('/dashboard');
         }
 
-        // 2. CHECK IF SUPERADMIN HAS APPROVED THEM YET
         if (!parsedUser.isApproved) {
             alert("Your account is currently under review by Airgo Admin. You will be granted full access once your documents are verified.");
         }
@@ -54,7 +55,6 @@ export default function PartnerDashboard() {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-            // Fetch Bookings assigned to this specific partner
             const bookingsRes = await fetch(`${apiUrl}/api/bookings`);
             if (bookingsRes.ok) {
                 const allBookings = await bookingsRes.json();
@@ -62,7 +62,6 @@ export default function PartnerDashboard() {
                 setMyBookings(filteredBookings);
             }
 
-            // Fetch specific inventory (Cars or Hotels depending on partnerType)
             if (partnerData.partnerType === 'car') {
                 const carsRes = await fetch(`${apiUrl}/api/cars`);
                 if (carsRes.ok) {
@@ -83,7 +82,6 @@ export default function PartnerDashboard() {
         }
     };
 
-    // 🟢 UPLOAD NEW INVENTORY TO DATABASE
     const handleAddItem = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUploading(true);
@@ -109,7 +107,7 @@ export default function PartnerDashboard() {
                 ...newItem,
                 image: finalImageUrl,
                 price: Number(newItem.price),
-                partnerId: user.id // SECURELY LINKS INVENTORY TO THIS PARTNER
+                partnerId: user.id
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -123,7 +121,7 @@ export default function PartnerDashboard() {
                 setIsModalOpen(false);
                 setImageFile(null);
                 setNewItem({ name: '', type: '', price: '', capacity: '', features: '', location: '', amenities: '' });
-                fetchPartnerData(user); // Refresh Data
+                fetchPartnerData(user);
             }
         } catch (error) {
             alert("❌ Error listing item. Please try again.");
@@ -143,6 +141,11 @@ export default function PartnerDashboard() {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
             return sum + (num || 0);
         }, 0).toLocaleString();
+    };
+
+    // 🟢 TOGGLE ROW EXPANSION
+    const toggleExpand = (id: string) => {
+        setExpandedBookingId(expandedBookingId === id ? null : id);
     };
 
     if (!user) return null;
@@ -193,13 +196,13 @@ export default function PartnerDashboard() {
                         <div className="bg-white rounded-3xl p-10 text-center shadow-sm border border-gray-200 max-w-2xl mx-auto mt-10">
                             <div className="text-5xl mb-4">🛡️</div>
                             <h2 className="text-2xl font-black text-gray-900 mb-2">Verification Pending</h2>
-                            <p className="text-gray-500">Your documents (CAC/ID) are currently being reviewed by the Airgo compliance team. You will be able to upload inventory once approved.</p>
+                            <p className="text-gray-500">Your documents are currently being reviewed by the Airgo compliance team. You will be able to upload inventory once approved.</p>
                         </div>
                     ) : isLoading ? (
                         <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004A99]"></div></div>
                     ) : (
                         <>
-                            {/* 🟢 OVERVIEW TAB */}
+                            {/* OVERVIEW TAB */}
                             {activeTab === 'overview' && (
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                     <div className="bg-gradient-to-br from-[#004A99] to-blue-900 p-6 rounded-3xl shadow-lg text-white md:col-span-2">
@@ -214,7 +217,7 @@ export default function PartnerDashboard() {
                                 </div>
                             )}
 
-                            {/* 🟢 INVENTORY TAB */}
+                            {/* INVENTORY TAB */}
                             {activeTab === 'inventory' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
@@ -240,7 +243,7 @@ export default function PartnerDashboard() {
                                 </div>
                             )}
 
-                            {/* 🟢 BOOKINGS TAB */}
+                            {/* 🟢 BOOKINGS TAB WITH EXPANDABLE DETAILS */}
                             {activeTab === 'bookings' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                                     <div className="p-6 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-black text-gray-900">Client Reservations</h2></div>
@@ -248,7 +251,7 @@ export default function PartnerDashboard() {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <th className="p-4 font-bold border-b">Client & Asset</th>
+                                                    <th className="p-4 font-bold border-b">Asset</th>
                                                     <th className="p-4 font-bold border-b">Dates</th>
                                                     <th className="p-4 font-bold border-b text-right">Value</th>
                                                     <th className="p-4 font-bold border-b text-center">Status</th>
@@ -258,22 +261,50 @@ export default function PartnerDashboard() {
                                                 {myBookings.length === 0 ? (
                                                     <tr><td colSpan={4} className="p-8 text-center text-gray-500">No active reservations.</td></tr>
                                                 ) : myBookings.map((booking) => (
-                                                    <tr key={booking._id} className="hover:bg-gray-50 transition">
-                                                        <td className="p-4">
-                                                            <p className="font-black text-gray-900">{booking.itemName}</p>
-                                                            <p className="text-xs text-blue-600 font-bold uppercase mt-1">Client ID: {booking.userId.substring(0, 8)}</p>
-                                                        </td>
-                                                        <td className="p-4 text-sm text-gray-600 font-medium">
-                                                            <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
-                                                            <p>Out: {new Date(booking.checkOut).toLocaleDateString()}</p>
-                                                        </td>
-                                                        <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
-                                                        <td className="p-4 text-center">
-                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                                                {booking.status}
-                                                            </span>
-                                                        </td>
-                                                    </tr>
+                                                    <React.Fragment key={booking._id}>
+                                                        {/* MAIN ROW (Clickable) */}
+                                                        <tr onClick={() => toggleExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
+                                                            <td className="p-4">
+                                                                <p className="font-black text-gray-900">{booking.itemName}</p>
+                                                                <p className="text-[10px] text-[#004A99] font-bold uppercase mt-1">Tap to view details ▼</p>
+                                                            </td>
+                                                            <td className="p-4 text-sm text-gray-600 font-medium">
+                                                                <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                            </td>
+                                                            <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
+                                                            <td className="p-4 text-center">
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                                                    {booking.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+
+                                                        {/* EXPANDED DROPDOWN */}
+                                                        {expandedBookingId === booking._id && (
+                                                            <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
+                                                                <td colSpan={4} className="p-6">
+                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Client ID</p>
+                                                                            <p className="text-sm font-black text-[#004A99]">{booking.userId.substring(0, 8)}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Check In</p>
+                                                                            <p className="text-sm font-bold text-gray-700">{new Date(booking.checkIn).toLocaleString()}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Check Out</p>
+                                                                            <p className="text-sm font-bold text-gray-700">{new Date(booking.checkOut).toLocaleString()}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
                                                 ))}
                                             </tbody>
                                         </table>
@@ -285,7 +316,7 @@ export default function PartnerDashboard() {
                 </div>
             </main>
 
-            {/* 🟢 DYNAMIC ADD INVENTORY MODAL */}
+            {/* DYNAMIC ADD INVENTORY MODAL */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
@@ -296,17 +327,10 @@ export default function PartnerDashboard() {
                         <form onSubmit={handleAddItem} className="p-6 space-y-4">
 
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label>
-                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label>
-                                    <input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} />
-                                </div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
                             </div>
 
-                            {/* CAR SPECIFIC FIELDS */}
                             {user.partnerType === 'car' && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
@@ -315,7 +339,6 @@ export default function PartnerDashboard() {
                                 </div>
                             )}
 
-                            {/* HOTEL SPECIFIC FIELDS */}
                             {user.partnerType === 'hotel' && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location / City</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.location} onChange={e => setNewItem({ ...newItem, location: e.target.value })} /></div>
@@ -323,17 +346,11 @@ export default function PartnerDashboard() {
                                 </div>
                             )}
 
-                            {/* IMAGE UPLOAD (FOR BOTH) */}
-                            <div>
-                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">High-Quality Photo *</label>
-                                <input required type="file" accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] file:font-bold text-gray-900" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
-                            </div>
+                            <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">High-Quality Photo *</label><input required type="file" accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] file:font-bold text-gray-900" onChange={(e) => setImageFile(e.target.files?.[0] || null)} /></div>
 
                             <div className="pt-4 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
-                                <button disabled={isUploading} type="submit" className={`px-6 py-2 rounded-xl font-bold text-white shadow-md ${isUploading ? 'bg-gray-400' : 'bg-[#004A99] hover:bg-blue-800'}`}>
-                                    {isUploading ? 'Uploading...' : 'Publish Listing'}
-                                </button>
+                                <button disabled={isUploading} type="submit" className={`px-6 py-2 rounded-xl font-bold text-white shadow-md ${isUploading ? 'bg-gray-400' : 'bg-[#004A99] hover:bg-blue-800'}`}>{isUploading ? 'Uploading...' : 'Publish Listing'}</button>
                             </div>
                         </form>
                     </div>

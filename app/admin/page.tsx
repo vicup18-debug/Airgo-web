@@ -15,6 +15,9 @@ export default function SuperadminDashboard() {
     const [hotels, setHotels] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // 🟢 EXPANDABLE ESCROW STATE
+    const [expandedEscrowId, setExpandedEscrowId] = useState<string | null>(null);
+
     // 🟢 CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
     const [newCar, setNewCar] = useState({ name: '', type: '', price: '', capacity: '', features: '' });
@@ -106,7 +109,7 @@ export default function SuperadminDashboard() {
     const handleUploadToCloudinary = async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('upload_preset', 'airgo_fleet'); // Ensure this preset exists in Cloudinary
+        formData.append('upload_preset', 'airgo_fleet');
         const res = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, { method: 'POST', body: formData });
         const data = await res.json();
         if (data.secure_url) return data.secure_url;
@@ -182,6 +185,11 @@ export default function SuperadminDashboard() {
         }, 0).toLocaleString();
     };
 
+    // 🟢 TOGGLE ESCROW EXPANSION
+    const toggleEscrowExpand = (id: string) => {
+        setExpandedEscrowId(expandedEscrowId === id ? null : id);
+    };
+
     if (!user) return null;
 
     return (
@@ -252,7 +260,7 @@ export default function SuperadminDashboard() {
                                 </div>
                             )}
 
-                            {/* ESCROW TAB */}
+                            {/* 🟢 EXPANDABLE ESCROW TAB */}
                             {activeTab === 'escrow' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                                     <div className="p-6 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-black text-gray-900">Live Escrow Ledger</h2></div>
@@ -270,16 +278,53 @@ export default function SuperadminDashboard() {
                                                 {allBookings.length === 0 ? (
                                                     <tr><td colSpan={4} className="p-8 text-center text-gray-500">No transactions yet.</td></tr>
                                                 ) : allBookings.map((booking) => (
-                                                    <tr key={booking._id} className="hover:bg-gray-50 transition">
-                                                        <td className="p-4 font-black text-gray-900">{booking.itemName}</td>
-                                                        <td className="p-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{booking.status}</span></td>
-                                                        <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
-                                                        <td className="p-4 text-center">
-                                                            {booking.status === 'Pending Escrow' && (
-                                                                <button onClick={() => handleDisburse(booking._id)} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black">Disburse</button>
-                                                            )}
-                                                        </td>
-                                                    </tr>
+                                                    <React.Fragment key={booking._id}>
+                                                        {/* 🟢 CLICKABLE MAIN ROW */}
+                                                        <tr onClick={() => toggleEscrowExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
+                                                            <td className="p-4">
+                                                                <p className="font-black text-gray-900">{booking.itemName}</p>
+                                                                <p className="text-[10px] text-[#000080] font-bold uppercase mt-1">Tap for details ▼</p>
+                                                            </td>
+                                                            <td className="p-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{booking.status}</span></td>
+                                                            <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
+                                                            <td className="p-4 text-center">
+                                                                {booking.status === 'Pending Escrow' && (
+                                                                    <button
+                                                                        onClick={(e) => { e.stopPropagation(); handleDisburse(booking._id); }}
+                                                                        className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition"
+                                                                    >
+                                                                        Disburse
+                                                                    </button>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+
+                                                        {/* 🟢 EXPANDED DROPDOWN AUDIT VIEW */}
+                                                        {expandedEscrowId === booking._id && (
+                                                            <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
+                                                                <td colSpan={4} className="p-6">
+                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Asset Type</p>
+                                                                            <p className="text-sm font-black uppercase text-[#000080]">{booking.itemType}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Partner ID</p>
+                                                                            <p className="text-xs font-mono text-gray-600">{booking.partnerId}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dates</p>
+                                                                            <p className="text-[11px] font-bold text-gray-700">{new Date(booking.checkIn).toLocaleDateString()} - {new Date(booking.checkOut).toLocaleDateString()}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
                                                 ))}
                                             </tbody>
                                         </table>
@@ -358,10 +403,10 @@ export default function SuperadminDashboard() {
                                 </div>
                             )}
 
-                            {/* 🟢 HOTEL MANAGEMENT TAB */}
+                            {/* HOTEL MANAGEMENT TAB */}
                             {activeTab === 'hotels' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
-                                    <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                                    <div className="p-4 md:p-6 border-b border-gray-100 bg-gray-50">
                                         <h2 className="text-lg font-bold text-gray-800">Global Properties</h2>
                                         <button onClick={() => setIsHotelModalOpen(true)} className="bg-[#000080] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-900 transition">+ Add Hotel</button>
                                     </div>
@@ -423,7 +468,7 @@ export default function SuperadminDashboard() {
                 </div>
             )}
 
-            {/* 🟢 ADD HOTEL MODAL */}
+            {/* ADD HOTEL MODAL */}
             {isHotelModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
