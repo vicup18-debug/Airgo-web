@@ -280,25 +280,30 @@ export default function PartnerDashboard() {
                                                         </tr>
 
                                                         {/* EXPANDED DROPDOWN */}
+                                                        {/* 🟢 EXPANDED DROPDOWN FOR PARTNERS (Inside app/partner/page.tsx) */}
                                                         {expandedBookingId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dispatch Contact</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
+                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
+                                                                                {booking.deliveryAddress || 'No address provided'}
+                                                                            </p>
+                                                                        </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Client ID</p>
-                                                                            <p className="text-sm font-black text-[#004A99]">{booking.userId.substring(0, 8)}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Check In</p>
-                                                                            <p className="text-sm font-bold text-gray-700">{new Date(booking.checkIn).toLocaleString()}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Check Out</p>
-                                                                            <p className="text-sm font-bold text-gray-700">{new Date(booking.checkOut).toLocaleString()}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
+                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>

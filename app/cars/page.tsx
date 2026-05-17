@@ -268,15 +268,27 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
     const finalPrice = calculateTotal();
 
+    const handleClose = () => {
+        setStep(1);
+        setBookingDetails({
+            name: '',
+            email: '',
+            phone: '',
+            address: '',
+            checkIn: '',
+            checkOut: ''
+        });
+        onClose();
+    };
+
     const handlePayment = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsProcessing(true);
 
         try {
+            const storedUser = localStorage.getItem('airgo_user');
+            const finalUserId = storedUser ? JSON.parse(storedUser).id : `guest_${Math.random().toString(36).substring(7)}`;
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const userData = localStorage.getItem('airgo_user');
-            const parsedUser = userData ? JSON.parse(userData) : null;
-            const finalUserId = parsedUser ? parsedUser.id : ('guest_' + Math.random().toString(36).substr(2, 9));
 
             const payload = {
                 userId: finalUserId,
@@ -288,9 +300,16 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                 checkOut: bookingDetails.checkOut,
                 guests: 1,
                 totalPrice: finalPrice.toLocaleString(),
-                status: 'Pending Escrow'
+                status: 'Pending Escrow',
+
+                // 🟢 NEW: SENDING THE CONTACT & DELIVERY INFO!
+                clientName: bookingDetails.name,
+                clientEmail: bookingDetails.email,
+                clientPhone: bookingDetails.phone,
+                deliveryAddress: bookingDetails.address
             };
 
+            // 🟢 UPDATED API CALL (Matching Backend Model)
             const response = await fetch(`${apiUrl}/api/bookings`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -302,18 +321,15 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                 throw new Error(errorData.message || "Booking failed on server");
             }
 
+            // If successful, move to success screen
             setStep(3);
+
         } catch (error: any) {
-            alert(`Error: ${error.message}`);
+            console.error("Booking Error:", error);
+            alert(`Booking failed: ${error.message}`);
         } finally {
             setIsProcessing(false);
         }
-    };
-
-    const handleClose = () => {
-        setStep(1);
-        setBookingDetails({ name: '', email: '', phone: '', address: '', checkIn: '', checkOut: '' });
-        onClose();
     };
 
     return (

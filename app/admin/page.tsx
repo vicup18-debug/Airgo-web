@@ -300,25 +300,32 @@ export default function SuperadminDashboard() {
                                                         </tr>
 
                                                         {/* 🟢 EXPANDED DROPDOWN AUDIT VIEW */}
+                                                        {/* 🟢 EXPANDED DROPDOWN AUDIT VIEW (Inside app/admin/page.tsx) */}
                                                         {expandedEscrowId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
-                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Client Details</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email provided'}</p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Asset Type</p>
-                                                                            <p className="text-sm font-black uppercase text-[#000080]">{booking.itemType}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery Address</p>
+                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
+                                                                                {booking.deliveryAddress || 'No address provided'}
+                                                                            </p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Partner ID</p>
-                                                                            <p className="text-xs font-mono text-gray-600">{booking.partnerId}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Asset</p>
+                                                                            <p className="text-xs font-black text-gray-900 mb-1">{booking._id.substring(0, 12).toUpperCase()}</p>
+                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Partner: {booking.partnerId.substring(0, 8)}</p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dates</p>
-                                                                            <p className="text-[11px] font-bold text-gray-700">{new Date(booking.checkIn).toLocaleDateString()} - {new Date(booking.checkOut).toLocaleDateString()}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
+                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
