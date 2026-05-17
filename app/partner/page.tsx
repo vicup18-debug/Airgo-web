@@ -13,8 +13,6 @@ export default function PartnerDashboard() {
     const [myInventory, setMyInventory] = useState<any[]>([]);
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    // 🟢 EXPANDABLE ROW STATE
     const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
     // 🟢 MODAL STATES
@@ -22,10 +20,10 @@ export default function PartnerDashboard() {
     const [isUploading, setIsUploading] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
 
-    // Dynamic Form State (Handles both Cars and Hotels)
+    // 🟢 UPDATED: Dynamic Form State (Added totalAllocated for the Hotel Matrix)
     const [newItem, setNewItem] = useState<any>({
-        name: '', type: '', price: '', capacity: '', features: '', // For Cars
-        location: '', amenities: '' // For Hotels
+        name: '', price: '', totalAllocated: '', amenities: '', // For Hotels
+        type: '', capacity: '', features: '' // For Cars
     });
 
     const router = useRouter();
@@ -69,10 +67,10 @@ export default function PartnerDashboard() {
                     setMyInventory(allCars.filter((c: any) => c.partnerId === partnerData.id));
                 }
             } else if (partnerData.partnerType === 'hotel') {
-                const hotelsRes = await fetch(`${apiUrl}/api/hotels`);
-                if (hotelsRes.ok) {
-                    const allHotels = await hotelsRes.json();
-                    setMyInventory(allHotels.filter((h: any) => h.partnerId === partnerData.id));
+                // 🟢 FIXED: Now correctly fetches from the new Rooms collection!
+                const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${partnerData.id}`);
+                if (roomsRes.ok) {
+                    setMyInventory(await roomsRes.json());
                 }
             }
         } catch (error) {
@@ -101,13 +99,15 @@ export default function PartnerDashboard() {
             }
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const endpoint = user.partnerType === 'car' ? '/api/cars' : '/api/hotels';
 
-            const payload = {
-                ...newItem,
-                image: finalImageUrl,
-                price: Number(newItem.price),
-                partnerId: user.id
+            // 🟢 FIXED: Routes to the correct database depending on the partner type
+            const isCar = user.partnerType === 'car';
+            const endpoint = isCar ? '/api/cars' : '/api/rooms';
+
+            const payload = isCar ? {
+                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: user.id
+            } : {
+                partnerId: user.id, hotelName: user.businessName || user.name, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -117,10 +117,10 @@ export default function PartnerDashboard() {
             });
 
             if (response.ok) {
-                alert(`✅ ${user.partnerType === 'car' ? 'Vehicle' : 'Property'} listed successfully!`);
+                alert(`✅ ${user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
-                setNewItem({ name: '', type: '', price: '', capacity: '', features: '', location: '', amenities: '' });
+                setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -143,7 +143,6 @@ export default function PartnerDashboard() {
         }, 0).toLocaleString();
     };
 
-    // 🟢 TOGGLE ROW EXPANSION
     const toggleExpand = (id: string) => {
         setExpandedBookingId(expandedBookingId === id ? null : id);
     };
@@ -172,7 +171,7 @@ export default function PartnerDashboard() {
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
-                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType === 'car' ? '🚘 My Fleet' : '🏨 My Properties'}</button>
+                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType === 'car' ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
                 </nav>
                 <div className="p-4 border-t border-blue-800">
@@ -221,21 +220,24 @@ export default function PartnerDashboard() {
                             {activeTab === 'inventory' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                        <h2 className="text-lg font-bold text-gray-800">{user.partnerType === 'car' ? 'My Fleet' : 'My Properties'}</h2>
+                                        <h2 className="text-lg font-bold text-gray-800">{user.partnerType === 'car' ? 'My Fleet' : 'Room Categories'}</h2>
                                         <button onClick={() => setIsModalOpen(true)} className="bg-[#004A99] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-800 transition">
-                                            + Add {user.partnerType === 'car' ? 'Vehicle' : 'Property'}
+                                            + Configure {user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'}
                                         </button>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {myInventory.length === 0 ? (
                                             <p className="col-span-full text-center text-gray-500 py-10">You have not listed any inventory yet.</p>
                                         ) : myInventory.map(item => (
-                                            <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                                                <img src={item.image} alt={item.name} className="w-full h-40 object-cover" />
+                                            <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50">
+                                                <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
                                                 <div className="p-4">
                                                     <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
-                                                    <p className="text-sm text-gray-500 mb-2">{item.type || item.location}</p>
-                                                    <p className="font-bold text-[#004A99]">₦{item.price?.toLocaleString()} <span className="text-xs text-gray-400 font-normal">/ day</span></p>
+                                                    <p className="text-xs font-bold text-gray-400 uppercase mt-1">{item.type || 'Amenities: ' + item.amenities}</p>
+                                                    <div className="flex justify-between items-center mt-4 pt-2 border-t">
+                                                        <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
+                                                        {item.totalAllocated && <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md">Pool: {item.totalAllocated} Rooms</span>}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -243,7 +245,7 @@ export default function PartnerDashboard() {
                                 </div>
                             )}
 
-                            {/* 🟢 BOOKINGS TAB WITH EXPANDABLE DETAILS */}
+                            {/* BOOKINGS TAB */}
                             {activeTab === 'bookings' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                                     <div className="p-6 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-black text-gray-900">Client Reservations</h2></div>
@@ -262,7 +264,6 @@ export default function PartnerDashboard() {
                                                     <tr><td colSpan={4} className="p-8 text-center text-gray-500">No active reservations.</td></tr>
                                                 ) : myBookings.map((booking) => (
                                                     <React.Fragment key={booking._id}>
-                                                        {/* MAIN ROW (Clickable) */}
                                                         <tr onClick={() => toggleExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
                                                             <td className="p-4">
                                                                 <p className="font-black text-gray-900">{booking.itemName}</p>
@@ -278,9 +279,6 @@ export default function PartnerDashboard() {
                                                                 </span>
                                                             </td>
                                                         </tr>
-
-                                                        {/* EXPANDED DROPDOWN */}
-                                                        {/* 🟢 EXPANDED DROPDOWN FOR PARTNERS (Inside app/partner/page.tsx) */}
                                                         {expandedBookingId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
@@ -326,7 +324,7 @@ export default function PartnerDashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h2 className="text-xl font-black text-[#004A99]">List New {user.partnerType === 'car' ? 'Vehicle' : 'Property'}</h2>
+                            <h2 className="text-xl font-black text-[#004A99]">List New {user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-900 text-xl font-bold">✕</button>
                         </div>
                         <form onSubmit={handleAddItem} className="p-6 space-y-4">
@@ -336,18 +334,17 @@ export default function PartnerDashboard() {
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
                             </div>
 
-                            {user.partnerType === 'car' && (
+                            {user.partnerType === 'car' ? (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features (e.g. Chauffeur, Bulletproof)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
                                 </div>
-                            )}
-
-                            {user.partnerType === 'hotel' && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location / City</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.location} onChange={e => setNewItem({ ...newItem, location: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Amenities</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" placeholder="e.g. Pool, WiFi" value={newItem.amenities} onChange={e => setNewItem({ ...newItem, amenities: e.target.value })} /></div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    {/* 🟢 FIXED: Required Allocation Field for Hotel Inventory Matrix */}
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Pool, WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.amenities} onChange={e => setNewItem({ ...newItem, amenities: e.target.value })} /></div>
                                 </div>
                             )}
 
