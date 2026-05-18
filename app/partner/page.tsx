@@ -46,40 +46,38 @@ export default function PartnerDashboard() {
         setIsLoading(true);
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const secureId = partnerData.id || partnerData.userId || partnerData._id;
 
-            // 🟢 THE BUG FIX: SILENTLY SYNC LATEST APPROVAL STATUS FROM BACKEND
+            // SILENTLY SYNC LATEST APPROVAL STATUS FROM BACKEND
             const partnersRes = await fetch(`${apiUrl}/api/auth/partners`);
             if (partnersRes.ok) {
                 const allPartners = await partnersRes.json();
-                const myLatestData = allPartners.find((p: any) => p._id === (partnerData.id || partnerData.userId));
+                const myLatestData = allPartners.find((p: any) => p._id === secureId);
 
                 if (myLatestData && myLatestData.isApproved !== partnerData.isApproved) {
-                    // Update React State
                     setUser((prev: any) => ({ ...prev, isApproved: myLatestData.isApproved }));
-
-                    // Update LocalStorage so it remembers for next time!
                     const updatedStorage = { ...partnerData, isApproved: myLatestData.isApproved };
                     localStorage.setItem('airgo_user', JSON.stringify(updatedStorage));
                 }
             }
 
-            // Fetch Bookings
+            // Fetch Bookings with unified secure ID
             const bookingsRes = await fetch(`${apiUrl}/api/bookings`);
             if (bookingsRes.ok) {
                 const allBookings = await bookingsRes.json();
-                const filteredBookings = allBookings.filter((b: any) => b.partnerId === (partnerData.id || partnerData.userId));
+                const filteredBookings = allBookings.filter((b: any) => b.partnerId === secureId);
                 setMyBookings(filteredBookings);
             }
 
-            // Fetch Inventory
+            // Fetch Inventory with unified secure ID maps
             if (partnerData.partnerType === 'car') {
                 const carsRes = await fetch(`${apiUrl}/api/cars`);
                 if (carsRes.ok) {
                     const allCars = await carsRes.json();
-                    setMyInventory(allCars.filter((c: any) => c.partnerId === (partnerData.id || partnerData.userId)));
+                    setMyInventory(allCars.filter((c: any) => c.partnerId === secureId));
                 }
             } else if (partnerData.partnerType === 'hotel') {
-                const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${partnerData.id || partnerData.userId}`);
+                const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${secureId}`);
                 if (roomsRes.ok) {
                     setMyInventory(await roomsRes.json());
                 }
@@ -110,14 +108,15 @@ export default function PartnerDashboard() {
             }
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const secureId = user.id || user.userId || user._id;
 
             const isCar = user.partnerType === 'car';
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
-                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: user.id || user.userId
+                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: secureId
             } : {
-                partnerId: user.id || user.userId, hotelName: user.businessName || user.name, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
+                partnerId: secureId, hotelName: user.businessName || user.name, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -174,7 +173,7 @@ export default function PartnerDashboard() {
                     <div>
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
-                            {user.partnerType === 'car' ? 'Fleet Manager' : 'Hotelier'}
+                            {user.partnerType === 'car' ? 'Car Rental' : 'Hotel'}
                         </p>
                     </div>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
@@ -243,10 +242,19 @@ export default function PartnerDashboard() {
                                                 <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
                                                 <div className="p-4">
                                                     <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase mt-1">{item.type || 'Amenities: ' + item.amenities}</p>
-                                                    <div className="flex justify-between items-center mt-4 pt-2 border-t">
-                                                        <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
-                                                        {item.totalAllocated && <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md">Pool: {item.totalAllocated} Rooms</span>}
+                                                    <p className="text-xs font-bold text-gray-400 uppercase mt-1">
+                                                        {user.partnerType === 'car' ? `Type: ${item.type}` : `Amenities: ${item.amenities}`}
+                                                    </p>
+                                                    <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
+                                                        <p className="font-black text-[#004A99]">
+                                                            ₦{(item.price || item.pricePerNight)?.toLocaleString()}
+                                                            <span className="text-[10px] text-gray-400 font-medium"> / night</span>
+                                                        </p>
+                                                        {item.totalAllocated && (
+                                                            <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md">
+                                                                Pool: {item.totalAllocated} Rooms
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

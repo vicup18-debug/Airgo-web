@@ -9,29 +9,39 @@ export default function JoinPartnerPage() {
         name: '',
         email: '',
         password: '',
+        confirmPassword: '', // 🟢 ADDED: Confirm Password State
         phone: '',
         businessName: '',
         businessAddress: '',
-        cacNumber: '', // Will only be enforced if 'hotel' is selected
+        cacNumber: '',
         partnerType: 'car'
     });
 
-    // 🟢 DYNAMIC UPLOAD STATE: Holds either the CAC or Driver's License
     const [verificationFile, setVerificationFile] = useState<File | null>(null);
     const [agreed, setAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+
+    // 🟢 ADDED: UI States for Premium Experience
+    const [successMessage, setSuccessMessage] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const router = useRouter();
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        // 🟢 STRICT VALIDATION
         if (!agreed) return setError("You must agree to the Terms & Conditions.");
         if (!verificationFile) return setError("Please upload the required verification document.");
         if (!formData.phone) return setError("Phone number is required.");
+        if (formData.password !== formData.confirmPassword) return setError("Passwords do not match.");
+        if (formData.password.length < 6) return setError("Password must be at least 6 characters.");
 
         setIsLoading(true);
         setError('');
+        setSuccessMessage('');
 
         try {
             // 1. UPLOAD DOCUMENT TO CLOUDINARY
@@ -70,13 +80,16 @@ export default function JoinPartnerPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-            alert("✅ Application Submitted! Airgo Admin will review your comprehensive business details shortly.");
-            router.push('/login');
+            // 🟢 SHOW GREEN BANNER & REDIRECT (Replaces the alert pop-up)
+            setSuccessMessage("✅ Application Submitted! Admin review pending. Redirecting...");
+
+            setTimeout(() => {
+                router.push('/login');
+            }, 2500); // Waits 2.5 seconds so they can read the success message
 
         } catch (err: any) {
             setError(err.message);
-        } finally {
-            setIsLoading(false);
+            setIsLoading(false); // Only stop loading if there's an error, otherwise let it redirect
         }
     };
 
@@ -93,7 +106,20 @@ export default function JoinPartnerPage() {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-xl">
                 <div className="bg-white py-8 px-6 shadow-2xl rounded-3xl">
                     <form className="space-y-5" onSubmit={handleRegister}>
-                        {error && <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">⚠️ {error}</div>}
+
+                        {/* 🔴 ERROR BANNER */}
+                        {error && (
+                            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
+                                ⚠️ {error}
+                            </div>
+                        )}
+
+                        {/* 🟢 SUCCESS BANNER */}
+                        {successMessage && (
+                            <div className="bg-green-50 text-green-700 p-3 rounded-xl text-sm font-bold border border-green-100 flex items-center gap-2">
+                                <span className="animate-pulse">⏳</span> {successMessage}
+                            </div>
+                        )}
 
                         {/* PARTNER TYPE & BUSINESS NAME */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -107,7 +133,6 @@ export default function JoinPartnerPage() {
                                         setVerificationFile(null); // Reset file if they switch types
                                     }}
                                 >
-                                    {/* 🟢 FIXED: Updated Dropdown Text */}
                                     <option value="car">Car Rental</option>
                                     <option value="hotel">Hotel</option>
                                 </select>
@@ -124,7 +149,7 @@ export default function JoinPartnerPage() {
                             <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.businessAddress} onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })} />
                         </div>
 
-                        {/* 🟢 CONDITIONAL FIELDS: HOTEL vs CAR RENTAL */}
+                        {/* CONDITIONAL FIELDS: HOTEL vs CAR RENTAL */}
                         {formData.partnerType === 'hotel' && (
                             <>
                                 <div>
@@ -152,7 +177,25 @@ export default function JoinPartnerPage() {
                         </div>
 
                         <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Email</label><input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} /></div>
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label><input required type="password" minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
+
+                        {/* 🟢 UPGRADED: PASSWORD & CONFIRM PASSWORD WITH SHOW/HIDE */}
+                        <div className="grid grid-cols-1 gap-4">
+                            <div className="relative">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+                                <input required type={showPassword ? "text" : "password"} minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none pr-12" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-[28px] text-gray-400 hover:text-[#000080] font-bold text-xs uppercase transition">
+                                    {showPassword ? 'Hide' : 'Show'}
+                                </button>
+                            </div>
+
+                            <div className="relative">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Confirm Password</label>
+                                <input required type={showConfirmPassword ? "text" : "password"} minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none pr-12" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} />
+                                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-4 top-[28px] text-gray-400 hover:text-[#000080] font-bold text-xs uppercase transition">
+                                    {showConfirmPassword ? 'Hide' : 'Show'}
+                                </button>
+                            </div>
+                        </div>
 
                         {/* TERMS AND CONDITIONS */}
                         <div className="flex items-start mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
