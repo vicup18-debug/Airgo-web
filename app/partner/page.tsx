@@ -9,21 +9,19 @@ export default function PartnerDashboard() {
     const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    // 🟢 DATA STATES
+    // DATA STATES
     const [myInventory, setMyInventory] = useState<any[]>([]);
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
-    // 🟢 MODAL STATES
+    // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
 
-    // 🟢 UPDATED: Dynamic Form State (Added totalAllocated for the Hotel Matrix)
     const [newItem, setNewItem] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', // For Hotels
-        type: '', capacity: '', features: '' // For Cars
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: ''
     });
 
     const router = useRouter();
@@ -40,10 +38,6 @@ export default function PartnerDashboard() {
             return router.push('/dashboard');
         }
 
-        if (!parsedUser.isApproved) {
-            alert("Your account is currently under review by Airgo Admin. You will be granted full access once your documents are verified.");
-        }
-
         setUser(parsedUser);
         fetchPartnerData(parsedUser);
     }, [router]);
@@ -53,22 +47,39 @@ export default function PartnerDashboard() {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
+            // 🟢 THE BUG FIX: SILENTLY SYNC LATEST APPROVAL STATUS FROM BACKEND
+            const partnersRes = await fetch(`${apiUrl}/api/auth/partners`);
+            if (partnersRes.ok) {
+                const allPartners = await partnersRes.json();
+                const myLatestData = allPartners.find((p: any) => p._id === (partnerData.id || partnerData.userId));
+
+                if (myLatestData && myLatestData.isApproved !== partnerData.isApproved) {
+                    // Update React State
+                    setUser((prev: any) => ({ ...prev, isApproved: myLatestData.isApproved }));
+
+                    // Update LocalStorage so it remembers for next time!
+                    const updatedStorage = { ...partnerData, isApproved: myLatestData.isApproved };
+                    localStorage.setItem('airgo_user', JSON.stringify(updatedStorage));
+                }
+            }
+
+            // Fetch Bookings
             const bookingsRes = await fetch(`${apiUrl}/api/bookings`);
             if (bookingsRes.ok) {
                 const allBookings = await bookingsRes.json();
-                const filteredBookings = allBookings.filter((b: any) => b.partnerId === partnerData.id);
+                const filteredBookings = allBookings.filter((b: any) => b.partnerId === (partnerData.id || partnerData.userId));
                 setMyBookings(filteredBookings);
             }
 
+            // Fetch Inventory
             if (partnerData.partnerType === 'car') {
                 const carsRes = await fetch(`${apiUrl}/api/cars`);
                 if (carsRes.ok) {
                     const allCars = await carsRes.json();
-                    setMyInventory(allCars.filter((c: any) => c.partnerId === partnerData.id));
+                    setMyInventory(allCars.filter((c: any) => c.partnerId === (partnerData.id || partnerData.userId)));
                 }
             } else if (partnerData.partnerType === 'hotel') {
-                // 🟢 FIXED: Now correctly fetches from the new Rooms collection!
-                const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${partnerData.id}`);
+                const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${partnerData.id || partnerData.userId}`);
                 if (roomsRes.ok) {
                     setMyInventory(await roomsRes.json());
                 }
@@ -100,14 +111,13 @@ export default function PartnerDashboard() {
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-            // 🟢 FIXED: Routes to the correct database depending on the partner type
             const isCar = user.partnerType === 'car';
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
-                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: user.id
+                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: user.id || user.userId
             } : {
-                partnerId: user.id, hotelName: user.businessName || user.name, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
+                partnerId: user.id || user.userId, hotelName: user.businessName || user.name, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -291,7 +301,7 @@ export default function PartnerDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
                                                                             <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
-                                                                                {booking.deliveryAddress || 'No address provided'}
+                                                                                {booking.deliveryAddress || 'Walk-In / Property Visit'}
                                                                             </p>
                                                                         </div>
                                                                         <div>
@@ -342,7 +352,6 @@ export default function PartnerDashboard() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
-                                    {/* 🟢 FIXED: Required Allocation Field for Hotel Inventory Matrix */}
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Pool, WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.amenities} onChange={e => setNewItem({ ...newItem, amenities: e.target.value })} /></div>
                                 </div>
