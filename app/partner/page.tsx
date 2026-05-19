@@ -182,6 +182,12 @@ export default function PartnerDashboard() {
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
                     <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType === 'car' ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
+                    <div className="my-4 border-b border-blue-800"></div>
+                    <Link href="/">
+                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50">
+                            🏠 Back to Homepage
+                        </button>
+                    </Link>
                 </nav>
                 <div className="p-4 border-t border-blue-800">
                     <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold transition shadow-md">Sign Out</button>
@@ -279,54 +285,64 @@ export default function PartnerDashboard() {
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {myBookings.length === 0 ? (
-                                                    <tr><td colSpan={4} className="p-8 text-center text-gray-500">No active reservations.</td></tr>
-                                                ) : myBookings.map((booking) => (
-                                                    <React.Fragment key={booking._id}>
-                                                        <tr onClick={() => toggleExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
-                                                            <td className="p-4">
-                                                                <p className="font-black text-gray-900">{booking.itemName}</p>
-                                                                <p className="text-[10px] text-[#004A99] font-bold uppercase mt-1">Tap to view details ▼</p>
-                                                            </td>
-                                                            <td className="p-4 text-sm text-gray-600 font-medium">
-                                                                <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
-                                                            </td>
-                                                            <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
-                                                            <td className="p-4 text-center">
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                                                    {booking.status}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                        {expandedBookingId === booking._id && (
-                                                            <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
-                                                                <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dispatch Contact</p>
-                                                                            <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
-                                                                            <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
-                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
-                                                                                {booking.deliveryAddress || 'Walk-In / Property Visit'}
-                                                                            </p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
-                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
-                                                                        </div>
-                                                                    </div>
+                                                    <tr>
+                                                        <td colSpan={4} className="p-0">
+                                                            <div className="p-12 text-center bg-white border border-gray-100 shadow-sm m-6 rounded-3xl">
+                                                                <div className="text-6xl mb-4">📭</div>
+                                                                <h3 className="text-2xl font-black text-[#000080] mb-2">No Reservations Yet</h3>
+                                                                <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all booking details and dispatch information will appear here.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    myBookings.map(booking => (
+                                                        <React.Fragment key={booking._id}>
+                                                            <tr onClick={() => toggleExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
+                                                                <td className="p-4">
+                                                                    <p className="font-black text-gray-900">{booking.itemName}</p>
+                                                                    <p className="text-[10px] text-[#004A99] font-bold uppercase mt-1">Tap to view details ▼</p>
+                                                                </td>
+                                                                <td className="p-4 text-sm text-gray-600 font-medium">
+                                                                    <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                </td>
+                                                                <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
+                                                                <td className="p-4 text-center">
+                                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                                                        {booking.status}
+                                                                    </span>
                                                                 </td>
                                                             </tr>
-                                                        )}
-                                                    </React.Fragment>
-                                                ))}
+                                                            {expandedBookingId === booking._id && (
+                                                                <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
+                                                                    <td colSpan={4} className="p-6">
+                                                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                                            <div>
+                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dispatch Contact</p>
+                                                                                <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
+                                                                                <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
+                                                                                <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
+                                                                                    {booking.deliveryAddress || 'Walk-In / Property Visit'}
+                                                                                </p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
+                                                                                <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
+                                                                                <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                                <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                            </div>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </React.Fragment>
+                                                    ))
+                                                )}
                                             </tbody>
                                         </table>
                                     </div>

@@ -286,6 +286,50 @@ export default function HotelHomepage() {
           </div>
         </div>
       )}
+
+      {/* FULL FOOTER RESTORED */}
+      <footer className="bg-[#000080] text-white py-12 px-6 mt-auto">
+        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 className="text-2xl font-black mb-4">Airgo<span className="text-[#FFB81C]">.ng</span></h3>
+            <p className="text-blue-200 text-sm leading-relaxed max-w-sm">Premium executive fleet and luxury hotel reservations across Nigeria, secured by our verified escrow framework.</p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm">24/7 Concierge & Support</h4>
+            {/* 🟢 PHONE LINKS NOW OPEN CALL APP */}
+            <p className="text-sm text-blue-200 mb-2 font-medium flex items-center gap-2"><span>📞</span> <a href="tel:+2348066058930" className="hover:text-white transition">+234 806 605 8930</a></p>
+            <p className="text-sm text-blue-200 mb-2 font-medium flex items-center gap-2"><span>📞</span> <a href="tel:+2348026696170" className="hover:text-white transition">+234 802 669 6170</a></p>
+            <p className="text-sm text-blue-200 font-medium flex items-center gap-2"><span>📞</span> <a href="tel:07078344409" className="hover:text-white transition">07078344409</a></p>
+          </div>
+          <div>
+            <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm">Legal & Quick Links</h4>
+            <ul className="text-sm text-blue-200 space-y-3 font-medium">
+              <li><Link href="/escrow" className="hover:text-white transition">Escrow Protection Agreement</Link></li>
+              <li><Link href="/cars" className="hover:text-white transition">Book Car Rentals</Link></li>
+              <li><Link href="/join" className="hover:text-[#FFB81C] transition">Partner with us</Link></li>
+            </ul>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-blue-900 text-center text-xs text-blue-300 font-medium">
+          &copy; {new Date().getFullYear()} Airgo.ng Platform. All rights reserved.
+        </div>
+      </footer>
+
+      {/* MOBILE BOTTOM NAVIGATION RESTORED */}
+      <div className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <Link href="/" className="flex flex-col items-center text-[#004A99]">
+          <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L4 9v12h5v-7h6v7h5V9z" /></svg>
+          <span className="text-[10px] font-bold">Hotels</span>
+        </Link>
+        <Link href="/cars" className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
+          <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+          <span className="text-[10px] font-bold">Car Rental</span>
+        </Link>
+        <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'} className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
+          <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+          <span className="text-[10px] font-bold">Account</span>
+        </Link>
+      </div>
     </div>
   );
 }

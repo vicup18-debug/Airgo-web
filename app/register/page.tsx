@@ -123,10 +123,17 @@ export default function RegisterPage() {
                             </button>
                         </div>
 
+                        {/* LEGAL CHECKBOX (For app/register/page.tsx and app/join/page.tsx) */}
                         <div className="flex items-start mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <input type="checkbox" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 mr-3 cursor-pointer w-5 h-5 accent-[#000080] shrink-0" />
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                checked={agreed}
+                                onChange={(e) => setAgreed(e.target.checked)}
+                                className="mt-1 mr-3 cursor-pointer w-5 h-5 accent-[#000080] shrink-0"
+                            />
                             <label htmlFor="terms" className="text-xs text-gray-600 cursor-pointer leading-relaxed">
-                                I agree to Airgo's <Link href="/terms" className="text-[#000080] font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-[#000080] font-bold hover:underline">Privacy Policy</Link>.
+                                I agree to Airgo's <Link href="/terms" className="text-[#000080] font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-[#000080] font-bold hover:underline">Privacy Policy</Link>. I also accept the <Link href="/escrow" className="text-[#FFB81C] font-black hover:underline">Airgo Escrow Protection Agreement</Link>.
                             </label>
                         </div>
 

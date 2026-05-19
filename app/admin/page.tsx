@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
@@ -229,6 +230,12 @@ export default function SuperadminDashboard() {
                     <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🚘 Manage Fleet</button>
                     {/* 🟢 UPDATED: Tab Label matching code matrix loops */}
                     <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🏨 Manage Room Matrix</button>
+                    <div className="my-4 border-b border-blue-800"></div>
+                    <Link href="/">
+                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50">
+                            🏠 Back to Homepage
+                        </button>
+                    </Link>
                 </nav>
                 <div className="p-4 border-t border-gray-800">
                     <button onClick={handleLogout} className="w-full bg-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900 hover:text-white transition">Sign Out</button>

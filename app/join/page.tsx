@@ -198,14 +198,21 @@ export default function JoinPartnerPage() {
                         </div>
 
                         {/* TERMS AND CONDITIONS */}
-                        <div className="flex items-start mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
-                            <input type="checkbox" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 mr-3 w-5 h-5 accent-[#000080] cursor-pointer shrink-0" />
-                            <label htmlFor="terms" className="text-xs text-blue-900 cursor-pointer leading-relaxed">
-                                I agree to the <span className="font-bold underline">Airgo Partnership Agreement</span>. I certify that my business is legally registered, and I consent to a comprehensive review of my submitted identification and business documents.
+                        {/* LEGAL CHECKBOX (For app/register/page.tsx and app/join/page.tsx) */}
+                        <div className="flex items-start mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                checked={agreed}
+                                onChange={(e) => setAgreed(e.target.checked)}
+                                className="mt-1 mr-3 cursor-pointer w-5 h-5 accent-[#000080] shrink-0"
+                            />
+                            <label htmlFor="terms" className="text-xs text-gray-600 cursor-pointer leading-relaxed">
+                                I agree to Airgo's <Link href="/terms" className="text-[#000080] font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-[#000080] font-bold hover:underline">Privacy Policy</Link>. I also accept the <Link href="/escrow" className="text-[#FFB81C] font-black hover:underline">Airgo Escrow Protection Agreement</Link>.
                             </label>
                         </div>
 
-                        <button disabled={isLoading || !agreed} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                        <button disabled={isLoading || !agreed} type="submit" className={`w-full flex justify-center py-4 px-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400 cursor-not-allowed opacity-70' : 'bg-[#000080] hover:bg-blue-900'}`}>
                             {isLoading ? 'Encrypting & Submitting...' : 'Submit Application'}
                         </button>
                     </form>

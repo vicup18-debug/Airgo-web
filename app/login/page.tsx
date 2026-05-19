@@ -129,7 +129,7 @@ export default function LoginPage() {
                         <p className="text-sm text-gray-600 mt-2">
                             Business owner?{' '}
                             <Link href="/join" className="font-bold text-[#FFB81C] hover:underline">
-                                Partner Login/Signup
+                                Partner Signup
                             </Link>
                         </p>
                     </div>
