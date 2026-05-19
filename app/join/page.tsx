@@ -65,6 +65,7 @@ export default function JoinPartnerPage() {
             // 2. ASSIGN URL BASED ON PARTNER TYPE
             const payload = {
                 ...formData,
+                email: formData.email.toLowerCase(), // 🟢 SMART UPGRADE: Force email to lowercase for DB consistency
                 role: 'partner',
                 cacCertificateUrl: formData.partnerType === 'hotel' ? finalFileUrl : '',
                 driversLicenseUrl: formData.partnerType === 'car' ? finalFileUrl : '',
@@ -80,7 +81,7 @@ export default function JoinPartnerPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-            // 🟢 SHOW GREEN BANNER & REDIRECT (Replaces the alert pop-up)
+            // 🟢 SHOW GREEN BANNER & REDIRECT
             setSuccessMessage("✅ Application Submitted! Admin review pending. Redirecting...");
 
             setTimeout(() => {
@@ -154,7 +155,8 @@ export default function JoinPartnerPage() {
                             <>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration Number *</label>
-                                    <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
+                                    {/* 🟢 SMART FIELD: Enforces Nigerian RC/BN format visually and via HTML5 pattern */}
+                                    <input required type="text" pattern="^(RC|BN|rc|bn)?\d{4,8}$" title="Enter a valid CAC number (e.g. RC123456)" placeholder="e.g. RC123456 or BN123456" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
                                 </div>
                                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                                     <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC Certificate *</label>
@@ -172,13 +174,24 @@ export default function JoinPartnerPage() {
 
                         {/* CONTACT INFO */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Name</label><input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} /></div>
-                            <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number *</label><input required type="tel" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} /></div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Name</label>
+                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number *</label>
+                                {/* 🟢 SMART FIELD: Restricts to valid phone number lengths */}
+                                <input required type="tel" pattern="^\+?[0-9]{10,14}$" placeholder="e.g. 08012345678" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                            </div>
                         </div>
 
-                        <div><label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Email</label><input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} /></div>
+                        <div>
+                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Email</label>
+                            {/* 🟢 SMART FIELD: Instantly converts to lowercase as they type */}
+                            <input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })} />
+                        </div>
 
-                        {/* 🟢 UPGRADED: PASSWORD & CONFIRM PASSWORD WITH SHOW/HIDE */}
+                        {/* PASSWORD & CONFIRM PASSWORD WITH SHOW/HIDE */}
                         <div className="grid grid-cols-1 gap-4">
                             <div className="relative">
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
@@ -198,21 +211,14 @@ export default function JoinPartnerPage() {
                         </div>
 
                         {/* TERMS AND CONDITIONS */}
-                        {/* LEGAL CHECKBOX (For app/register/page.tsx and app/join/page.tsx) */}
-                        <div className="flex items-start mt-4 bg-gray-50 p-4 rounded-xl border border-gray-200">
-                            <input
-                                type="checkbox"
-                                id="terms"
-                                checked={agreed}
-                                onChange={(e) => setAgreed(e.target.checked)}
-                                className="mt-1 mr-3 cursor-pointer w-5 h-5 accent-[#000080] shrink-0"
-                            />
-                            <label htmlFor="terms" className="text-xs text-gray-600 cursor-pointer leading-relaxed">
-                                I agree to Airgo's <Link href="/terms" className="text-[#000080] font-bold hover:underline">Terms of Service</Link> and <Link href="/privacy" className="text-[#000080] font-bold hover:underline">Privacy Policy</Link>. I also accept the <Link href="/escrow" className="text-[#FFB81C] font-black hover:underline">Airgo Escrow Protection Agreement</Link>.
+                        <div className="flex items-start mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                            <input type="checkbox" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 mr-3 w-5 h-5 accent-[#000080] cursor-pointer shrink-0" />
+                            <label htmlFor="terms" className="text-xs text-blue-900 cursor-pointer leading-relaxed">
+                                I agree to the <span className="font-bold underline">Airgo Partnership Agreement</span> and <Link href="/escrow" className="font-black text-[#FFB81C] hover:underline">Escrow Policy</Link>. I certify that my business is legally registered, and I consent to a comprehensive review of my submitted identification and business documents.
                             </label>
                         </div>
 
-                        <button disabled={isLoading || !agreed} type="submit" className={`w-full flex justify-center py-4 px-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400 cursor-not-allowed opacity-70' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                        <button disabled={isLoading || !agreed} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
                             {isLoading ? 'Encrypting & Submitting...' : 'Submit Application'}
                         </button>
                     </form>

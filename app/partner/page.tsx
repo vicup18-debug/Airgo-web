@@ -55,7 +55,10 @@ export default function PartnerDashboard() {
                 const myLatestData = allPartners.find((p: any) => p._id === secureId);
 
                 if (myLatestData && myLatestData.isApproved !== partnerData.isApproved) {
+                    // Update React State
                     setUser((prev: any) => ({ ...prev, isApproved: myLatestData.isApproved }));
+
+                    // Update LocalStorage so it remembers for next time!
                     const updatedStorage = { ...partnerData, isApproved: myLatestData.isApproved };
                     localStorage.setItem('airgo_user', JSON.stringify(updatedStorage));
                 }
@@ -173,7 +176,7 @@ export default function PartnerDashboard() {
                     <div>
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
-                            {user.partnerType === 'car' ? 'Car Rental' : 'Hotel'}
+                            {user.partnerType === 'car' ? 'Fleet Manager' : 'Hotelier'}
                         </p>
                     </div>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
@@ -182,9 +185,11 @@ export default function PartnerDashboard() {
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
                     <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType === 'car' ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
+
+                    {/* 🟢 UPGRADED: Home Button in Sidebar */}
                     <div className="my-4 border-b border-blue-800"></div>
                     <Link href="/">
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50">
+                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50">
                             🏠 Back to Homepage
                         </button>
                     </Link>
@@ -249,18 +254,11 @@ export default function PartnerDashboard() {
                                                 <div className="p-4">
                                                     <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
                                                     <p className="text-xs font-bold text-gray-400 uppercase mt-1">
-                                                        {user.partnerType === 'car' ? `Type: ${item.type}` : `Amenities: ${item.amenities}`}
+                                                        {user.partnerType === 'car' ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
                                                     </p>
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
-                                                        <p className="font-black text-[#004A99]">
-                                                            ₦{(item.price || item.pricePerNight)?.toLocaleString()}
-                                                            <span className="text-[10px] text-gray-400 font-medium"> / night</span>
-                                                        </p>
-                                                        {item.totalAllocated && (
-                                                            <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md">
-                                                                Pool: {item.totalAllocated} Rooms
-                                                            </span>
-                                                        )}
+                                                        <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
+                                                        {item.totalAllocated && <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md">Pool: {item.totalAllocated} Rooms</span>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -284,65 +282,64 @@ export default function PartnerDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
+                                                {/* 🟢 UPGRADED: Beautiful Empty State Banner */}
                                                 {myBookings.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={4} className="p-0">
                                                             <div className="p-12 text-center bg-white border border-gray-100 shadow-sm m-6 rounded-3xl">
                                                                 <div className="text-6xl mb-4">📭</div>
-                                                                <h3 className="text-2xl font-black text-[#000080] mb-2">No Reservations Yet</h3>
+                                                                <h3 className="text-2xl font-black text-[#004A99] mb-2">No Reservations Yet</h3>
                                                                 <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all booking details and dispatch information will appear here.</p>
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                ) : (
-                                                    myBookings.map(booking => (
-                                                        <React.Fragment key={booking._id}>
-                                                            <tr onClick={() => toggleExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
-                                                                <td className="p-4">
-                                                                    <p className="font-black text-gray-900">{booking.itemName}</p>
-                                                                    <p className="text-[10px] text-[#004A99] font-bold uppercase mt-1">Tap to view details ▼</p>
-                                                                </td>
-                                                                <td className="p-4 text-sm text-gray-600 font-medium">
-                                                                    <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
-                                                                </td>
-                                                                <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
-                                                                <td className="p-4 text-center">
-                                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                                                        {booking.status}
-                                                                    </span>
+                                                ) : myBookings.map((booking) => (
+                                                    <React.Fragment key={booking._id}>
+                                                        <tr onClick={() => toggleExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
+                                                            <td className="p-4">
+                                                                <p className="font-black text-gray-900">{booking.itemName}</p>
+                                                                <p className="text-[10px] text-[#004A99] font-bold uppercase mt-1">Tap to view details ▼</p>
+                                                            </td>
+                                                            <td className="p-4 text-sm text-gray-600 font-medium">
+                                                                <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                            </td>
+                                                            <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
+                                                            <td className="p-4 text-center">
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                                                    {booking.status}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                        {expandedBookingId === booking._id && (
+                                                            <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
+                                                                <td colSpan={4} className="p-6">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dispatch Contact</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
+                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
+                                                                                {booking.deliveryAddress || 'Walk-In / Property Visit'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
+                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                        </div>
+                                                                    </div>
                                                                 </td>
                                                             </tr>
-                                                            {expandedBookingId === booking._id && (
-                                                                <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
-                                                                    <td colSpan={4} className="p-6">
-                                                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                                                            <div>
-                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dispatch Contact</p>
-                                                                                <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
-                                                                                <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
-                                                                                <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
-                                                                                    {booking.deliveryAddress || 'Walk-In / Property Visit'}
-                                                                                </p>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
-                                                                                <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
-                                                                            </div>
-                                                                            <div>
-                                                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                                <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                                <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </td>
-                                                                </tr>
-                                                            )}
-                                                        </React.Fragment>
-                                                    ))
-                                                )}
+                                                        )}
+                                                    </React.Fragment>
+                                                ))}
                                             </tbody>
                                         </table>
                                     </div>
@@ -365,18 +362,21 @@ export default function PartnerDashboard() {
 
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
+                                {/* 🟢 UPGRADED: Smart Field - Min 0 */}
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
                             </div>
 
                             {user.partnerType === 'car' ? (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
+                                    {/* 🟢 UPGRADED: Smart Field - Min 1 */}
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features (e.g. Chauffeur, Bulletproof)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                    {/* 🟢 UPGRADED: Smart Field - Min 1 */}
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Pool, WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.amenities} onChange={e => setNewItem({ ...newItem, amenities: e.target.value })} /></div>
                                 </div>
                             )}

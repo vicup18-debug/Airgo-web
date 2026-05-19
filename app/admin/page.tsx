@@ -6,7 +6,6 @@ import Link from 'next/link';
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
-    // 🟢 UPDATED: Changed 'hotels' tab to 'rooms' matrix tab
     const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals' | 'fleet' | 'rooms'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -14,7 +13,7 @@ export default function SuperadminDashboard() {
     const [allBookings, setAllBookings] = useState<any[]>([]);
     const [partners, setPartners] = useState<any[]>([]);
     const [cars, setCars] = useState<any[]>([]);
-    const [rooms, setRooms] = useState<any[]>([]); // 🟢 UPDATED: Changed hotels array to rooms matrix array
+    const [rooms, setRooms] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // EXPANDABLE ESCROW STATE
@@ -25,7 +24,7 @@ export default function SuperadminDashboard() {
     const [newCar, setNewCar] = useState({ name: '', type: '', price: '', capacity: '', features: '' });
     const [carImageFile, setCarImageFile] = useState<File | null>(null);
 
-    // 🟢 UPDATED: ROOM MATRIX FORM STATES (Replaces the flat hotel creation tool)
+    // ROOM MATRIX FORM STATES 
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
     const [newRoom, setNewRoom] = useState({ hotelName: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
     const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
@@ -62,13 +61,13 @@ export default function SuperadminDashboard() {
                 fetch(`${apiUrl}/api/bookings`),
                 fetch(`${apiUrl}/api/auth/partners`),
                 fetch(`${apiUrl}/api/cars`),
-                fetch(`${apiUrl}/api/rooms`) // 🟢 FIXED: Now syncs live with the real Room Matrix
+                fetch(`${apiUrl}/api/rooms`)
             ]);
 
             if (bookingsRes.ok) setAllBookings(await bookingsRes.json());
             if (partnersRes.ok) setPartners(await partnersRes.json());
             if (carsRes.ok) setCars(await carsRes.json());
-            if (roomsRes.ok) setRooms(await roomsRes.json()); // 🟢 FIXED: Saves directly to the verified screen array
+            if (roomsRes.ok) setRooms(await roomsRes.json());
         } catch (error) {
             console.error("Error fetching system data:", error);
         } finally {
@@ -141,7 +140,7 @@ export default function SuperadminDashboard() {
         } catch (error) { alert("❌ Error adding vehicle."); } finally { setIsUploading(false); }
     };
 
-    // 🟢 UPDATED: ADD ROOM MATRIX TIER (Pipes directly to the live verification collection)
+    // --- ADD ROOM MATRIX ---
     const handleAddRoom = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsUploading(true);
@@ -152,7 +151,7 @@ export default function SuperadminDashboard() {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    partnerId: 'airgo_direct', // Admin deployed corporate stock
+                    partnerId: 'airgo_direct',
                     hotelName: newRoom.hotelName,
                     name: newRoom.name,
                     pricePerNight: Number(newRoom.pricePerNight),
@@ -228,11 +227,10 @@ export default function SuperadminDashboard() {
                     <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'approvals' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🛡️ Partner Approvals</button>
                     <div className="my-2 border-b border-gray-800"></div>
                     <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🚘 Manage Fleet</button>
-                    {/* 🟢 UPDATED: Tab Label matching code matrix loops */}
                     <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🏨 Manage Room Matrix</button>
-                    <div className="my-4 border-b border-blue-800"></div>
+                    <div className="my-4 border-b border-gray-800"></div>
                     <Link href="/">
-                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50">
+                        <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-black text-gray-300 hover:bg-gray-800 border border-gray-800">
                             🏠 Back to Homepage
                         </button>
                     </Link>
@@ -291,8 +289,17 @@ export default function SuperadminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
+                                                {/* 🟢 UPGRADED: Beautiful Empty State Banner */}
                                                 {allBookings.length === 0 ? (
-                                                    <tr><td colSpan={4} className="p-8 text-center text-gray-500">No transactions yet.</td></tr>
+                                                    <tr>
+                                                        <td colSpan={4} className="p-0">
+                                                            <div className="p-12 text-center bg-white border border-gray-100 shadow-sm m-6 rounded-3xl">
+                                                                <div className="text-6xl mb-4">📭</div>
+                                                                <h3 className="text-2xl font-black text-[#000080] mb-2">No Transactions Yet</h3>
+                                                                <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all escrow details and dispatch information will appear here.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
                                                 ) : allBookings.map((booking) => (
                                                     <React.Fragment key={booking._id}>
                                                         <tr onClick={() => toggleEscrowExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
@@ -304,7 +311,7 @@ export default function SuperadminDashboard() {
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
                                                                 {booking.status === 'Pending Escrow' && (
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleDisburse(booking._id); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md">Disburse</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleDisburse(booking._id); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse</button>
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -315,20 +322,24 @@ export default function SuperadminDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Client Details</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
-                                                                            <p className="text-xs font-bold text-[#000080] mt-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email provided'}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery Address</p>
-                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed">{booking.deliveryAddress || 'No address provided'}</p>
+                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
+                                                                                {booking.deliveryAddress || 'No address provided'}
+                                                                            </p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
-                                                                            <p className="text-xs font-black text-gray-900">{booking._id.toUpperCase()}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Asset</p>
+                                                                            <p className="text-xs font-black text-gray-900 mb-1">{booking._id.substring(0, 12).toUpperCase()}</p>
+                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Partner: {booking.partnerId.substring(0, 8)}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleDateString()}</p>
-                                                                            <p className="text-xs font-bold text-red-700">Out: {new Date(booking.checkOut).toLocaleDateString()}</p>
+                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -350,7 +361,7 @@ export default function SuperadminDashboard() {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <th className="p-4 font-bold border-b">Partner</th>
+                                                    <th className="p-4 font-bold border-b">Partner / Type</th>
                                                     <th className="p-4 font-bold border-b">Business Name</th>
                                                     <th className="p-4 font-bold border-b">Contact Info</th>
                                                     <th className="p-4 font-bold border-b">Status</th>
@@ -358,20 +369,25 @@ export default function SuperadminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
-                                                {partners.map((partner) => (
+                                                {partners.length === 0 ? (
+                                                    <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found.</td></tr>
+                                                ) : partners.map((partner) => (
                                                     <tr key={partner._id} className={`transition ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-gray-50'}`}>
                                                         <td className="p-4">
                                                             <p className="font-bold text-gray-900">{partner.name}</p>
-                                                            <p className="text-[10px] uppercase font-black text-blue-600">{partner.partnerType === 'car' ? '🚘 Car Rental' : '🏨 Hotel'}</p>
+                                                            <p className="text-[10px] uppercase font-black text-blue-600">{partner.partnerType === 'car' ? '🚘 Fleet' : partner.partnerType === 'hotel' ? '🏨 Hotel' : 'Partner'}</p>
                                                         </td>
                                                         <td className="p-4 text-gray-600 font-medium">{partner.businessName || 'N/A'}</td>
                                                         <td className="p-4"><p className="text-sm text-gray-900">{partner.email}</p><p className="text-xs text-gray-500">{partner.phoneNumber || 'No phone'}</p></td>
                                                         <td className="p-4">
                                                             <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{partner.isApproved ? 'Approved' : 'Pending'}</span>
+                                                            {partner.isActive === false && <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>}
                                                         </td>
                                                         <td className="p-4 flex flex-wrap gap-2 justify-center">
                                                             {!partner.isApproved && <button onClick={() => handleApprovePartner(partner._id)} className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">Approve</button>}
-                                                            <button onClick={() => handleToggleStatus(partner._id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-600 text-white'}`}>{partner.isActive !== false ? 'Deactivate' : 'Reactivate'}</button>
+                                                            <button onClick={() => handleToggleStatus(partner._id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}>
+                                                                {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 ))}
@@ -389,7 +405,9 @@ export default function SuperadminDashboard() {
                                         <button onClick={() => setIsCarModalOpen(true)} className="bg-[#000080] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-900 transition">+ Add Vehicle</button>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {cars.map(car => (
+                                        {cars.length === 0 ? (
+                                            <p className="col-span-full text-center text-gray-500 py-10">No vehicles in the database.</p>
+                                        ) : cars.map(car => (
                                             <div key={car._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                                                 <img src={car.image} alt={car.name} className="w-full h-40 object-cover" />
                                                 <div className="p-4">
@@ -406,7 +424,7 @@ export default function SuperadminDashboard() {
                                 </div>
                             )}
 
-                            {/* 🟢 UPGRADED: ROOM CONFIGURATION MATRIX TAB (Replaces Old Flat Inventory Screen) */}
+                            {/* ROOM CONFIGURATION MATRIX TAB */}
                             {activeTab === 'rooms' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
@@ -453,8 +471,10 @@ export default function SuperadminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
+                                {/* 🟢 UPGRADED: Smart Field - Min 0 */}
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} /></div>
+                                {/* 🟢 UPGRADED: Smart Field - Min 1 */}
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo</label>
@@ -471,7 +491,7 @@ export default function SuperadminDashboard() {
                 </div>
             )}
 
-            {/* 🟢 UPGRADED: DYNAMIC ROOM ALLOCATION MODAL (For Direct Admin Uploads) */}
+            {/* DYNAMIC ROOM ALLOCATION MODAL */}
             {isRoomModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
@@ -483,8 +503,10 @@ export default function SuperadminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel / Property Name</label><input required type="text" placeholder="e.g. Transcorp Hilton" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.hotelName} onChange={e => setNewRoom({ ...newRoom, hotelName: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Room Tier Name</label><input required type="text" placeholder="e.g. Presidential Suite" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.name} onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price Per Night (₦)</label><input required type="number" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.pricePerNight} onChange={e => setNewRoom({ ...newRoom, pricePerNight: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation Count</label><input required type="number" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
+                                {/* 🟢 UPGRADED: Smart Field - Min 0 */}
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price Per Night (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.pricePerNight} onChange={e => setNewRoom({ ...newRoom, pricePerNight: e.target.value })} /></div>
+                                {/* 🟢 UPGRADED: Smart Field - Min 1 */}
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation Count</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
                             </div>
                             <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Private Pool, Free WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.amenities} onChange={e => setNewRoom({ ...newRoom, amenities: e.target.value })} /></div>
                             <div>
