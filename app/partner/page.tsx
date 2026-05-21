@@ -143,7 +143,7 @@ export default function PartnerDashboard() {
         }
     };
 
-    const handleUpdateInventory = async (id, updates) => {
+    const handleUpdateInventory = async (id: string, updates: any) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const isCar = user.partnerType === 'car';
