@@ -76,10 +76,25 @@ export default function SuperadminDashboard() {
     };
 
     // --- ESCROW & PARTNER ACTIONS ---
-    const handleDisburse = (bookingId: string) => {
+    const handleDisburse = async (bookingId: string) => {
         if (window.confirm(`Authorize payout?`)) {
-            alert(`✅ Payout Authorized!`);
-            setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'Paid Out' } : b));
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ status: 'Paid Out' })
+                });
+
+                if (res.ok) {
+                    alert(`✅ Payout Authorized!`);
+                    setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'Paid Out' } : b));
+                } else {
+                    alert('❌ Failed to authorize payout.');
+                }
+            } catch (error) {
+                alert('❌ Error connecting to server.');
+            }
         }
     };
 
