@@ -39,29 +39,7 @@ export default function HotelsPage() {
         <div className="min-h-screen bg-[#F8F9FA] font-sans pb-24">
 
             {/* 🟢 TOP NAVIGATION */}
-            <nav className="bg-[#004A99] text-white py-4 px-8 flex justify-between items-center shadow-lg sticky top-0 z-40">
-                <div className="flex items-center space-x-12">
-                    <Link href="/">
-                        <div className="text-2xl font-black text-white tracking-tight cursor-pointer">
-                            Airgo<span className="text-[#FFB81C]">.ng</span>
-                        </div>
-                    </Link>
-                    <div className="hidden md:flex space-x-6 font-semibold text-sm items-center">
-                        <Link href="/hotels" className="text-[#FFB81C] border-b-2 border-[#FFB81C] pb-1">Hotels</Link>
-                        <span className="text-blue-300 flex items-center cursor-not-allowed">
-                            Flights <span className="ml-1.5 text-[9px] uppercase tracking-wider bg-blue-800 text-blue-200 px-1.5 py-0.5 rounded-sm">Soon</span>
-                        </span>
-                        <Link href="/cars" className="hover:text-[#FFB81C] transition">Car Rentals</Link>
-                    </div>
-                </div>
-                <div className="flex items-center space-x-6">
-                    <Link href="/login">
-                        <button className="bg-white text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition shadow-md">
-                            Sign In
-                        </button>
-                    </Link>
-                </div>
-            </nav>
+            
 
             {/* 🟢 APP-STYLE DASHBOARD CONTAINER */}
             <div className="max-w-5xl mx-auto px-6 mt-8">

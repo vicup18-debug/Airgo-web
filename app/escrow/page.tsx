@@ -158,13 +158,18 @@ export default function EscrowAgreementPage() {
                         <p>This Agreement constitutes the complete understanding between Airgo, customers, and service providers regarding escrow protection services. </p>
                     </section>
 
+                    {/* 🟢 UPGRADED: Professional Institutional Signature */}
                     <section className="bg-gray-50 p-6 rounded-2xl border border-gray-200 mt-8">
-                        <h2 className="text-xl font-black text-gray-900 mb-3">23. CONTACT INFORMATION </h2>
-                        <ul className="space-y-2 font-bold text-[#000080]">
-                            <li>Airgo Travel & Tour </li>
-                            <li>Website: <a href="https://airgo.ng" className="hover:underline">https://airgo.ng</a> </li>
-                            <li>Email: <a href="mailto:airgotravelandtour@gmail.com" className="hover:underline">airgotravelandtour@gmail.com</a> </li>
-                            <li>Phone: <a href="tel:07078344409" className="hover:underline">07078344409</a> </li>
+                        <h2 className="text-xl font-black text-gray-900 mb-3">23. CONTACT & COMPLIANCE CHANNELS</h2>
+                        <ul className="space-y-3 font-bold text-[#000080]">
+                            <li className="text-gray-900 font-black">Airgo Travel & Tour Ltd.</li>
+                            <li>Corporate Portal: <a href="https://airgo.ng" className="hover:underline">https://airgo.ng</a></li>
+                            {/* Removed Gmail, substituted domain email */}
+                            <li>Official Support: <a href="mailto:support@airgo.ng" className="hover:underline">support@airgo.ng</a></li>
+                            <li>Compliance & Grievances: <a href="mailto:legal@airgo.ng" className="hover:underline">legal@airgo.ng</a></li>
+                            <li className="text-gray-500 font-medium text-xs mt-2">
+                                For immediate assistance regarding active escrow holds, please utilize our dedicated support lines or open a dispute case within your security dashboard.
+                            </li>
                         </ul>
                     </section>
                 </div>

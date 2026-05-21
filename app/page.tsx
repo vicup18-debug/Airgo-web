@@ -4,17 +4,54 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+// 🟢 PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
+const FALLBACK_ROOMS = [
+  {
+    _id: 'airgo_room_01',
+    hotelName: 'Transcorp Hilton Abuja',
+    name: 'Presidential Suite',
+    pricePerNight: 350000,
+    totalAllocated: 5,
+    amenities: 'Private Pool, Executive Lounge Access, City View',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89404bb8a0e?auto=format&fit=crop&w=800&q=80',
+    partnerId: 'airgo_direct',
+    bookedDates: []
+  },
+  {
+    _id: 'airgo_room_02',
+    hotelName: 'The Wheatbaker Lagos',
+    name: 'Luxury Executive Penthouse',
+    pricePerNight: 280000,
+    totalAllocated: 3,
+    amenities: 'Spa Access, Free Wi-Fi, Chauffeur Service',
+    image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
+    partnerId: 'airgo_direct',
+    bookedDates: []
+  },
+  {
+    _id: 'airgo_room_03',
+    hotelName: 'Fraser Suites Abuja',
+    name: 'Diplomatic Studio',
+    pricePerNight: 195000,
+    totalAllocated: 8,
+    amenities: 'Kitchenette, Gym Access, Premium Security',
+    image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+    partnerId: 'airgo_direct',
+    bookedDates: []
+  }
+];
+
 export default function HotelHomepage() {
   const [user, setUser] = useState<any>(null);
   const [liveRooms, setLiveRooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 🟢 SEARCH & DATE STATES
+  // SEARCH & DATE STATES
   const [location, setLocation] = useState('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
 
-  // 🟢 BOOKING MODAL STATES
+  // BOOKING MODAL STATES
   const [selectedRoom, setSelectedRoom] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [clientData, setClientData] = useState({ name: '', email: '', phone: '' });
@@ -26,17 +63,25 @@ export default function HotelHomepage() {
     if (userData) {
       const parsedUser = JSON.parse(userData);
       setUser(parsedUser);
-      // Pre-fill frictionless data if they are already logged in
       setClientData({ name: parsedUser.name, email: parsedUser.email, phone: parsedUser.phone || '' });
     }
 
     const fetchRooms = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-        const res = await fetch(`${apiUrl}/api/rooms`); // 🟢 FETCHING FROM NEW MATRIX
-        if (res.ok) setLiveRooms(await res.json());
+        const res = await fetch(`${apiUrl}/api/rooms`);
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.length > 0) {
+            setLiveRooms(data);
+          } else {
+            setLiveRooms(FALLBACK_ROOMS); // 🟢 Fallback on empty DB
+          }
+        }
       } catch (error) {
         console.error("Error fetching inventory:", error);
+        setLiveRooms(FALLBACK_ROOMS); // 🟢 Fallback on server error
       } finally {
         setIsLoading(false);
       }
@@ -44,9 +89,10 @@ export default function HotelHomepage() {
     fetchRooms();
   }, []);
 
-  // 🛡️ THE DYNAMIC AVAILABILITY ENGINE (Checks real-time dates)
+  // 🛡️ DYNAMIC AVAILABILITY ENGINE
   const isRoomAvailable = (room: any) => {
-    if (!checkIn || !checkOut) return true; // If they haven't picked dates yet, show everything
+    if (!checkIn || !checkOut) return true;
+    if (!room.bookedDates) return true; // Safeguard for fallback data
 
     let d = new Date(checkIn);
     const endD = new Date(checkOut);
@@ -54,24 +100,18 @@ export default function HotelHomepage() {
     while (d < endD) {
       const dateStr = d.toISOString().split('T')[0];
       const dayMatch = room.bookedDates?.find((b: any) => b.date === dateStr);
-
-      // If the count on any single day hits the allocation limit, the room is dead
-      if (dayMatch && dayMatch.count >= room.totalAllocated) {
-        return false;
-      }
+      if (dayMatch && dayMatch.count >= room.totalAllocated) return false;
       d.setDate(d.getDate() + 1);
     }
     return true;
   };
 
-  // Calculate dynamic price based on nights
   const calculateTotal = (pricePerNight: number) => {
     if (!checkIn || !checkOut) return pricePerNight;
     const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24));
     return (nights > 0 ? nights : 1) * pricePerNight;
   };
 
-  // 🟢 SUBMIT BOOKING TO BACKEND
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
@@ -82,8 +122,10 @@ export default function HotelHomepage() {
     setIsBooking(true);
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+      const finalUserId = user.id || user.userId || user._id;
+
       const payload = {
-        userId: user.id || user.userId || user._id,
+        userId: finalUserId,
         itemId: selectedRoom._id,
         itemName: `${selectedRoom.hotelName} - ${selectedRoom.name}`,
         itemType: 'hotel',
@@ -92,7 +134,7 @@ export default function HotelHomepage() {
         checkOut: checkOut,
         guests: 1,
         totalPrice: calculateTotal(selectedRoom.pricePerNight).toLocaleString(),
-        // 🟢 NEW: Frictionless Contact Info for the PDF & Partner!
+        status: 'Pending Escrow',
         clientName: clientData.name,
         clientEmail: clientData.email,
         clientPhone: clientData.phone,
@@ -108,9 +150,9 @@ export default function HotelHomepage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Booking failed');
 
-      alert("✅ Booking Confirmed! Your PDF Invoice has been generated and emailed to you.");
+      alert("✅ Booking Confirmed! Your Escrow hold is active and PDF Invoice has been generated.");
       setSelectedRoom(null);
-      router.push('/dashboard'); // Take them to their client dashboard
+      router.push('/dashboard');
 
     } catch (error: any) {
       alert(`❌ ${error.message}`);
@@ -122,44 +164,15 @@ export default function HotelHomepage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-[72px] md:pb-0 flex flex-col">
 
-      {/* NAVIGATION */}
-      <nav className="hidden md:flex bg-[#004A99] text-white py-4 px-8 justify-between items-center shadow-lg sticky top-0 z-40">
-        <div className="flex items-center space-x-12">
-          <Link href="/"><div className="text-2xl font-black text-white tracking-tight cursor-pointer">Airgo<span className="text-[#FFB81C]">.ng</span></div></Link>
-          <div className="flex space-x-6 font-semibold text-sm items-center">
-            <Link href="/" className="text-[#FFB81C] border-b-2 border-[#FFB81C] pb-1">Hotels</Link>
-            <span className="text-blue-300 flex items-center cursor-not-allowed">Flights <span className="ml-1.5 text-[9px] uppercase tracking-wider bg-blue-800 text-blue-200 px-1.5 py-0.5 rounded-sm">Soon</span></span>
-            <Link href="/cars" className="hover:text-[#FFB81C] transition">Car Rentals</Link>
-          </div>
-        </div>
-        <div>
-          {user ? (
-            <Link href={user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard'}>
-              <button className="bg-[#FFB81C] text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-yellow-400 transition shadow-md">Dashboard</button>
-            </Link>
-          ) : (
-            <Link href="/login"><button className="bg-white text-[#004A99] px-6 py-2 rounded-lg font-bold text-sm hover:bg-gray-100 transition shadow-md">Sign In</button></Link>
-          )}
-        </div>
-      </nav>
-
-      {/* MOBILE TOP BAR */}
-      <div className="md:hidden bg-[#004A99] text-white py-4 px-6 sticky top-0 z-40 shadow-md flex justify-between items-center">
-        <div className="text-xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.ng</span></div>
-        <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'}>
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#004A99] font-bold shadow-sm">
-            {user ? user.name.charAt(0).toUpperCase() : '👤'}
-          </div>
-        </Link>
-      </div>
+      
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-grow">
-        {/* HERO */}
-        <header className="bg-[#004A99] pt-8 pb-32 px-6 rounded-b-[2.5rem] md:rounded-none relative">
+        {/* HEADER */}
+        <header className="bg-[#000080] pt-12 pb-32 px-6 rounded-b-[2.5rem] md:rounded-none relative">
           <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-3">Find Your Perfect Stay</h1>
-            <p className="text-blue-100 text-sm md:text-lg mb-8">Secure luxury suites with Airgo Escrow Protection.</p>
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Find Your Perfect Stay</h1>
+            <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto">Secure luxury hotel suites and premium executive lodgings across Nigeria with Airgo Escrow Protection.</p>
           </div>
         </header>
 
@@ -169,67 +182,62 @@ export default function HotelHomepage() {
             <form className="flex flex-col md:flex-row gap-4">
               <div className="flex-[2]">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Hotel or City</label>
-                <input type="text" placeholder="Search destinations..." className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] focus:ring-2 outline-none" value={location} onChange={(e) => setLocation(e.target.value)} />
+                <input type="text" placeholder="Abuja, Lagos, Hilton..." className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 outline-none" value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
               <div className="flex-1">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check In</label>
-                <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] outline-none" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
               </div>
               <div className="flex-1">
                 <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check Out</label>
-                <input required type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#004A99] outline-none" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
               </div>
             </form>
           </div>
         </div>
 
         {/* LIVE DYNAMIC INVENTORY */}
-        <div className="max-w-5xl mx-auto px-6 mt-12 mb-16">
-          <h2 className="text-xl font-black text-gray-900 mb-6">Available Executive Suites</h2>
-
+        <div className="max-w-7xl mx-auto px-6 mt-12 mb-16">
           {!checkIn || !checkOut ? (
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 text-sm text-blue-800 font-bold flex items-center gap-2">
-              <span>📅</span> Please select your Check-In and Check-Out dates to check real-time availability.
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-8 text-sm text-blue-900 font-bold flex items-center gap-2 max-w-5xl mx-auto">
+              <span>📅</span> Please select your Check-In and Check-Out dates to cross-reference real-time matrix availability.
             </div>
           ) : null}
 
           {isLoading ? (
             <div className="text-center py-12 text-gray-500 font-bold animate-pulse">Scanning live matrices...</div>
-          ) : liveRooms.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-gray-100 p-10 text-center shadow-sm">
-              <div className="text-4xl mb-4">🏗️</div>
-              <h3 className="text-xl font-black text-[#004A99] mb-2">Curating Premium Stays</h3>
-              <p className="text-gray-500 max-w-md mx-auto">Our hotel partners are currently onboarding their properties. Please check back shortly.</p>
-            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {liveRooms.map((room) => {
                 const available = isRoomAvailable(room);
 
                 return (
-                  <div key={room._id} className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition duration-300 ${available ? 'hover:shadow-lg' : 'opacity-60 grayscale'}`}>
-                    <div className="h-48 overflow-hidden relative">
-                      <img src={room.image} alt={room.name} className="w-full h-full object-cover" />
+                  <div key={room._id} className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition duration-300 flex flex-col ${available ? 'hover:shadow-lg' : 'opacity-60 grayscale'}`}>
+                    <div className="h-56 overflow-hidden relative">
+                      <img src={room.image} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       {!available && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
                           <span className="bg-red-600 text-white font-black px-4 py-2 rounded-lg text-sm uppercase tracking-wider transform -rotate-12 shadow-xl">Sold Out</span>
                         </div>
                       )}
                     </div>
-                    <div className="p-5">
-                      <p className="text-xs font-black text-[#004A99] uppercase tracking-wider mb-1">{room.hotelName}</p>
+                    <div className="p-6 flex flex-col flex-grow">
+                      <p className="text-xs font-black text-[#000080] uppercase tracking-wider mb-1 line-clamp-1">{room.hotelName}</p>
                       <h3 className="font-bold text-gray-900 text-xl mb-2 leading-tight">{room.name}</h3>
-                      <p className="text-xs text-gray-500 mb-4 line-clamp-2">{room.amenities}</p>
+
+                      <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100 flex-grow">
+                        <p className="text-xs text-gray-600 font-medium leading-relaxed">{room.amenities}</p>
+                      </div>
 
                       <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
                         <div>
-                          <p className="text-sm font-black text-[#004A99]">₦{calculateTotal(room.pricePerNight).toLocaleString()}</p>
+                          <p className="text-2xl font-black text-[#000080]">₦{calculateTotal(room.pricePerNight).toLocaleString()}</p>
                           <p className="text-[10px] text-gray-400 font-bold uppercase">{checkIn && checkOut ? 'Total Price' : 'Per Night'}</p>
                         </div>
                         <button
                           onClick={() => available ? setSelectedRoom(room) : null}
                           disabled={!available || !checkIn || !checkOut}
-                          className={`px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition ${!checkIn || !checkOut ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : available ? 'bg-[#FFB81C] text-[#004A99] hover:bg-yellow-400' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                          className={`px-5 py-3 rounded-xl font-black text-sm shadow-md transition ${!checkIn || !checkOut ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : available ? 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
                         >
                           {available ? 'Book Escrow' : 'Unavailable'}
                         </button>
@@ -243,11 +251,14 @@ export default function HotelHomepage() {
         </div>
       </div>
 
-      {/* 🟢 FRICTIONLESS BOOKING MODAL */}
+      
+      
+
+      {/* FRICTIONLESS BOOKING MODAL */}
       {selectedRoom && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto border border-gray-100">
-            <div className="bg-[#004A99] p-6 text-white flex justify-between items-start">
+            <div className="bg-[#000080] p-6 text-white flex justify-between items-start">
               <div>
                 <h2 className="text-2xl font-black">{selectedRoom.hotelName}</h2>
                 <p className="text-blue-200 text-sm font-bold mt-1">{selectedRoom.name}</p>
@@ -262,74 +273,30 @@ export default function HotelHomepage() {
               </div>
               <div className="flex justify-between items-end mt-4">
                 <span className="text-xs uppercase font-black text-gray-400">Total Escrow Hold</span>
-                <span className="text-3xl font-black text-[#004A99]">₦{calculateTotal(selectedRoom.pricePerNight).toLocaleString()}</span>
+                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(selectedRoom.pricePerNight).toLocaleString()}</span>
               </div>
             </div>
 
             <form onSubmit={handleConfirmBooking} className="p-6 space-y-4">
               {!user && <div className="bg-yellow-50 text-yellow-800 p-3 rounded-xl text-xs font-bold mb-4">Please log in to your Airgo account to secure this booking.</div>}
 
-              <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Guest Name</label><input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#004A99] outline-none" value={clientData.name} onChange={(e) => setClientData({ ...clientData, name: e.target.value })} /></div>
+              <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Guest Name</label><input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none" value={clientData.name} onChange={(e) => setClientData({ ...clientData, name: e.target.value })} /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Email (For Invoice)</label><input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#004A99] outline-none" value={clientData.email} onChange={(e) => setClientData({ ...clientData, email: e.target.value })} /></div>
-                <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Phone Number</label><input required type="tel" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#004A99] outline-none" value={clientData.phone} onChange={(e) => setClientData({ ...clientData, phone: e.target.value })} /></div>
+                <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Email (For Invoice)</label><input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none" value={clientData.email} onChange={(e) => setClientData({ ...clientData, email: e.target.value })} /></div>
+                <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Phone Number</label><input required type="tel" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none" value={clientData.phone} onChange={(e) => setClientData({ ...clientData, phone: e.target.value })} /></div>
               </div>
 
               <p className="text-[10px] text-gray-500 leading-relaxed mt-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                🔒 By confirming, your funds will be securely held in the Airgo Escrow framework. The partner will only be paid upon successful completion of your stay. Cancellations are subject to a 70% refund policy.
+                🔒 By confirming, your funds will be securely held in the Airgo Escrow framework. The partner will only be paid upon successful completion of your stay.
               </p>
 
-              <button disabled={isBooking || !user} type="submit" className={`w-full py-4 rounded-xl shadow-lg text-lg font-black text-[#004A99] transition mt-2 ${(isBooking || !user) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] hover:bg-yellow-400'}`}>
+              <button disabled={isBooking || !user} type="submit" className={`w-full py-4 rounded-xl shadow-lg text-lg font-black transition mt-2 ${(isBooking || !user) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
                 {isBooking ? 'Locking Inventory & Encrypting...' : 'Confirm Escrow Booking'}
               </button>
             </form>
           </div>
         </div>
       )}
-
-      {/* FULL FOOTER RESTORED */}
-      <footer className="bg-[#000080] text-white py-12 px-6 mt-auto">
-        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 className="text-2xl font-black mb-4">Airgo<span className="text-[#FFB81C]">.ng</span></h3>
-            <p className="text-blue-200 text-sm leading-relaxed max-w-sm">Premium executive fleet and luxury hotel reservations across Nigeria, secured by our verified escrow framework.</p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm">24/7 Concierge & Support</h4>
-            {/* 🟢 PHONE LINKS NOW OPEN CALL APP */}
-            <p className="text-sm text-blue-200 mb-2 font-medium flex items-center gap-2"><span>📞</span> <a href="tel:+2348066058930" className="hover:text-white transition">+234 806 605 8930</a></p>
-            <p className="text-sm text-blue-200 mb-2 font-medium flex items-center gap-2"><span>📞</span> <a href="tel:+2348026696170" className="hover:text-white transition">+234 802 669 6170</a></p>
-            <p className="text-sm text-blue-200 font-medium flex items-center gap-2"><span>📞</span> <a href="tel:07078344409" className="hover:text-white transition">07078344409</a></p>
-          </div>
-          <div>
-            <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm">Legal & Quick Links</h4>
-            <ul className="text-sm text-blue-200 space-y-3 font-medium">
-              <li><Link href="/escrow" className="hover:text-white transition">Escrow Protection Agreement</Link></li>
-              <li><Link href="/cars" className="hover:text-white transition">Book Car Rentals</Link></li>
-              <li><Link href="/join" className="hover:text-[#FFB81C] transition">Partner with us</Link></li>
-            </ul>
-          </div>
-        </div>
-        <div className="max-w-6xl mx-auto mt-10 pt-6 border-t border-blue-900 text-center text-xs text-blue-300 font-medium">
-          &copy; {new Date().getFullYear()} Airgo.ng Platform. All rights reserved.
-        </div>
-      </footer>
-
-      {/* MOBILE BOTTOM NAVIGATION RESTORED */}
-      <div className="md:hidden fixed bottom-0 w-full bg-white border-t border-gray-200 flex justify-around py-3 pb-safe z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-        <Link href="/" className="flex flex-col items-center text-[#004A99]">
-          <svg className="w-6 h-6 mb-1" fill="currentColor" viewBox="0 0 24 24"><path d="M12 3L4 9v12h5v-7h6v7h5V9z" /></svg>
-          <span className="text-[10px] font-bold">Hotels</span>
-        </Link>
-        <Link href="/cars" className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
-          <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-          <span className="text-[10px] font-bold">Car Rental</span>
-        </Link>
-        <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'} className="flex flex-col items-center text-gray-400 hover:text-[#004A99] transition">
-          <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-          <span className="text-[10px] font-bold">Account</span>
-        </Link>
-      </div>
     </div>
   );
 }

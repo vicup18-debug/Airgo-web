@@ -12,16 +12,7 @@ export default function FlightsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
-            <nav className="bg-[#004A99] text-white py-4 px-8 flex justify-between items-center shadow-md">
-                <Link href="/">
-                    <div className="text-2xl font-black tracking-tight cursor-pointer">
-                        Airgo<span className="text-[#FFB81C]">.ng</span>
-                    </div>
-                </Link>
-                <Link href="/login">
-                    <button className="bg-white text-[#004A99] px-6 py-2 rounded-lg font-bold hover:bg-gray-100 transition shadow-md">Sign In</button>
-                </Link>
-            </nav>
+            
 
             <div className="max-w-7xl mx-auto py-8 px-6 flex flex-col md:flex-row gap-8">
                 {/* Sidebar */}

@@ -4,13 +4,7 @@ import Link from 'next/link';
 export default function TermsPage() {
     return (
         <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
-            <nav className="bg-[#004A99] text-white py-4 px-8 shadow-md">
-                <Link href="/">
-                    <div className="text-2xl font-black tracking-tight cursor-pointer">
-                        Airgo<span className="text-[#FFB81C]">.ng</span>
-                    </div>
-                </Link>
-            </nav>
+            
 
             <main className="flex-grow max-w-4xl mx-auto py-16 px-6 w-full">
                 <div className="bg-white p-10 md:p-16 rounded-3xl shadow-sm border border-gray-100">
@@ -37,9 +31,7 @@ export default function TermsPage() {
                 </div>
             </main>
 
-            <footer className="bg-gray-900 text-gray-400 py-8 text-center text-sm">
-                <p>© 2026 Airgo.ng. All rights reserved.</p>
-            </footer>
+            
         </div>
     );
 }
