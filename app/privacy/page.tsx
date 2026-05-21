@@ -25,7 +25,7 @@ export default function PrivacyPage() {
 
                         <h2 className="text-2xl font-bold text-[#004A99] mt-8 mb-4">5. Contact Information</h2>
                         <p>For questions, complaints, or requests regarding this Privacy Notice, please contact:<br />
-                            Email: info@airgo.ng, airgotravelandtour@gmail.com<br />
+                            Email: info@airgo.ng<br />
                             Phone: +2347078344409</p>
                     </div>
                 </div>

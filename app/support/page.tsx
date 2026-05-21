@@ -43,7 +43,7 @@ export default function SupportPage() {
                             <div>
                                 <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wide">Email Support</h3>
                                 <p className="text-xl font-black text-gray-900">info@airgo.ng</p>
-                                <p className="text-sm text-gray-500">airgotravelandtour@gmail.com</p>
+                                <p className="text-sm text-gray-500">Info@airgo.ng</p>
                             </div>
                         </div>
                     </div>

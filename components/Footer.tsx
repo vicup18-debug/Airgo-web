@@ -40,6 +40,7 @@ export default function Footer() {
               <p className="flex flex-col">
                 <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Hotel Operations & Fleet Logistics</span>
                 <a href="tel:+2348026696170" className="hover:text-white transition mt-0.5 text-base font-black">📞 +234 802 669 6170</a>
+                <a href="https://wa.me/2348026696170" target="_blank" rel="noopener noreferrer" className="hover:text-white transition mt-1 text-sm font-black text-green-400">💬 WhatsApp Support</a>
               </p>
               <p className="flex flex-col">
                 <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Official Escalations & Corporate Line</span>
@@ -56,7 +57,6 @@ export default function Footer() {
               <li><Link href="/escrow" className="hover:text-white transition">Escrow Protection Agreement</Link></li>
               <li><Link href="/join" className="hover:text-[#FFB81C] transition">Become a Verified Partner</Link></li>
               <li><a href="mailto:Info@airgo.ng" className="hover:text-white transition">General Inquiry: Info@airgo.ng</a></li>
-              <li><a href="mailto:airgotravelandtour@gmail.com" className="hover:text-white transition">Corporate/Support: airgotravelandtour@gmail.com</a></li>
             </ul>
           </div>
         </div>

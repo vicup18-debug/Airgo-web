@@ -13,7 +13,8 @@ const FALLBACK_FLEET = [
         capacity: '4',
         features: 'Bulletproof (B6), VIP Chauffeur, Armed Escort Optional',
         image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80',
-        partnerId: 'airgo_direct'
+        partnerId: 'airgo_direct',
+        isFallback: true
     },
     {
         id: 'airgo_fleet_02',
@@ -23,7 +24,8 @@ const FALLBACK_FLEET = [
         capacity: '4',
         features: 'Chauffeur Included, Airport Meet & Greet, Deep Tint',
         image: 'https://images.unsplash.com/photo-1606016159991-d8544e311546?auto=format&fit=crop&w=800&q=80',
-        partnerId: 'airgo_direct'
+        partnerId: 'airgo_direct',
+        isFallback: true
     },
     {
         id: 'airgo_fleet_03',
@@ -33,14 +35,15 @@ const FALLBACK_FLEET = [
         capacity: '3',
         features: 'Executive Rear Seating, Champagne Cooler, VIP Escort',
         image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0be2?auto=format&fit=crop&w=800&q=80',
-        partnerId: 'airgo_direct'
+        partnerId: 'airgo_direct',
+        isFallback: true
     }
 ];
 
 export default function CarsPage() {
     const [selectedCar, setSelectedCar] = useState<any>(null);
-    const [carFleet, setCarFleet] = useState<any[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [carFleet, setCarFleet] = useState<any[]>(FALLBACK_FLEET);
+    const [isLoading, setIsLoading] = useState(false);
 
     // SEARCH BAR STATES
     const [searchQuery, setSearchQuery] = useState('');
@@ -70,9 +73,6 @@ export default function CarsPage() {
                 }
             } catch (error) {
                 console.log("Error fetching fleet, using fallback data.");
-                setCarFleet(FALLBACK_FLEET); // 🟢 Inject fallback on error
-            } finally {
-                setIsLoading(false);
             }
         };
 
@@ -186,12 +186,23 @@ export default function CarsPage() {
                                                     </p>
                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">per day</p>
                                                 </div>
-                                                <button
-                                                    onClick={() => setSelectedCar(car)}
-                                                    className="bg-[#FFB81C] text-[#000080] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
-                                                >
-                                                    Book Escrow
-                                                </button>
+                                                {car.isFallback ? (
+                                                    <a
+                                                        href={`https://wa.me/2348026696170?text=Hi, I want to enquire about the ${encodeURIComponent(car.name)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="bg-[#25D366] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#1ebd57] transition shadow-md text-center"
+                                                    >
+                                                        Enquire via WhatsApp
+                                                    </a>
+                                                ) : (
+                                                    <button
+                                                        onClick={() => setSelectedCar(car)}
+                                                        className="bg-[#FFB81C] text-[#000080] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
+                                                    >
+                                                        Book Escrow
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     </div>

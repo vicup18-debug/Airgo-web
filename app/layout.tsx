@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     default: "Airgo.ng | Secure Luxury Escrow Bookings",
     template: "%s | Airgo.ng", // Child pages automatically insert their title here
   },
-  description: "Nigeria's premier escrow-protected luxury asset marketplace. Secure your executive fleet and premium hotel reservations safely.",
+  description: "Book verified luxury hotels and executive suites across Nigeria with Airgo Escrow Protection. Your payment is held safely until your stay is confirmed.",
   keywords: ["Luxury Car Rental Nigeria", "Escrow Bookings", "Hotel Reservations Abuja", "VIP Transport", "Airgo Escrow"],
   openGraph: {
     title: "Airgo.ng | Premium Escrow Bookings",

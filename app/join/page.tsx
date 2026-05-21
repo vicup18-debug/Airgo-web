@@ -21,6 +21,7 @@ export default function JoinPartnerPage() {
     const [agreed, setAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [step, setStep] = useState(1);
 
     // 🟢 ADDED: UI States for Premium Experience
     const [successMessage, setSuccessMessage] = useState('');
@@ -98,7 +99,7 @@ export default function JoinPartnerPage() {
         <div className="min-h-screen bg-[#000080] flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
             <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
                 <Link href="/">
-                    <h2 className="text-4xl font-black text-white tracking-tighter">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
+                    <h2 className="text-4xl font-black text-white tracking-tighter">Airgo<span className="text-[#FFB81C]">.ng</span></h2>
                 </Link>
                 <h2 className="mt-6 text-2xl font-bold text-blue-100">Partner with the Elite</h2>
                 <p className="mt-2 text-sm text-blue-200">Strict verification required for all car rental and hotel partners.</p>
@@ -122,8 +123,10 @@ export default function JoinPartnerPage() {
                             </div>
                         )}
 
-                        {/* PARTNER TYPE & BUSINESS NAME */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {step === 1 && (
+                            <>
+                                {/* PARTNER TYPE & BUSINESS NAME */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Partner Type</label>
                                 <select
@@ -144,36 +147,8 @@ export default function JoinPartnerPage() {
                             </div>
                         </div>
 
-                        {/* BUSINESS ADDRESS */}
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Address *</label>
-                            <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.businessAddress} onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })} />
-                        </div>
-
-                        {/* CONDITIONAL FIELDS: HOTEL vs CAR RENTAL */}
-                        {formData.partnerType === 'hotel' && (
-                            <>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration Number *</label>
-                                    {/* 🟢 SMART FIELD: Enforces Nigerian RC/BN format visually and via HTML5 pattern */}
-                                    <input required type="text" pattern="^(RC|BN|rc|bn)?\d{4,8}$" title="Enter a valid CAC number (e.g. RC123456)" placeholder="e.g. RC123456 or BN123456" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
-                                </div>
-                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                    <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC Certificate *</label>
-                                    <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
-                                </div>
-                            </>
-                        )}
-
-                        {formData.partnerType === 'car' && (
-                            <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Driver's License *</label>
-                                <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
-                            </div>
-                        )}
-
-                        {/* CONTACT INFO */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* CONTACT INFO */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Name</label>
                                 <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
@@ -218,9 +193,50 @@ export default function JoinPartnerPage() {
                             </label>
                         </div>
 
-                        <button disabled={isLoading || !agreed} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || !agreed) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
-                            {isLoading ? 'Encrypting & Submitting...' : 'Submit Application'}
+                        <button type="button" onClick={() => setStep(2)} disabled={!agreed} className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(!agreed) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                            Continue
                         </button>
+                        </>
+                        )}
+
+                        {step === 2 && (
+                            <>
+                                <div className="flex items-center mb-4">
+                                    <button type="button" onClick={() => setStep(1)} className="text-[#000080] font-black text-sm mr-4 hover:underline">← Back</button>
+                                    <h3 className="text-lg font-bold text-gray-900">Verification Details</h3>
+                                </div>
+                                {/* BUSINESS ADDRESS */}
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Address *</label>
+                                    <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.businessAddress} onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })} />
+                                </div>
+
+                                {/* CONDITIONAL FIELDS: HOTEL vs CAR RENTAL */}
+                                {formData.partnerType === 'hotel' && (
+                                    <>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration Number *</label>
+                                            <input required type="text" pattern="^(RC|BN|rc|bn)?\d{4,8}$" title="Enter a valid CAC number (e.g. RC123456)" placeholder="e.g. RC123456 or BN123456" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
+                                        </div>
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC Certificate *</label>
+                                            <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
+                                        </div>
+                                    </>
+                                )}
+
+                                {formData.partnerType === 'car' && (
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Driver's License *</label>
+                                        <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
+                                    </div>
+                                )}
+
+                                <button disabled={isLoading} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                                    {isLoading ? 'Encrypting & Submitting...' : 'Submit Application'}
+                                </button>
+                            </>
+                        )}
                     </form>
                 </div>
             </div>

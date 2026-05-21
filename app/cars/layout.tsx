@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Premium Executive Fleet",
-    description: "Book luxury vehicles, SUVs, and executive sedans with professional chauffeurs or self-drive options across Nigeria.",
+    description: "Hire premium executive vehicles and luxury sedans in Nigeria. Chauffeur or self-drive options, secured by Airgo Escrow.",
 };
 
 export default function CarsLayout({

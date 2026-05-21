@@ -14,16 +14,18 @@ export default function AboutPage() {
                     </p>
                 </div>
 
-                {/* 🟢 INTERACTIVE CARD GRID (No Glow, Crisp Borders) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
+                {/* 🟢 WHO WE ARE NARRATIVE */}
+                <div className="bg-white p-10 md:p-12 rounded-3xl border border-gray-100 shadow-sm mb-16">
+                    <h2 className="text-3xl font-black text-gray-900 mb-6">Who We Are</h2>
+                    <p className="text-gray-600 leading-relaxed text-lg">
+                        Airgo.ng was built to solve a real problem: in Nigeria, booking a hotel or hiring a car online too often ends in disappointment — or worse, fraud. We created Airgo as a verified marketplace where every transaction is escrow-protected, every partner is screened, and every customer has a real support line to call. We operate across Abuja and Kaduna, with plans to expand nationally. Behind Airgo is a team that believes trust should be the foundation of every booking.
+                    </p>
+                </div>
 
-                    <div className="bg-white p-8 rounded-2xl border border-gray-200 hover:border-[#004A99] hover:-translate-y-2 transition-all duration-300 cursor-default">
-                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl">✈️</div>
-                        <h2 className="text-2xl font-bold text-gray-900 mb-3">Flight Bookings</h2>
-                        <p className="text-gray-600 leading-relaxed">
-                            Find the best flight deals quickly and easily. Search, compare, and book flights across multiple airlines, ensuring competitive prices and flexible travel options with instant confirmation.
-                        </p>
-                    </div>
+                {/* 🟢 INTERACTIVE CARD GRID (No Glow, Crisp Borders) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
+
+
 
                     <div className="bg-white p-8 rounded-2xl border border-gray-200 hover:border-[#004A99] hover:-translate-y-2 transition-all duration-300 cursor-default">
                         <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl">🏨</div>

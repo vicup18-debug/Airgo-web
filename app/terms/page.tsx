@@ -25,7 +25,7 @@ export default function TermsPage() {
 
                         <h2 className="text-2xl font-bold text-[#004A99] mt-8 mb-4">5. Contact Information</h2>
                         <p>For inquiries regarding these Terms, please contact Airgo.ng Customer Support:<br />
-                            Email: info@airgo.ng, airgotravelandtour@gmail.com<br />
+                            Email: info@airgo.ng<br />
                             Phone: +2347078344409</p>
                     </div>
                 </div>

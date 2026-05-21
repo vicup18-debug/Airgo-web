@@ -43,8 +43,8 @@ const FALLBACK_ROOMS = [
 
 export default function HotelHomepage() {
   const [user, setUser] = useState<any>(null);
-  const [liveRooms, setLiveRooms] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [liveRooms, setLiveRooms] = useState<any[]>(FALLBACK_ROOMS);
+  const [isLoading, setIsLoading] = useState(false);
 
   // SEARCH & DATE STATES
   const [location, setLocation] = useState('');
@@ -81,9 +81,6 @@ export default function HotelHomepage() {
         }
       } catch (error) {
         console.error("Error fetching inventory:", error);
-        setLiveRooms(FALLBACK_ROOMS); // 🟢 Fallback on server error
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchRooms();
@@ -169,10 +166,29 @@ export default function HotelHomepage() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-grow">
         {/* HEADER */}
-        <header className="bg-[#000080] pt-12 pb-32 px-6 rounded-b-[2.5rem] md:rounded-none relative">
+        <header className="bg-[#000080] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Find Your Perfect Stay</h1>
             <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto">Secure luxury hotel suites and premium executive lodgings across Nigeria with Airgo Escrow Protection.</p>
+          </div>
+          
+          {/* TRUST BAR */}
+          <div className="mt-10 bg-[#000060] rounded-2xl p-6 md:p-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">✅</span>
+              <span className="font-bold text-white text-base">Verified Partners</span>
+              <span className="text-xs text-blue-200 mt-1">Strictly vetted luxury properties</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">🔒</span>
+              <span className="font-bold text-white text-base">Escrow-Protected Transactions</span>
+              <span className="text-xs text-blue-200 mt-1">Your funds are held securely</span>
+            </div>
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">📞</span>
+              <span className="font-bold text-white text-base">24/7 Support</span>
+              <span className="text-xs text-blue-200 mt-1">Always available for assistance</span>
+            </div>
           </div>
         </header>
 
@@ -198,11 +214,6 @@ export default function HotelHomepage() {
 
         {/* LIVE DYNAMIC INVENTORY */}
         <div className="max-w-7xl mx-auto px-6 mt-12 mb-16">
-          {!checkIn || !checkOut ? (
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-8 text-sm text-blue-900 font-bold flex items-center gap-2 max-w-5xl mx-auto">
-              <span>📅</span> Please select your Check-In and Check-Out dates to cross-reference real-time matrix availability.
-            </div>
-          ) : null}
 
           {isLoading ? (
             <div className="text-center py-12 text-gray-500 font-bold animate-pulse">Scanning live matrices...</div>
