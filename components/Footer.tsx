@@ -38,16 +38,12 @@ export default function Footer() {
             <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-xs">24/7 Support & Dispatch</h4>
             <div className="space-y-3 text-sm text-blue-200 font-medium">
               <p className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Hotel Operations & Lodging</span>
-                <a href="tel:+2348066058930" className="hover:text-white transition mt-0.5 text-base font-black">📞 +234 806 605 8930</a>
-              </p>
-              <p className="flex flex-col">
-                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">VIP Fleet & Chauffeur Logistics</span>
+                <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Hotel Operations & Fleet Logistics</span>
                 <a href="tel:+2348026696170" className="hover:text-white transition mt-0.5 text-base font-black">📞 +234 802 669 6170</a>
               </p>
               <p className="flex flex-col">
                 <span className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Official Escalations & Corporate Line</span>
-                <a href="tel:07078344409" className="hover:text-white transition mt-0.5 text-base font-black">📞 07078344409</a>
+                <a href="tel:+2347078344409" className="hover:text-white transition mt-0.5 text-base font-black">📞 +234 707 834 4409</a>
               </p>
             </div>
           </div>
@@ -59,7 +55,8 @@ export default function Footer() {
               <li><Link href="/corporate" className="hover:text-white transition">Corporate Solutions</Link></li>
               <li><Link href="/escrow" className="hover:text-white transition">Escrow Protection Agreement</Link></li>
               <li><Link href="/join" className="hover:text-[#FFB81C] transition">Become a Verified Partner</Link></li>
-              <li><a href="mailto:support@airgo.ng" className="hover:text-white transition">Corporate Inquiry: support@airgo.ng</a></li>
+              <li><a href="mailto:Info@airgo.ng" className="hover:text-white transition">General Inquiry: Info@airgo.ng</a></li>
+              <li><a href="mailto:airgotravelandtour@gmail.com" className="hover:text-white transition">Corporate/Support: airgotravelandtour@gmail.com</a></li>
             </ul>
           </div>
         </div>
