@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 export default function SupportPage() {
@@ -9,10 +10,10 @@ export default function SupportPage() {
     const handleSend = (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name || !formData.email || !formData.message) {
-            alert("Please fill out all fields.");
+            toast.success("Please fill out all fields.");
             return;
         }
-        alert("Message Sent! Our 24/7 support team will contact you shortly.");
+        toast.success("Message Sent! Our 24/7 support team will contact you shortly.");
         setFormData({ name: '', email: '', message: '' });
     };
 

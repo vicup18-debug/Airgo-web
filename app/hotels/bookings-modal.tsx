@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -48,7 +49,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
 
         // 🟢 REQUIRE LOGIN BEFORE BOOKING
         if (!user) {
-            alert("Please sign in to secure this booking.");
+            toast.success("Please sign in to secure this booking.");
             router.push('/login');
             return;
         }
@@ -82,12 +83,12 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
 
             if (!res.ok) throw new Error("Booking failed to process.");
 
-            alert("✅ Booking Secured! Redirecting to your dashboard to complete escrow payment.");
+            toast.success("Booking Secured! Redirecting to your dashboard to complete escrow payment.");
             onClose();
             router.push('/dashboard');
 
         } catch (error: any) {
-            alert(error.message || "An error occurred during booking.");
+            toast.error(error.message || "An error occurred during booking.");
         } finally {
             setIsSubmitting(false);
         }

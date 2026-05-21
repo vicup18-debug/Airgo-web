@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -34,7 +35,7 @@ export default function PartnerDashboard() {
 
         const parsedUser = JSON.parse(userData);
         if (parsedUser.role !== 'partner') {
-            alert("Unauthorized Access.");
+            toast.error("Unauthorized Access.");
             return router.push('/dashboard');
         }
 
@@ -129,20 +130,43 @@ export default function PartnerDashboard() {
             });
 
             if (response.ok) {
-                alert(`✅ ${user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'} listed successfully!`);
+                toast.success(`${user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
                 setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
-            alert("❌ Error listing item. Please try again.");
+            toast.error("❌ Error listing item. Please try again.");
         } finally {
             setIsUploading(false);
         }
     };
 
-    const handleLogout = () => {
+    const handleUpdateInventory = async (id, updates) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const isCar = user.partnerType === 'car';
+            const endpoint = isCar ? `/api/cars/${id}` : `/api/rooms/${id}`;
+            
+            const response = await fetch(`${apiUrl}${endpoint}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+
+            if (response.ok) {
+                toast.success("Inventory updated successfully!");
+                fetchPartnerData(user);
+            } else {
+                toast.error("Failed to update inventory.");
+            }
+        } catch (error) {
+            toast.error("Error updating inventory.");
+        }
+    };
+
+const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
         window.location.href = '/login';
@@ -371,6 +395,7 @@ export default function PartnerDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
                                     {/* 🟢 UPGRADED: Smart Field - Min 1 */}
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Allocated</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features (e.g. Chauffeur, Bulletproof)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
                                 </div>
                             ) : (

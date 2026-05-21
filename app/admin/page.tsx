@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -43,7 +44,7 @@ export default function SuperadminDashboard() {
 
         const parsedUser = JSON.parse(userData);
         if (parsedUser.role !== 'admin') {
-            alert("Unauthorized Access. Redirecting...");
+            toast.error("Unauthorized Access. Redirecting...");
             router.push('/dashboard');
             return;
         }
@@ -77,7 +78,7 @@ export default function SuperadminDashboard() {
 
     // --- ESCROW & PARTNER ACTIONS ---
     const handleDisburse = async (bookingId: string) => {
-        if (window.confirm(`Authorize payout?`)) {
+        if (window.window.window.window.confirm(`Authorize payout?`)) {
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
                 const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
@@ -87,13 +88,13 @@ export default function SuperadminDashboard() {
                 });
 
                 if (res.ok) {
-                    alert(`✅ Payout Authorized!`);
+                    toast.success(`Payout Authorized!`);
                     setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'Paid Out' } : b));
                 } else {
-                    alert('❌ Failed to authorize payout.');
+                    toast.success("❌ Failed to authorize payout.");
                 }
             } catch (error) {
-                alert('❌ Error connecting to server.');
+                toast.error("❌ Error connecting to server.");
             }
         }
     };
@@ -103,10 +104,10 @@ export default function SuperadminDashboard() {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const res = await fetch(`${apiUrl}/api/auth/approve-partner/${partnerId}`, { method: 'PUT' });
             if (res.ok) {
-                alert("✅ Partner Approved!");
+                toast.success("Partner Approved!");
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isApproved: true } : p));
             }
-        } catch (error) { alert("❌ Error connecting to server."); }
+        } catch (error) { toast.error("❌ Error connecting to server."); }
     };
 
     const handleToggleStatus = async (partnerId: string) => {
@@ -115,10 +116,10 @@ export default function SuperadminDashboard() {
             const res = await fetch(`${apiUrl}/api/auth/toggle-status/${partnerId}`, { method: 'PUT' });
             if (res.ok) {
                 const data = await res.json();
-                alert(`✅ ${data.message}`);
+                toast.success(`${data.message}`);
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isActive: data.isActive } : p));
             }
-        } catch (error) { alert("❌ Error changing partner status."); }
+        } catch (error) { toast.error("❌ Error changing partner status."); }
     };
 
     // --- CLOUDINARY UPLOAD HELPER ---
@@ -146,13 +147,13 @@ export default function SuperadminDashboard() {
             });
 
             if (response.ok) {
-                alert("✅ Vehicle deployed successfully!");
+                toast.success("Vehicle deployed successfully!");
                 setIsCarModalOpen(false);
                 setNewCar({ name: '', type: '', price: '', capacity: '', features: '' });
                 setCarImageFile(null);
                 fetchAllSystemData();
             }
-        } catch (error) { alert("❌ Error adding vehicle."); } finally { setIsUploading(false); }
+        } catch (error) { toast.error("❌ Error adding vehicle."); } finally { setIsUploading(false); }
     };
 
     // --- ADD ROOM MATRIX ---
@@ -177,18 +178,18 @@ export default function SuperadminDashboard() {
             });
 
             if (response.ok) {
-                alert("✅ Room Category published to live matrix pool!");
+                toast.success("Room Category published to live matrix pool!");
                 setIsRoomModalOpen(false);
                 setNewRoom({ hotelName: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
                 setRoomImageFile(null);
                 fetchAllSystemData();
             }
-        } catch (error) { alert("❌ Error adding room category configuration."); } finally { setIsUploading(false); }
+        } catch (error) { toast.error("❌ Error adding room category configuration."); } finally { setIsUploading(false); }
     };
 
     // --- DELETE ITEM (Generic) ---
     const handleDelete = async (type: 'cars' | 'rooms', id: string) => {
-        if (!confirm(`Are you sure you want to remove this listing?`)) return;
+        if (!window.window.window.confirm(`Are you sure you want to remove this listing?`)) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const response = await fetch(`${apiUrl}/api/${type}/${id}`, { method: 'DELETE' });

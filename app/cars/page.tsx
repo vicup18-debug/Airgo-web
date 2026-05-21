@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 // 🟢 THE FALLBACK MATRIX: If the database is empty, we inject this premium fleet automatically so the site never looks broken!
@@ -312,7 +313,7 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
         } catch (error: any) {
             console.error("Booking Error:", error);
-            alert(`Booking failed: ${error.message}`);
+            toast.error(`Booking failed: ${error.message}`);
         } finally {
             setIsProcessing(false);
         }

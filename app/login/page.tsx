@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { GoogleLogin } from '@react-oauth/google';
+import toast from 'react-hot-toast';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
@@ -53,8 +55,45 @@ export default function LoginPage() {
 
         } catch (err: any) {
             setError(err.message);
+            toast.error(err.message);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleGoogleSuccess = async (credentialResponse: any) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/google`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: credentialResponse.credential }),
+            });
+
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || 'Google Login failed');
+
+            localStorage.setItem('airgo_token', data.token);
+            localStorage.setItem('airgo_user', JSON.stringify({
+                id: data.userId,
+                name: data.name,
+                email: data.email,
+                role: data.role,
+                isApproved: data.isApproved
+            }));
+
+            if (data.isLinked) {
+                toast.success("Google account linked to your existing Airgo account.");
+            } else {
+                toast.success("Signed in with Google successfully!");
+            }
+
+            if (data.role === 'admin') router.push('/admin');
+            else if (data.role === 'partner') router.push('/partner');
+            else router.push('/dashboard');
+
+        } catch (err: any) {
+            toast.error(err.message);
         }
     };
 
@@ -110,6 +149,12 @@ export default function LoginPage() {
                             </button>
                         </div>
 
+                        <div className="flex items-center justify-between">
+                            <Link href="/forgot-password" className="text-sm font-bold text-[#000080] hover:underline">
+                                Forgot password?
+                            </Link>
+                        </div>
+
                         <button
                             disabled={isLoading}
                             type="submit"
@@ -117,6 +162,25 @@ export default function LoginPage() {
                         >
                             {isLoading ? 'Authenticating...' : 'Sign In'}
                         </button>
+                        
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-white px-2 text-gray-500 font-bold uppercase">Or</span>
+                            </div>
+                        </div>
+
+                        <div className="flex justify-center">
+                            <GoogleLogin
+                                onSuccess={handleGoogleSuccess}
+                                onError={() => toast.error('Google Sign-In failed')}
+                                theme="filled_blue"
+                                shape="pill"
+                                size="large"
+                            />
+                        </div>
                     </form>
 
                     <div className="mt-6 text-center pt-6 border-t border-gray-100">

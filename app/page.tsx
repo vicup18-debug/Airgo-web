@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -112,7 +113,7 @@ export default function HotelHomepage() {
   const handleConfirmBooking = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) {
-      alert("Please sign in to secure your escrow reservation.");
+      toast.success("Please sign in to secure your escrow reservation.");
       return router.push('/login');
     }
 
@@ -130,7 +131,7 @@ export default function HotelHomepage() {
         checkIn: checkIn,
         checkOut: checkOut,
         guests: 1,
-        totalPrice: calculateTotal(selectedRoom.pricePerNight).toLocaleString(),
+        totalPrice: calculateTotal(selectedRoom).toLocaleString(),
         status: 'Pending Escrow',
         clientName: clientData.name,
         clientEmail: clientData.email,
@@ -147,12 +148,12 @@ export default function HotelHomepage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Booking failed');
 
-      alert("✅ Booking Confirmed! Your Escrow hold is active and PDF Invoice has been generated.");
+      toast.success("Booking Confirmed! Your Escrow hold is active and PDF Invoice has been generated.");
       setSelectedRoom(null);
       router.push('/dashboard');
 
     } catch (error: any) {
-      alert(`❌ ${error.message}`);
+      toast.error(`❌ ${error.message}`);
     } finally {
       setIsBooking(false);
     }
@@ -242,7 +243,7 @@ export default function HotelHomepage() {
 
                       <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
                         <div>
-                          <p className="text-2xl font-black text-[#000080]">₦{calculateTotal(room.pricePerNight).toLocaleString()}</p>
+                          <p className="text-2xl font-black text-[#000080]">₦{calculateTotal(room).toLocaleString()}</p>
                           <p className="text-[10px] text-gray-400 font-bold uppercase">{checkIn && checkOut ? 'Total Price' : 'Per Night'}</p>
                         </div>
                         <button
@@ -284,7 +285,7 @@ export default function HotelHomepage() {
               </div>
               <div className="flex justify-between items-end mt-4">
                 <span className="text-xs uppercase font-black text-gray-400">Total Escrow Hold</span>
-                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(selectedRoom.pricePerNight).toLocaleString()}</span>
+                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(selectedRoom).toLocaleString()}</span>
               </div>
             </div>
 

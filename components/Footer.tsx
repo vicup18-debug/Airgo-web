@@ -61,7 +61,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-blue-900 text-center text-xs text-blue-300 font-medium">
-          &copy; {new Date().getFullYear()} Airgo Travel & Tour Ltd (Airgo.ng). All rights reserved. Managed across Abuja and Kaduna regions, Nigeria.
+          &copy; {new Date().getFullYear()} Airgo Travel & Tour Ltd (Airgo.ng). All rights reserved. Servicing the entire Nigerian market.
         </div>
       </footer>
 
