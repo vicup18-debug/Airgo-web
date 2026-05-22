@@ -10,6 +10,7 @@ const FALLBACK_ROOMS = [
   {
     _id: 'airgo_room_01',
     hotelName: 'Transcorp Hilton Abuja',
+    hotelAddress: '1 Aguiyi Ironsi St, Maitama, Abuja',
     name: 'Presidential Suite',
     pricePerNight: 350000,
     totalAllocated: 5,
@@ -21,6 +22,7 @@ const FALLBACK_ROOMS = [
   {
     _id: 'airgo_room_02',
     hotelName: 'The Wheatbaker Lagos',
+    hotelAddress: '4 Onitolo Rd, Ikoyi, Lagos',
     name: 'Luxury Executive Penthouse',
     pricePerNight: 280000,
     totalAllocated: 3,
@@ -32,6 +34,7 @@ const FALLBACK_ROOMS = [
   {
     _id: 'airgo_room_03',
     hotelName: 'Fraser Suites Abuja',
+    hotelAddress: '294 Leventis Close, Central Business District, Abuja',
     name: 'Diplomatic Studio',
     pricePerNight: 195000,
     totalAllocated: 8,
@@ -42,10 +45,37 @@ const FALLBACK_ROOMS = [
   }
 ];
 
+const FALLBACK_CARS = [
+  {
+    _id: 'airgo_car_01',
+    name: 'Mercedes-Benz G-Wagon',
+    type: 'Luxury SUV',
+    price: 450000,
+    capacity: 4,
+    features: 'Bulletproof, Chauffeur, Leather Interior',
+    image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80',
+    partnerId: 'airgo_direct',
+    bookedDates: []
+  },
+  {
+    _id: 'airgo_car_02',
+    name: 'Range Rover Autobiography',
+    type: 'Premium SUV',
+    price: 350000,
+    capacity: 5,
+    features: 'Massaging Seats, Panoramic Roof, Wi-Fi',
+    image: 'https://images.unsplash.com/photo-1606016159991-efa9f131a48c?auto=format&fit=crop&w=800&q=80',
+    partnerId: 'airgo_direct',
+    bookedDates: []
+  }
+];
+
 export default function HotelHomepage() {
   const [user, setUser] = useState<any>(null);
   const [liveRooms, setLiveRooms] = useState<any[]>(FALLBACK_ROOMS);
+  const [liveCars, setLiveCars] = useState<any[]>(FALLBACK_CARS);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'stays' | 'transport'>('stays');
 
   // SEARCH & DATE STATES
   const [location, setLocation] = useState('');
@@ -53,7 +83,7 @@ export default function HotelHomepage() {
   const [checkOut, setCheckOut] = useState('');
 
   // BOOKING MODAL STATES
-  const [selectedRoom, setSelectedRoom] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [clientData, setClientData] = useState({ name: '', email: '', phone: '' });
 
@@ -67,47 +97,54 @@ export default function HotelHomepage() {
       setClientData({ name: parsedUser.name, email: parsedUser.email, phone: parsedUser.phone || '' });
     }
 
-    const fetchRooms = async () => {
+    const fetchData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-        const res = await fetch(`${apiUrl}/api/rooms`);
+        const [roomsRes, carsRes] = await Promise.all([
+          fetch(`${apiUrl}/api/rooms`),
+          fetch(`${apiUrl}/api/cars`)
+        ]);
 
-        if (res.ok) {
-          const data = await res.json();
-          if (data.length > 0) {
-            setLiveRooms(data);
-          } else {
-            setLiveRooms(FALLBACK_ROOMS); // 🟢 Fallback on empty DB
-          }
+        if (roomsRes.ok) {
+          const roomsData = await roomsRes.json();
+          if (roomsData.length > 0) setLiveRooms(roomsData);
+        }
+        
+        if (carsRes.ok) {
+          const carsData = await carsRes.json();
+          if (carsData.length > 0) setLiveCars(carsData);
         }
       } catch (error) {
         console.error("Error fetching inventory:", error);
       }
     };
-    fetchRooms();
+    fetchData();
   }, []);
 
   // 🛡️ DYNAMIC AVAILABILITY ENGINE
-  const isRoomAvailable = (room: any) => {
+  const isItemAvailable = (item: any, isCar: boolean = false) => {
     if (!checkIn || !checkOut) return true;
-    if (!room.bookedDates) return true; // Safeguard for fallback data
+    if (!item.bookedDates) return true;
 
     let d = new Date(checkIn);
     const endD = new Date(checkOut);
+    
+    // Total capacity vs allocated threshold
+    const capacityThreshold = isCar ? 1 : (item.totalAllocated || 1);
 
     while (d < endD) {
       const dateStr = d.toISOString().split('T')[0];
-      const dayMatch = room.bookedDates?.find((b: any) => b.date === dateStr);
-      if (dayMatch && dayMatch.count >= room.totalAllocated) return false;
+      const dayMatch = item.bookedDates?.find((b: any) => b.date === dateStr);
+      if (dayMatch && dayMatch.count >= capacityThreshold) return false;
       d.setDate(d.getDate() + 1);
     }
     return true;
   };
 
-  const calculateTotal = (pricePerNight: number) => {
-    if (!checkIn || !checkOut) return pricePerNight;
-    const nights = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24));
-    return (nights > 0 ? nights : 1) * pricePerNight;
+  const calculateTotal = (pricePerUnit: number) => {
+    if (!checkIn || !checkOut) return pricePerUnit;
+    const days = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24));
+    return (days > 0 ? days : 1) * pricePerUnit;
   };
 
   const handleConfirmBooking = async (e: React.FormEvent) => {
@@ -121,22 +158,25 @@ export default function HotelHomepage() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
       const finalUserId = user.id || user.userId || user._id;
+      
+      const isCar = activeTab === 'transport';
+      const basePrice = isCar ? selectedItem.price : selectedItem.pricePerNight;
 
       const payload = {
         userId: finalUserId,
-        itemId: selectedRoom._id,
-        itemName: `${selectedRoom.hotelName} - ${selectedRoom.name}`,
-        itemType: 'hotel',
-        partnerId: selectedRoom.partnerId,
+        itemId: selectedItem._id,
+        itemName: isCar ? selectedItem.name : `${selectedItem.hotelName} - ${selectedItem.name}`,
+        itemType: isCar ? 'car' : 'hotel',
+        partnerId: selectedItem.partnerId,
         checkIn: checkIn,
         checkOut: checkOut,
         guests: 1,
-        totalPrice: calculateTotal(selectedRoom).toLocaleString(),
+        totalPrice: calculateTotal(basePrice).toLocaleString(),
         status: 'Pending Escrow',
         clientName: clientData.name,
         clientEmail: clientData.email,
         clientPhone: clientData.phone,
-        deliveryAddress: 'Walk-In Stay at Property'
+        deliveryAddress: location || (isCar ? 'Depot Pick-up' : 'Walk-In Stay at Property')
       };
 
       const res = await fetch(`${apiUrl}/api/bookings`, {
@@ -149,7 +189,7 @@ export default function HotelHomepage() {
       if (!res.ok) throw new Error(data.message || 'Booking failed');
 
       toast.success("Booking Confirmed! Your Escrow hold is active and PDF Invoice has been generated.");
-      setSelectedRoom(null);
+      setSelectedItem(null);
       router.push('/dashboard');
 
     } catch (error: any) {
@@ -162,96 +202,150 @@ export default function HotelHomepage() {
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-[72px] md:pb-0 flex flex-col">
 
-      
-
       {/* MAIN CONTENT AREA */}
       <div className="flex-grow">
         {/* HEADER */}
-        <header className="bg-[#000080] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative">
-          <div className="max-w-4xl mx-auto text-center">
-            <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Find Your Perfect Stay</h1>
-            <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto">Secure luxury hotel suites and premium executive lodgings across Nigeria with Airgo Escrow Protection.</p>
+        <header className="bg-gradient-to-b from-[#000080] to-[#000060] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative overflow-hidden">
+          
+          {/* Animated Background Elements */}
+          <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+             <div className="absolute w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-4"></div>
+             <div className="absolute w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 top-0 -right-4"></div>
+             <div className="absolute w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 -bottom-8 left-20"></div>
+          </div>
+
+          <div className="max-w-4xl mx-auto text-center relative z-10">
+            <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Experience <span className="text-[#FFB81C]">Premium</span> Comfort</h1>
+            <p className="text-base md:text-xl text-blue-100 max-w-2xl mx-auto mb-10 font-medium">Secure luxury suites and premium executive fleets with zero risk through Airgo Escrow Protection.</p>
+            
+            {/* TOGGLE: STAYS VS TRANSPORT */}
+            <div className="flex justify-center gap-4 mb-6">
+              <button 
+                onClick={() => setActiveTab('stays')} 
+                className={`px-8 py-3.5 rounded-full font-black text-sm uppercase tracking-wide transition-all duration-300 ${activeTab === 'stays' ? 'bg-[#FFB81C] text-[#000080] shadow-[0_0_20px_rgba(255,184,28,0.4)] scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'}`}
+              >
+                🏨 Luxury Stays
+              </button>
+              <button 
+                onClick={() => setActiveTab('transport')} 
+                className={`px-8 py-3.5 rounded-full font-black text-sm uppercase tracking-wide transition-all duration-300 ${activeTab === 'transport' ? 'bg-[#FFB81C] text-[#000080] shadow-[0_0_20px_rgba(255,184,28,0.4)] scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'}`}
+              >
+                🚘 Executive Fleet
+              </button>
+            </div>
           </div>
           
-          {/* TRUST BAR */}
-          <div className="mt-10 bg-[#000060] rounded-2xl p-6 md:p-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-2">✅</span>
-              <span className="font-bold text-white text-base">Verified Partners</span>
-              <span className="text-xs text-blue-200 mt-1">Strictly vetted luxury properties</span>
+          {/* GLASSMORPHISM TRUST BAR */}
+          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-2xl border border-white/20 relative z-10">
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-white/10 shadow-inner">
+                <span className="text-2xl">🌟</span>
+              </div>
+              <span className="font-black text-white text-lg mb-1 tracking-tight">Verified Partners</span>
+              <span className="text-sm text-blue-100/80 font-medium leading-relaxed">Strictly vetted luxury properties and verified chauffeurs.</span>
             </div>
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-2">🔒</span>
-              <span className="font-bold text-white text-base">Escrow-Protected Transactions</span>
-              <span className="text-xs text-blue-200 mt-1">Your funds are held securely</span>
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-white/10 shadow-inner">
+                <span className="text-2xl">🔒</span>
+              </div>
+              <span className="font-black text-white text-lg mb-1 tracking-tight">Escrow-Protected</span>
+              <span className="text-sm text-blue-100/80 font-medium leading-relaxed">Your funds are held securely until service is completely delivered.</span>
             </div>
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-2">📞</span>
-              <span className="font-bold text-white text-base">24/7 Support</span>
-              <span className="text-xs text-blue-200 mt-1">Always available for assistance</span>
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-white/10 shadow-inner">
+                <span className="text-2xl">💎</span>
+              </div>
+              <span className="font-black text-white text-lg mb-1 tracking-tight">24/7 Concierge</span>
+              <span className="text-sm text-blue-100/80 font-medium leading-relaxed">Always available for VIP assistance and priority booking support.</span>
             </div>
           </div>
         </header>
 
         {/* SEARCH BOX & CALENDAR PICKER */}
-        <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-10">
-          <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
+        <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-20">
+          <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-gray-100">
             <form className="flex flex-col md:flex-row gap-4">
               <div className="flex-[2]">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Hotel or City</label>
-                <input type="text" placeholder="Abuja, Lagos, Hilton..." className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 outline-none" value={location} onChange={(e) => setLocation(e.target.value)} />
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Hotel, City or Region' : 'Pickup Location'}</label>
+                <input type="text" placeholder={activeTab === 'stays' ? 'Abuja, Lagos, Hilton...' : 'Lekki, Airport, Victoria Island...'} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check In</label>
-                <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Check In' : 'Pickup Date'}</label>
+                <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
               </div>
               <div className="flex-1">
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Check Out</label>
-                <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Check Out' : 'Return Date'}</label>
+                <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
               </div>
             </form>
           </div>
         </div>
 
         {/* LIVE DYNAMIC INVENTORY */}
-        <div className="max-w-7xl mx-auto px-6 mt-12 mb-16">
+        <div className="max-w-7xl mx-auto px-6 mt-16 mb-24">
+          <div className="flex justify-between items-end mb-8">
+            <div>
+              <h2 className="text-3xl font-black text-gray-900">{activeTab === 'stays' ? 'Featured Properties' : 'Executive Vehicles'}</h2>
+              <p className="text-gray-500 mt-2 font-medium">{activeTab === 'stays' ? 'Discover handpicked luxury accommodations.' : 'Travel in absolute comfort and style.'}</p>
+            </div>
+          </div>
 
           {isLoading ? (
-            <div className="text-center py-12 text-gray-500 font-bold animate-pulse">Scanning live matrices...</div>
+            <div className="text-center py-20 text-gray-400 font-bold animate-pulse text-lg">Scanning live matrices...</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {liveRooms.map((room) => {
-                const available = isRoomAvailable(room);
+              {(activeTab === 'stays' ? liveRooms : liveCars).map((item) => {
+                const available = isItemAvailable(item, activeTab === 'transport');
+                const isCar = activeTab === 'transport';
+                const basePrice = isCar ? item.price : item.pricePerNight;
 
                 return (
-                  <div key={room._id} className={`bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 transition duration-300 flex flex-col ${available ? 'hover:shadow-lg' : 'opacity-60 grayscale'}`}>
-                    <div className="h-56 overflow-hidden relative">
-                      <img src={room.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={room.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      {!available && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-sm">
-                          <span className="bg-red-600 text-white font-black px-4 py-2 rounded-lg text-sm uppercase tracking-wider transform -rotate-12 shadow-xl">Sold Out</span>
+                  <div key={item._id} className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group ${!available && 'opacity-60 grayscale'}`}>
+                    <div className="h-64 overflow-hidden relative">
+                      <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
+                      {!available ? (
+                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
+                          <span className="bg-red-600 text-white font-black px-6 py-3 rounded-xl text-sm uppercase tracking-widest transform -rotate-12 shadow-2xl border border-white/20">Sold Out</span>
+                        </div>
+                      ) : (
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50">
+                           <p className="text-sm font-black text-gray-900">₦{basePrice.toLocaleString()}<span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">{isCar ? '/day' : '/night'}</span></p>
                         </div>
                       )}
                     </div>
-                    <div className="p-6 flex flex-col flex-grow">
-                      <p className="text-xs font-black text-[#000080] uppercase tracking-wider mb-1 line-clamp-1">{room.hotelName}</p>
-                      <h3 className="font-bold text-gray-900 text-xl mb-2 leading-tight">{room.name}</h3>
+                    <div className="p-8 flex flex-col flex-grow">
+                      {!isCar && <p className="text-[10px] font-black text-[#000080] uppercase tracking-widest mb-2 truncate">{item.hotelName}</p>}
+                      <h3 className="font-black text-gray-900 text-2xl mb-3 leading-tight">{item.name}</h3>
+                      
+                      {!isCar && item.hotelAddress && (
+                        <div className="flex items-start gap-2 mb-4 text-gray-500">
+                          <span className="text-sm mt-0.5">📍</span>
+                          <p className="text-sm font-medium leading-relaxed">{item.hotelAddress}</p>
+                        </div>
+                      )}
+                      
+                      {isCar && item.type && (
+                         <div className="flex items-center gap-2 mb-4 text-gray-500">
+                           <span className="text-sm">🏷️</span>
+                           <p className="text-sm font-bold uppercase tracking-wide">{item.type} <span className="mx-2">•</span> {item.capacity} Seats</p>
+                         </div>
+                      )}
 
-                      <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100 flex-grow">
-                        <p className="text-xs text-gray-600 font-medium leading-relaxed">{room.amenities}</p>
+                      <div className="bg-gray-50 p-4 rounded-2xl mb-8 border border-gray-100 flex-grow">
+                        <p className="text-xs text-gray-600 font-medium leading-relaxed">{isCar ? item.features : item.amenities}</p>
                       </div>
 
-                      <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
+                      <div className="flex justify-between items-center pt-2 mt-auto">
                         <div>
-                          <p className="text-2xl font-black text-[#000080]">₦{calculateTotal(room).toLocaleString()}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase">{checkIn && checkOut ? 'Total Price' : 'Per Night'}</p>
+                          <p className="text-xl font-black text-gray-900">₦{calculateTotal(basePrice).toLocaleString()}</p>
+                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{checkIn && checkOut ? 'Total Escrow' : (isCar ? 'Per Day' : 'Per Night')}</p>
                         </div>
                         <button
-                          onClick={() => available ? setSelectedRoom(room) : null}
+                          onClick={() => available ? setSelectedItem(item) : null}
                           disabled={!available || !checkIn || !checkOut}
-                          className={`px-5 py-3 rounded-xl font-black text-sm shadow-md transition ${!checkIn || !checkOut ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : available ? 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400' : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                          className={`px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${!checkIn || !checkOut ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
                         >
-                          {available ? 'Book Escrow' : 'Unavailable'}
+                          {available ? 'Reserve Now' : 'Unavailable'}
                         </button>
                       </div>
                     </div>
@@ -263,47 +357,64 @@ export default function HotelHomepage() {
         </div>
       </div>
 
-      
-      
-
       {/* FRICTIONLESS BOOKING MODAL */}
-      {selectedRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden my-auto border border-gray-100">
-            <div className="bg-[#000080] p-6 text-white flex justify-between items-start">
-              <div>
-                <h2 className="text-2xl font-black">{selectedRoom.hotelName}</h2>
-                <p className="text-blue-200 text-sm font-bold mt-1">{selectedRoom.name}</p>
+      {selectedItem && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden my-auto border border-gray-100 transform transition-all">
+            <div className="bg-gradient-to-r from-[#000080] to-[#000060] p-8 text-white relative overflow-hidden">
+               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+              <div className="relative z-10 pr-8">
+                <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">{activeTab === 'stays' ? selectedItem.hotelName : `${selectedItem.type} Vehicle`}</p>
+                <h2 className="text-3xl font-black leading-tight">{selectedItem.name}</h2>
               </div>
-              <button onClick={() => setSelectedRoom(null)} className="text-white hover:text-red-300 text-2xl font-bold transition">✕</button>
+              <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all z-20">✕</button>
             </div>
 
-            <div className="p-6 bg-gray-50 border-b border-gray-200">
-              <div className="flex justify-between text-sm font-bold text-gray-600 mb-2">
-                <span>Check-In: <span className="text-gray-900">{new Date(checkIn).toLocaleDateString()}</span></span>
-                <span>Check-Out: <span className="text-gray-900">{new Date(checkOut).toLocaleDateString()}</span></span>
+            <div className="p-8 bg-gray-50/50 border-b border-gray-100">
+              <div className="flex justify-between items-center mb-6">
+                 <div className="flex flex-col">
+                   <span className="text-[10px] uppercase font-black text-gray-400 mb-1">{activeTab === 'stays' ? 'Check-In' : 'Pickup Date'}</span>
+                   <span className="text-sm font-bold text-gray-900">{new Date(checkIn).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                 </div>
+                 <div className="h-px bg-gray-300 w-12 flex-1 mx-4"></div>
+                 <div className="flex flex-col text-right">
+                   <span className="text-[10px] uppercase font-black text-gray-400 mb-1">{activeTab === 'stays' ? 'Check-Out' : 'Return Date'}</span>
+                   <span className="text-sm font-bold text-gray-900">{new Date(checkOut).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                 </div>
               </div>
-              <div className="flex justify-between items-end mt-4">
-                <span className="text-xs uppercase font-black text-gray-400">Total Escrow Hold</span>
-                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(selectedRoom).toLocaleString()}</span>
+
+              <div className="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
+                <span className="text-xs uppercase font-black text-gray-500 tracking-wider">Total Escrow Hold</span>
+                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(activeTab === 'transport' ? selectedItem.price : selectedItem.pricePerNight).toLocaleString()}</span>
               </div>
             </div>
 
-            <form onSubmit={handleConfirmBooking} className="p-6 space-y-4">
-              {!user && <div className="bg-yellow-50 text-yellow-800 p-3 rounded-xl text-xs font-bold mb-4">Please log in to your Airgo account to secure this booking.</div>}
+            <form onSubmit={handleConfirmBooking} className="p-8 space-y-5">
+              {!user && <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-2xl text-sm font-bold mb-6 flex items-start gap-3">
+                 <span className="text-xl">⚠️</span>
+                 <p>Please log in to your Airgo account to secure this escrow reservation.</p>
+              </div>}
 
-              <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Guest Name</label><input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none" value={clientData.name} onChange={(e) => setClientData({ ...clientData, name: e.target.value })} /></div>
-              <div className="grid grid-cols-2 gap-4">
-                <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Email (For Invoice)</label><input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none" value={clientData.email} onChange={(e) => setClientData({ ...clientData, email: e.target.value })} /></div>
-                <div><label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Phone Number</label><input required type="tel" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none" value={clientData.phone} onChange={(e) => setClientData({ ...clientData, phone: e.target.value })} /></div>
+              <div><label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Primary Guest Name</label><input required type="text" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] focus:ring-4 focus:ring-[#000080]/10 outline-none transition-all font-medium" value={clientData.name} onChange={(e) => setClientData({ ...clientData, name: e.target.value })} /></div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div><label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Email Address</label><input required type="email" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] focus:ring-4 focus:ring-[#000080]/10 outline-none transition-all font-medium" value={clientData.email} onChange={(e) => setClientData({ ...clientData, email: e.target.value })} /></div>
+                <div><label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Phone Number</label><input required type="tel" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] focus:ring-4 focus:ring-[#000080]/10 outline-none transition-all font-medium" value={clientData.phone} onChange={(e) => setClientData({ ...clientData, phone: e.target.value })} /></div>
               </div>
 
-              <p className="text-[10px] text-gray-500 leading-relaxed mt-4 bg-gray-50 p-3 rounded-xl border border-gray-100">
-                🔒 By confirming, your funds will be securely held in the Airgo Escrow framework. The partner will only be paid upon successful completion of your stay.
-              </p>
+              <div className="flex items-start gap-3 mt-6 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
+                <span className="text-xl mt-0.5">🛡️</span>
+                <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
+                  By confirming, your funds are encrypted and held securely in the <strong className="text-[#000080]">Airgo Escrow framework</strong>. The partner is only paid upon successful completion of your service.
+                </p>
+              </div>
 
-              <button disabled={isBooking || !user} type="submit" className={`w-full py-4 rounded-xl shadow-lg text-lg font-black transition mt-2 ${(isBooking || !user) ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
-                {isBooking ? 'Locking Inventory & Encrypting...' : 'Confirm Escrow Booking'}
+              <button disabled={isBooking || !user} type="submit" className={`w-full py-4.5 rounded-2xl shadow-xl text-lg font-black transition-all duration-300 mt-4 ${(isBooking || !user) ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#FFB81C] text-[#000080] hover:bg-[#e5a519] hover:shadow-[0_10px_25px_rgba(255,184,28,0.4)] hover:-translate-y-1'}`}>
+                {isBooking ? (
+                   <span className="flex items-center justify-center gap-2">
+                     <svg className="animate-spin h-5 w-5 text-[#000080]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                     Locking Inventory...
+                   </span>
+                ) : 'Confirm Escrow Reservation'}
               </button>
             </form>
           </div>

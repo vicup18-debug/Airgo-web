@@ -15,6 +15,19 @@ export default function PartnerDashboard() {
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+
+export default function PartnerDashboard() {
+    const [user, setUser] = useState<any>(null);
+    const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings'>('overview');
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // DATA STATES
+    const [myInventory, setMyInventory] = useState<any[]>([]);
+    const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
 
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,7 +35,7 @@ export default function PartnerDashboard() {
     const [imageFile, setImageFile] = useState<File | null>(null);
 
     const [newItem, setNewItem] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: ''
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
     });
 
     const router = useRouter();
@@ -120,7 +133,7 @@ export default function PartnerDashboard() {
             const payload = isCar ? {
                 name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: secureId
             } : {
-                partnerId: secureId, hotelName: user.businessName || user.name, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
+                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -133,7 +146,7 @@ export default function PartnerDashboard() {
                 toast.success(`${user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
-                setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '' });
+                setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -395,20 +408,6 @@ const handleLogout = () => {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
                                     {/* 🟢 UPGRADED: Smart Field - Min 1 */}
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Allocated</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
-                                    <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features (e.g. Chauffeur, Bulletproof)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 gap-4">
-                                    {/* 🟢 UPGRADED: Smart Field - Min 1 */}
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Pool, WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.amenities} onChange={e => setNewItem({ ...newItem, amenities: e.target.value })} /></div>
-                                </div>
-                            )}
-
-                            <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">High-Quality Photo *</label><input required type="file" accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] file:font-bold text-gray-900" onChange={(e) => setImageFile(e.target.files?.[0] || null)} /></div>
-
-                            <div className="pt-4 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
                                 <button disabled={isUploading} type="submit" className={`px-6 py-2 rounded-xl font-bold text-white shadow-md ${isUploading ? 'bg-gray-400' : 'bg-[#004A99] hover:bg-blue-800'}`}>{isUploading ? 'Uploading...' : 'Publish Listing'}</button>
                             </div>

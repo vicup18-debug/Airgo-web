@@ -19,6 +19,7 @@ export default function SuperadminDashboard() {
 
     // EXPANDABLE ESCROW STATE
     const [expandedEscrowId, setExpandedEscrowId] = useState<string | null>(null);
+    const [expandedPartnerId, setExpandedPartnerId] = useState<string | null>(null);
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
@@ -27,7 +28,7 @@ export default function SuperadminDashboard() {
 
     // ROOM MATRIX FORM STATES 
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-    const [newRoom, setNewRoom] = useState({ hotelName: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
+    const [newRoom, setNewRoom] = useState({ hotelName: '', hotelAddress: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
     const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
 
     const [isUploading, setIsUploading] = useState(false);
@@ -78,7 +79,7 @@ export default function SuperadminDashboard() {
 
     // --- ESCROW & PARTNER ACTIONS ---
     const handleDisburse = async (bookingId: string) => {
-        if (window.window.window.window.confirm(`Authorize payout?`)) {
+        if (window.confirm(`Authorize payout?`)) {
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
                 const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
@@ -169,6 +170,7 @@ export default function SuperadminDashboard() {
                 body: JSON.stringify({
                     partnerId: 'airgo_direct',
                     hotelName: newRoom.hotelName,
+                    hotelAddress: newRoom.hotelAddress,
                     name: newRoom.name,
                     pricePerNight: Number(newRoom.pricePerNight),
                     totalAllocated: Number(newRoom.totalAllocated),
@@ -180,7 +182,7 @@ export default function SuperadminDashboard() {
             if (response.ok) {
                 toast.success("Room Category published to live matrix pool!");
                 setIsRoomModalOpen(false);
-                setNewRoom({ hotelName: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
+                setNewRoom({ hotelName: '', hotelAddress: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
                 setRoomImageFile(null);
                 fetchAllSystemData();
             }
@@ -189,7 +191,7 @@ export default function SuperadminDashboard() {
 
     // --- DELETE ITEM (Generic) ---
     const handleDelete = async (type: 'cars' | 'rooms', id: string) => {
-        if (!window.window.window.confirm(`Are you sure you want to remove this listing?`)) return;
+        if (!window.confirm(`Are you sure you want to remove this listing?`)) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const response = await fetch(`${apiUrl}/api/${type}/${id}`, { method: 'DELETE' });
@@ -305,7 +307,6 @@ export default function SuperadminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
-                                                {/* 🟢 UPGRADED: Beautiful Empty State Banner */}
                                                 {allBookings.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={4} className="p-0">
@@ -388,24 +389,50 @@ export default function SuperadminDashboard() {
                                                 {partners.length === 0 ? (
                                                     <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found.</td></tr>
                                                 ) : partners.map((partner) => (
-                                                    <tr key={partner._id} className={`transition ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-gray-50'}`}>
-                                                        <td className="p-4">
-                                                            <p className="font-bold text-gray-900">{partner.name}</p>
-                                                            <p className="text-[10px] uppercase font-black text-blue-600">{partner.partnerType === 'car' ? '🚘 Fleet' : partner.partnerType === 'hotel' ? '🏨 Hotel' : 'Partner'}</p>
-                                                        </td>
-                                                        <td className="p-4 text-gray-600 font-medium">{partner.businessName || 'N/A'}</td>
-                                                        <td className="p-4"><p className="text-sm text-gray-900">{partner.email}</p><p className="text-xs text-gray-500">{partner.phoneNumber || 'No phone'}</p></td>
-                                                        <td className="p-4">
-                                                            <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{partner.isApproved ? 'Approved' : 'Pending'}</span>
-                                                            {partner.isActive === false && <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>}
-                                                        </td>
-                                                        <td className="p-4 flex flex-wrap gap-2 justify-center">
-                                                            {!partner.isApproved && <button onClick={() => handleApprovePartner(partner._id)} className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">Approve</button>}
-                                                            <button onClick={() => handleToggleStatus(partner._id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}>
-                                                                {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
-                                                            </button>
-                                                        </td>
-                                                    </tr>
+                                                    <React.Fragment key={partner._id}>
+                                                        <tr onClick={() => setExpandedPartnerId(expandedPartnerId === partner._id ? null : partner._id)} className={`transition cursor-pointer ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-blue-50'}`}>
+                                                            <td className="p-4">
+                                                                <p className="font-bold text-gray-900">{partner.name}</p>
+                                                                <p className="text-[10px] uppercase font-black text-blue-600">{partner.partnerType === 'car' ? '🚘 Fleet' : partner.partnerType === 'hotel' ? '🏨 Hotel' : 'Partner'}</p>
+                                                                <p className="text-[10px] text-[#000080] font-bold uppercase mt-1">Tap for details ▼</p>
+                                                            </td>
+                                                            <td className="p-4 text-gray-600 font-medium">{partner.businessName || 'N/A'}</td>
+                                                            <td className="p-4"><p className="text-sm text-gray-900">{partner.email}</p><p className="text-xs text-gray-500">{partner.phoneNumber || 'No phone'}</p></td>
+                                                            <td className="p-4">
+                                                                <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{partner.isApproved ? 'Approved' : 'Pending'}</span>
+                                                                {partner.isActive === false && <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>}
+                                                            </td>
+                                                            <td className="p-4 flex flex-wrap gap-2 justify-center">
+                                                                {!partner.isApproved && <button onClick={(e) => { e.stopPropagation(); handleApprovePartner(partner._id); }} className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition">Approve</button>}
+                                                                <button onClick={(e) => { e.stopPropagation(); handleToggleStatus(partner._id); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}>
+                                                                    {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        {expandedPartnerId === partner._id && (
+                                                            <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
+                                                                <td colSpan={5} className="p-6">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Business Details</p>
+                                                                            <p className="text-sm font-black text-gray-900">{partner.businessName || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 mt-1">{partner.businessAddress || 'No address provided'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Registration</p>
+                                                                            <p className="text-xs font-bold text-gray-900">CAC Number: <span className="font-normal text-gray-600">{partner.cacNumber || 'N/A'}</span></p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Documents</p>
+                                                                            {partner.cacCertificateUrl && <a href={partner.cacCertificateUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#000080] hover:underline block mb-1">📄 View CAC Certificate</a>}
+                                                                            {partner.driversLicenseUrl && <a href={partner.driversLicenseUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#000080] hover:underline block mb-1">📄 View Driver's License</a>}
+                                                                            {!partner.cacCertificateUrl && !partner.driversLicenseUrl && <p className="text-xs text-gray-500">No documents uploaded</p>}
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
                                                 ))}
                                             </tbody>
                                         </table>
@@ -457,6 +484,7 @@ export default function SuperadminDashboard() {
                                                     <span className="text-[10px] uppercase tracking-wider text-blue-600 font-black">{room.hotelName}</span>
                                                     <h3 className="font-black text-gray-900 text-lg mt-0.5">{room.name}</h3>
                                                     <p className="text-xs text-gray-400 mt-1 line-clamp-1">Amenities: {room.amenities}</p>
+                                                    <p className="text-[10px] text-gray-500 mt-1 line-clamp-1">📍 {room.hotelAddress || 'No address'}</p>
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
                                                         <p className="font-bold text-[#000080]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">/ night</span></p>
                                                         <div className="flex items-center gap-2">
@@ -487,9 +515,7 @@ export default function SuperadminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
-                                {/* 🟢 UPGRADED: Smart Field - Min 0 */}
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} /></div>
-                                {/* 🟢 UPGRADED: Smart Field - Min 1 */}
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
                             </div>
                             <div>
@@ -518,11 +544,12 @@ export default function SuperadminDashboard() {
                         <form onSubmit={handleAddRoom} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel / Property Name</label><input required type="text" placeholder="e.g. Transcorp Hilton" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.hotelName} onChange={e => setNewRoom({ ...newRoom, hotelName: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Room Tier Name</label><input required type="text" placeholder="e.g. Presidential Suite" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.name} onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} /></div>
-                                {/* 🟢 UPGRADED: Smart Field - Min 0 */}
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.hotelAddress} onChange={e => setNewRoom({ ...newRoom, hotelAddress: e.target.value })} /></div>
+                                <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Room Tier Name</label><input required type="text" placeholder="e.g. Presidential Suite" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.name} onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} /></div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price Per Night (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.pricePerNight} onChange={e => setNewRoom({ ...newRoom, pricePerNight: e.target.value })} /></div>
-                                {/* 🟢 UPGRADED: Smart Field - Min 1 */}
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation Count</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
                             </div>
                             <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Private Pool, Free WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.amenities} onChange={e => setNewRoom({ ...newRoom, amenities: e.target.value })} /></div>
                             <div>
