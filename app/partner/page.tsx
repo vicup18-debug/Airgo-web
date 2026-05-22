@@ -74,7 +74,7 @@ export default function PartnerDashboard() {
             }
 
             // Fetch Inventory with unified secure ID maps
-            if (partnerData.partnerType === 'car') {
+            if (partnerData.partnerType?.toLowerCase().includes('car')) {
                 const carsRes = await fetch(`${apiUrl}/api/cars`);
                 if (carsRes.ok) {
                     const allCars = await carsRes.json();
@@ -114,7 +114,7 @@ export default function PartnerDashboard() {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const secureId = user.id || user.userId || user._id;
 
-            const isCar = user.partnerType === 'car';
+            const isCar = user.partnerType?.toLowerCase().includes('car');
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
@@ -130,7 +130,7 @@ export default function PartnerDashboard() {
             });
 
             if (response.ok) {
-                toast.success(`${user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'} listed successfully!`);
+                toast.success(`${user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
                 setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '' });
@@ -146,7 +146,7 @@ export default function PartnerDashboard() {
     const handleUpdateInventory = async (id: string, updates: any) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const isCar = user.partnerType === 'car';
+            const isCar = user.partnerType?.toLowerCase().includes('car');
             const endpoint = isCar ? `/api/cars/${id}` : `/api/rooms/${id}`;
             
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -200,14 +200,14 @@ const handleLogout = () => {
                     <div>
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
-                            {user.partnerType === 'car' ? 'Fleet Manager' : 'Hotelier'}
+                            {user.partnerType?.toLowerCase().includes('car') ? 'Fleet Manager' : 'Hotelier'}
                         </p>
                     </div>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
-                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType === 'car' ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
+                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType?.toLowerCase().includes('car') ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
 
                     {/* 🟢 UPGRADED: Home Button in Sidebar */}
@@ -264,9 +264,9 @@ const handleLogout = () => {
                             {activeTab === 'inventory' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                        <h2 className="text-lg font-bold text-gray-800">{user.partnerType === 'car' ? 'My Fleet' : 'Room Categories'}</h2>
+                                        <h2 className="text-lg font-bold text-gray-800">{user.partnerType?.toLowerCase().includes('car') ? 'My Fleet' : 'Room Categories'}</h2>
                                         <button onClick={() => setIsModalOpen(true)} className="bg-[#004A99] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-800 transition">
-                                            + Configure {user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'}
+                                            + Configure {user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'}
                                         </button>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -278,7 +278,7 @@ const handleLogout = () => {
                                                 <div className="p-4">
                                                     <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
                                                     <p className="text-xs font-bold text-gray-400 uppercase mt-1">
-                                                        {user.partnerType === 'car' ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
+                                                        {user.partnerType?.toLowerCase().includes('car') ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
                                                     </p>
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
                                                         <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
@@ -379,7 +379,7 @@ const handleLogout = () => {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h2 className="text-xl font-black text-[#004A99]">List New {user.partnerType === 'car' ? 'Vehicle' : 'Room Tier'}</h2>
+                            <h2 className="text-xl font-black text-[#004A99]">List New {user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-900 text-xl font-bold">✕</button>
                         </div>
                         <form onSubmit={handleAddItem} className="p-6 space-y-4">
@@ -390,7 +390,7 @@ const handleLogout = () => {
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
                             </div>
 
-                            {user.partnerType === 'car' ? (
+                            {user.partnerType?.toLowerCase().includes('car') ? (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
                                     {/* 🟢 UPGRADED: Smart Field - Min 1 */}

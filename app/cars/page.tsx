@@ -183,7 +183,7 @@ export default function CarsPage() {
                                             <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
                                                 <div>
                                                     <p className="text-2xl font-black text-[#000080]">
-                                                        {typeof car.price === 'number' ? `₦${car.price.toLocaleString()}` : car.price}
+                                                        {typeof car.price === 'number' ? `₦${car.price.toLocaleString()}` : (typeof car.price === 'object' && car.price !== null && car.price.$numberDecimal) ? `₦${Number(car.price.$numberDecimal).toLocaleString()}` : (typeof car.price === 'string' && !isNaN(Number(car.price)) ? `₦${Number(car.price).toLocaleString()}` : `₦${car.price}`)}
                                                     </p>
                                                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">per day</p>
                                                 </div>
@@ -192,7 +192,7 @@ export default function CarsPage() {
                                                         href={`https://wa.me/2348026696170?text=Hi, I want to enquire about the ${encodeURIComponent(car.name)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="bg-[#25D366] text-white px-6 py-3 rounded-xl font-black text-sm hover:bg-[#1ebd57] transition shadow-md text-center"
+                                                        className="bg-[#25D366] text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#1ebd57] transition shadow-md text-center whitespace-nowrap"
                                                     >
                                                         Enquire via WhatsApp
                                                     </a>
@@ -246,7 +246,9 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
     const numericPrice = typeof car.price === 'string'
         ? parseInt(car.price.replace(/[^0-9]/g, ''))
-        : car.price;
+        : (typeof car.price === 'object' && car.price !== null && car.price.$numberDecimal)
+            ? Number(car.price.$numberDecimal)
+            : Number(car.price) || 0;
 
     const calculateTotal = () => {
         if (!bookingDetails.checkIn || !bookingDetails.checkOut) return numericPrice;

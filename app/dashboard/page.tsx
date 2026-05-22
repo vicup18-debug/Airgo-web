@@ -63,7 +63,19 @@ export default function ClientDashboard() {
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
             {/* 🟢 NAVBAR */}
-            
+            <div className="bg-[#000080] p-4 flex justify-between items-center text-white shadow-md">
+                <Link href="/" className="font-black text-xl tracking-tight">Airgo</Link>
+                <div className="flex gap-4">
+                    <Link href="/">
+                        <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-bold transition">
+                            🏠 Back to Homepage
+                        </button>
+                    </Link>
+                    <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold transition shadow-md">
+                        Sign Out
+                    </button>
+                </div>
+            </div>
 
             <div className="max-w-6xl mx-auto px-4 md:px-6 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
