@@ -205,58 +205,44 @@ export default function HotelHomepage() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-grow">
         {/* HEADER */}
-        <header className="bg-gradient-to-b from-[#000080] to-[#000060] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative overflow-hidden">
-          
-          {/* Animated Background Elements */}
-          <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-             <div className="absolute w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob top-0 -left-4"></div>
-             <div className="absolute w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000 top-0 -right-4"></div>
-             <div className="absolute w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000 -bottom-8 left-20"></div>
-          </div>
-
-          <div className="max-w-4xl mx-auto text-center relative z-10">
-            <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tight">Experience <span className="text-[#FFB81C]">Premium</span> Comfort</h1>
-            <p className="text-base md:text-xl text-blue-100 max-w-2xl mx-auto mb-10 font-medium">Secure luxury suites and premium executive fleets with zero risk through Airgo Escrow Protection.</p>
+        <header className="bg-[#000080] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Find Your Perfect Stay</h1>
+            <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto mb-8">Secure luxury hotel suites and premium executive lodgings across Nigeria with Airgo Escrow Protection.</p>
             
             {/* TOGGLE: STAYS VS TRANSPORT */}
             <div className="flex justify-center gap-4 mb-6">
               <button 
                 onClick={() => setActiveTab('stays')} 
-                className={`px-8 py-3.5 rounded-full font-black text-sm uppercase tracking-wide transition-all duration-300 ${activeTab === 'stays' ? 'bg-[#FFB81C] text-[#000080] shadow-[0_0_20px_rgba(255,184,28,0.4)] scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'}`}
+                className={`px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'stays' ? 'bg-[#FFB81C] text-[#000080]' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
                 🏨 Luxury Stays
               </button>
               <button 
                 onClick={() => setActiveTab('transport')} 
-                className={`px-8 py-3.5 rounded-full font-black text-sm uppercase tracking-wide transition-all duration-300 ${activeTab === 'transport' ? 'bg-[#FFB81C] text-[#000080] shadow-[0_0_20px_rgba(255,184,28,0.4)] scale-105' : 'bg-white/10 text-white hover:bg-white/20 backdrop-blur-sm'}`}
+                className={`px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'transport' ? 'bg-[#FFB81C] text-[#000080]' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
                 🚘 Executive Fleet
               </button>
             </div>
           </div>
           
-          {/* GLASSMORPHISM TRUST BAR */}
-          <div className="mt-8 bg-white/10 backdrop-blur-md rounded-3xl p-6 md:p-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-2xl border border-white/20 relative z-10">
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-white/10 shadow-inner">
-                <span className="text-2xl">🌟</span>
-              </div>
-              <span className="font-black text-white text-lg mb-1 tracking-tight">Verified Partners</span>
-              <span className="text-sm text-blue-100/80 font-medium leading-relaxed">Strictly vetted luxury properties and verified chauffeurs.</span>
+          {/* TRUST BAR */}
+          <div className="mt-10 bg-[#000060] rounded-2xl p-6 md:p-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">✅</span>
+              <span className="font-bold text-white text-base">Verified Partners</span>
+              <span className="text-xs text-blue-200 mt-1">Strictly vetted luxury properties and verified chauffeurs.</span>
             </div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:-rotate-6 transition-all duration-300 border border-white/10 shadow-inner">
-                <span className="text-2xl">🔒</span>
-              </div>
-              <span className="font-black text-white text-lg mb-1 tracking-tight">Escrow-Protected</span>
-              <span className="text-sm text-blue-100/80 font-medium leading-relaxed">Your funds are held securely until service is completely delivered.</span>
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">🔒</span>
+              <span className="font-bold text-white text-base">Escrow-Protected</span>
+              <span className="text-xs text-blue-200 mt-1">Your funds are held securely until service is completely delivered.</span>
             </div>
-            <div className="flex flex-col items-center text-center group">
-              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 border border-white/10 shadow-inner">
-                <span className="text-2xl">💎</span>
-              </div>
-              <span className="font-black text-white text-lg mb-1 tracking-tight">24/7 Concierge</span>
-              <span className="text-sm text-blue-100/80 font-medium leading-relaxed">Always available for VIP assistance and priority booking support.</span>
+            <div className="flex flex-col items-center text-center">
+              <span className="text-3xl mb-2">📞</span>
+              <span className="font-bold text-white text-base">24/7 Support</span>
+              <span className="text-xs text-blue-200 mt-1">Always available for VIP assistance and priority booking support.</span>
             </div>
           </div>
         </header>
