@@ -239,10 +239,11 @@ const handleLogout = () => {
 
                     {/* 🟢 UPGRADED: Home Button in Sidebar */}
                     <div className="my-4 border-b border-blue-800"></div>
-                    <Link href="/">
-                        <button className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50">
-                            🏠 Back to Homepage
-                        </button>
+                    <Link 
+                        href="/" 
+                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50"
+                    >
+                        🏠 Back to Homepage
                     </Link>
                 </nav>
                 <div className="p-4 border-t border-blue-800">

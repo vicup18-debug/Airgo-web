@@ -16,8 +16,10 @@ export default function Navigation() {
       } catch (e) {
         console.error(e);
       }
+    } else {
+      setUser(null);
     }
-  }, []);
+  }, [pathname]);
 
 // 🟢 SAFETY SWITCH: Hide global nav on dashboards and auth pages
   const hiddenRoutes = ['/admin', '/partner', '/dashboard', '/login', '/register', '/join'];

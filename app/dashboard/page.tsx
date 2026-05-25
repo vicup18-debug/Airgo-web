@@ -66,10 +66,11 @@ export default function ClientDashboard() {
             <div className="bg-[#000080] p-4 flex justify-between items-center text-white shadow-md">
                 <Link href="/" className="font-black text-xl tracking-tight">Airgo</Link>
                 <div className="flex gap-4">
-                    <Link href="/">
-                        <button className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-bold transition">
-                            🏠 Back to Homepage
-                        </button>
+                    <Link 
+                        href="/" 
+                        className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-bold transition"
+                    >
+                        🏠 Back to Homepage
                     </Link>
                     <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold transition shadow-md">
                         Sign Out

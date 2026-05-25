@@ -293,11 +293,11 @@ export default function HotelHomepage() {
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
                           <span className="bg-red-600 text-white font-black px-6 py-3 rounded-xl text-sm uppercase tracking-widest transform -rotate-12 shadow-2xl border border-white/20">Sold Out</span>
                         </div>
-                      ) : (
+                      ) : isCar ? (
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50">
-                           <p className="text-sm font-black text-gray-900">₦{basePrice.toLocaleString()}<span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">{isCar ? '/day' : '/night'}</span></p>
+                           <p className="text-sm font-black text-gray-900">₦{basePrice.toLocaleString()}<span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">/day</span></p>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                     <div className="p-8 flex flex-col flex-grow">
                       {!isCar && <p className="text-[10px] font-black text-[#000080] uppercase tracking-widest mb-2 truncate">{item.hotelName}</p>}
@@ -322,16 +322,23 @@ export default function HotelHomepage() {
                       </div>
 
                       <div className="flex justify-between items-center pt-2 mt-auto">
-                        <div>
-                          <p className="text-xl font-black text-gray-900">₦{calculateTotal(basePrice).toLocaleString()}</p>
-                          <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{checkIn && checkOut ? 'Total Escrow' : (isCar ? 'Per Day' : 'Per Night')}</p>
-                        </div>
+                        {isCar ? (
+                          <div>
+                            <p className="text-xl font-black text-gray-900">₦{calculateTotal(basePrice).toLocaleString()}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{checkIn && checkOut ? 'Total Escrow' : 'Per Day'}</p>
+                          </div>
+                        ) : (
+                          <div>
+                            <p className="text-sm font-bold text-[#000080]">Rate visible on select</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Escrow holding active</p>
+                          </div>
+                        )}
                         <button
                           onClick={() => available ? setSelectedItem(item) : null}
                           disabled={!available || !checkIn || !checkOut}
                           className={`px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${!checkIn || !checkOut ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
                         >
-                          {available ? 'Reserve Now' : 'Unavailable'}
+                          {available ? (isCar ? 'Reserve Now' : 'Book Room') : 'Unavailable'}
                         </button>
                       </div>
                     </div>
