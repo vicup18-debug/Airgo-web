@@ -107,9 +107,6 @@ export default function HotelsPage() {
                                             <div className="absolute top-4 left-4 bg-white bg-opacity-90 px-3 py-1 rounded-full shadow-sm flex items-center gap-1 backdrop-blur-md">
                                                 <span className="text-xs font-black text-gray-900">⭐ {hotel.rating || 'New'}</span>
                                             </div>
-                                            <div className="absolute bottom-4 right-4 bg-[#FFB81C] text-[#004A99] font-black px-4 py-1.5 rounded-xl shadow-lg">
-                                                ₦{hotel.price?.toLocaleString()}
-                                            </div>
                                         </div>
                                         <div className="p-5">
                                             <h3 className="text-lg font-black text-gray-900 truncate">{hotel.name}</h3>
@@ -118,7 +115,7 @@ export default function HotelsPage() {
                                                 onClick={() => setSelectedHotel(hotel)}
                                                 className="w-full mt-4 bg-gray-50 hover:bg-[#F0F7FF] text-[#004A99] border border-[#E2E8F0] hover:border-[#004A99] py-3 rounded-xl font-bold transition-colors"
                                             >
-                                                Book Now
+                                                View Rooms
                                             </button>
                                         </div>
                                     </div>

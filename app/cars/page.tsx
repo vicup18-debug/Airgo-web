@@ -332,14 +332,29 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                             <button onClick={handleClose} className="text-gray-400 hover:text-red-500 transition text-2xl font-black">✕</button>
                         </div>
 
-                        <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
-                            <img src={car.image} alt={car.name} className="w-24 h-24 rounded-xl object-cover shadow-sm" />
-                            <div>
-                                <h3 className="text-lg font-bold text-[#000080]">{car.name}</h3>
-                                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                <p className="text-2xl font-black text-gray-900 mt-0.5">₦{numericPrice.toLocaleString()}</p>
+                        {car.images && car.images.length > 0 ? (
+                            <div className="mb-6 pb-6 border-b border-gray-100">
+                                <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                                    {car.images.map((img: string, idx: number) => (
+                                        <img key={idx} src={img} alt={`${car.name} ${idx}`} className="w-40 h-28 rounded-xl object-cover shadow-sm flex-shrink-0 border border-gray-200" />
+                                    ))}
+                                </div>
+                                <div className="mt-2">
+                                    <h3 className="text-xl font-bold text-[#000080]">{car.name}</h3>
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
+                                    <p className="text-2xl font-black text-gray-900 mt-0.5">₦{numericPrice.toLocaleString()}</p>
+                                </div>
                             </div>
-                        </div>
+                        ) : (
+                            <div className="flex gap-4 mb-6 pb-6 border-b border-gray-100">
+                                <img src={car.image} alt={car.name} className="w-24 h-24 rounded-xl object-cover shadow-sm" />
+                                <div>
+                                    <h3 className="text-lg font-bold text-[#000080]">{car.name}</h3>
+                                    <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
+                                    <p className="text-2xl font-black text-gray-900 mt-0.5">₦{numericPrice.toLocaleString()}</p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 mb-6">
                             <div className="flex items-center gap-2 mb-2">

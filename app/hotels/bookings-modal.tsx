@@ -17,6 +17,9 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
     const [guests, setGuests] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [user, setUser] = useState<any>(null);
+    const [rooms, setRooms] = useState<any[]>([]);
+    const [selectedRoom, setSelectedRoom] = useState<any>(null);
+    const [isLoadingRooms, setIsLoadingRooms] = useState(false);
     const router = useRouter();
 
     // 🟢 SECURITY: Check if user is logged in
@@ -25,21 +28,49 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
         if (userData) {
             setUser(JSON.parse(userData));
         }
-    }, [isOpen]);
+        
+        if (isOpen && hotel) {
+            fetchRooms();
+        } else {
+            setSelectedRoom(null);
+            setRooms([]);
+            setCheckIn('');
+            setCheckOut('');
+            setGuests(1);
+        }
+    }, [isOpen, hotel]);
+
+    const fetchRooms = async () => {
+        setIsLoadingRooms(true);
+        try {
+            const apiUrl = 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/rooms`);
+            if (res.ok) {
+                const allRooms = await res.json();
+                // Find rooms belonging to this hotel's partner
+                const hotelRooms = allRooms.filter((r: any) => r.partnerId === hotel.partnerId || r.hotelName === hotel.name);
+                setRooms(hotelRooms);
+            }
+        } catch (e) {
+            console.error("Error fetching rooms", e);
+        } finally {
+            setIsLoadingRooms(false);
+        }
+    };
 
     if (!isOpen || !hotel) return null;
 
     // 🟢 CALCULATE TOTAL NIGHTS & PRICE
     const calculateTotal = () => {
-        if (!checkIn || !checkOut) return 0;
+        if (!checkIn || !checkOut || !selectedRoom) return 0;
         const start = new Date(checkIn);
         const end = new Date(checkOut);
         const nights = Math.max((end.getTime() - start.getTime()) / (1000 * 3600 * 24), 1);
 
         // Strip out the "₦" and commas to do math, then multiply by nights
-        const rawPrice = typeof hotel.price === 'string'
-            ? parseInt(hotel.price.replace(/\D/g, ''))
-            : hotel.price;
+        const rawPrice = typeof selectedRoom.pricePerNight === 'string'
+            ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, ''))
+            : selectedRoom.pricePerNight;
 
         return (rawPrice * nights).toLocaleString();
     };
@@ -69,8 +100,8 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                 },
                 body: JSON.stringify({
                     userId: user.id,
-                    itemId: hotel._id || hotel.id,
-                    itemName: hotel.name,
+                    itemId: selectedRoom._id,
+                    itemName: `${hotel.name} - ${selectedRoom.name}`,
                     itemType: 'hotel',
                     partnerId: hotel.partnerId || 'airgo_direct',
                     checkIn,
@@ -110,8 +141,8 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                     </button>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleBooking} className="p-6">
+                {/* Content */}
+                <div className="p-6">
                     {!user && (
                         <div className="bg-blue-50 text-[#000080] p-3 rounded-xl text-sm font-bold border border-blue-100 mb-6 flex justify-between items-center">
                             <span>You must be signed in to book.</span>
@@ -119,43 +150,86 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                         </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
+                    {!selectedRoom ? (
                         <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-in</label>
-                            <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                            <h3 className="text-xl font-bold mb-4">Select Room Category</h3>
+                            {isLoadingRooms ? (
+                                <div className="flex justify-center py-10">
+                                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#004A99]"></div>
+                                </div>
+                            ) : rooms.length === 0 ? (
+                                <div className="text-center py-10 text-gray-500">No rooms available for this hotel yet.</div>
+                            ) : (
+                                <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
+                                    {rooms.map(room => (
+                                        <div key={room._id} className="border border-gray-100 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-[#000080] hover:shadow-md transition bg-gray-50" onClick={() => setSelectedRoom(room)}>
+                                            <img src={room.image} className="w-24 h-24 rounded-lg object-cover shadow-sm" />
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-lg text-gray-900">{room.name}</h4>
+                                                <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
+                                                <div className="flex justify-between items-end mt-2">
+                                                    <p className="font-black text-[#004A99]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
+                                                    <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold">Select</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div>
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-out</label>
-                            <input required type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
-                        </div>
-                    </div>
+                    ) : (
+                        <form onSubmit={handleBooking}>
+                            <div className="mb-4 flex items-center gap-2">
+                                <button type="button" onClick={() => setSelectedRoom(null)} className="text-[#000080] font-bold text-sm hover:underline">← Back to rooms</button>
+                            </div>
+                            
+                            <div className="p-4 bg-blue-50 rounded-xl mb-6 border border-blue-100 flex gap-4">
+                                <img src={selectedRoom.image} className="w-16 h-16 rounded-lg object-cover shadow-sm" />
+                                <div>
+                                    <h4 className="font-bold text-lg text-[#000080]">{selectedRoom.name}</h4>
+                                    <p className="font-black text-gray-900">₦{selectedRoom.pricePerNight?.toLocaleString()} / night</p>
+                                </div>
+                            </div>
 
-                    <div className="mb-6">
-                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Number of Guests</label>
-                        <select className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900 bg-white" value={guests} onChange={(e) => setGuests(Number(e.target.value))}>
-                            {[1, 2, 3, 4, 5, 6].map(num => <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>)}
-                        </select>
-                    </div>
+                            <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-in</label>
+                                    <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-out</label>
+                                    <input required type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                                </div>
+                            </div>
 
-                    <div className="border-t border-gray-100 pt-4 mb-6">
-                        <div className="flex justify-between items-center mb-1">
-                            <span className="text-gray-500 font-medium">Rate per night</span>
-                            <span className="font-bold text-gray-900">₦{typeof hotel.price === 'string' ? hotel.price : hotel.price?.toLocaleString()}</span>
-                        </div>
-                        <div className="flex justify-between items-end">
-                            <span className="text-lg font-black text-gray-900">Total Escrow</span>
-                            <span className="text-2xl font-black text-[#000080]">₦{calculateTotal()}</span>
-                        </div>
-                    </div>
+                            <div className="mb-6">
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Number of Guests</label>
+                                <select className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900 bg-white" value={guests} onChange={(e) => setGuests(Number(e.target.value))}>
+                                    {[1, 2, 3, 4, 5, 6].map(num => <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>)}
+                                </select>
+                            </div>
 
-                    <button
-                        disabled={isSubmitting || !user}
-                        type="submit"
-                        className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-lg transition ${isSubmitting || !user ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}
-                    >
-                        {isSubmitting ? 'Securing Booking...' : 'Proceed to Escrow'}
-                    </button>
-                </form>
+                            <div className="border-t border-gray-100 pt-4 mb-6">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-gray-500 font-medium">Rate per night</span>
+                                    <span className="font-bold text-gray-900">₦{typeof selectedRoom.pricePerNight === 'string' ? selectedRoom.pricePerNight : selectedRoom.pricePerNight?.toLocaleString()}</span>
+                                </div>
+                                <div className="flex justify-between items-end">
+                                    <span className="text-lg font-black text-gray-900">Total Escrow</span>
+                                    <span className="text-2xl font-black text-[#000080]">₦{calculateTotal()}</span>
+                                </div>
+                            </div>
+
+                            <button
+                                disabled={isSubmitting || !user}
+                                type="submit"
+                                className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-lg transition ${isSubmitting || !user ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}
+                            >
+                                {isSubmitting ? 'Securing Booking...' : 'Proceed to Escrow'}
+                            </button>
+                        </form>
+                    )}
+                </div>
             </div>
         </div>
     );

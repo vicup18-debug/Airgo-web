@@ -20,6 +20,7 @@ export default function PartnerDashboard() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [imageFile, setImageFile] = useState<File | null>(null);
+    const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
 
     const [newItem, setNewItem] = useState<any>({
         name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
@@ -98,27 +99,52 @@ export default function PartnerDashboard() {
         setIsUploading(true);
         try {
             let finalImageUrl = "";
-            if (imageFile) {
-                const imgData = new FormData();
-                imgData.append('file', imageFile);
-                imgData.append('upload_preset', 'airgo_fleet');
+            let finalImageUrls: string[] = [];
+            const isCar = user.partnerType?.toLowerCase().includes('car');
 
-                const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
-                    method: 'POST', body: imgData
-                });
-                const cloudData = await cloudRes.json();
-                if (cloudData.secure_url) finalImageUrl = cloudData.secure_url;
-                else throw new Error("Upload failed");
+            if (isCar) {
+                if (carImageFiles.length > 0) {
+                    for (const file of carImageFiles) {
+                        const imgData = new FormData();
+                        imgData.append('file', file);
+                        imgData.append('upload_preset', 'airgo_fleet');
+
+                        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
+                            method: 'POST', body: imgData
+                        });
+                        const cloudData = await cloudRes.json();
+                        if (cloudData.secure_url) {
+                            finalImageUrls.push(cloudData.secure_url);
+                        }
+                    }
+                    if (finalImageUrls.length > 0) {
+                        finalImageUrl = finalImageUrls[0];
+                    } else {
+                        throw new Error("Upload failed");
+                    }
+                }
+            } else {
+                if (imageFile) {
+                    const imgData = new FormData();
+                    imgData.append('file', imageFile);
+                    imgData.append('upload_preset', 'airgo_fleet');
+
+                    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
+                        method: 'POST', body: imgData
+                    });
+                    const cloudData = await cloudRes.json();
+                    if (cloudData.secure_url) finalImageUrl = cloudData.secure_url;
+                    else throw new Error("Upload failed");
+                }
             }
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const secureId = user.id || user.userId || user._id;
 
-            const isCar = user.partnerType?.toLowerCase().includes('car');
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
-                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, partnerId: secureId
+                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, images: finalImageUrls, partnerId: secureId
             } : {
                 partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
             };
@@ -133,6 +159,7 @@ export default function PartnerDashboard() {
                 toast.success(`${user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
+                setCarImageFiles([]);
                 setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '' });
                 fetchPartnerData(user);
             }
@@ -404,8 +431,14 @@ const handleLogout = () => {
                             )}
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Listing Photo *</label>
-                                <input required type="file" accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900" onChange={(e) => setImageFile(e.target.files?.[0] || null)} />
+                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Listing Photo{user.partnerType?.toLowerCase().includes('car') ? '(s)' : ''} *</label>
+                                <input required type="file" multiple={user.partnerType?.toLowerCase().includes('car')} accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900" onChange={(e) => {
+                                    if (user.partnerType?.toLowerCase().includes('car')) {
+                                        setCarImageFiles(Array.from(e.target.files || []));
+                                    } else {
+                                        setImageFile(e.target.files?.[0] || null);
+                                    }
+                                }} />
                             </div>
 
                             <div className="pt-4 flex justify-end gap-3">
