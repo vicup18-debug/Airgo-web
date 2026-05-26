@@ -51,11 +51,11 @@ export default function RegisterPage() {
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
             // 🟢 SHOW GREEN BANNER & REDIRECT
-            setSuccessMessage("✅ Account created successfully! Redirecting to login...");
+            setSuccessMessage("✅ Account created successfully! Please check your email for a verification link to activate your account. Redirecting...");
 
             setTimeout(() => {
-                router.push('/login');
-            }, 2000); // Waits 2 seconds so they can read the success message
+                router.push('/login?verifyEmail=true');
+            }, 5000); // Waits 5 seconds so they can read the success message
 
         } catch (err: any) {
             setError(err.message);

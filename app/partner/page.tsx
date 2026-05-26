@@ -210,6 +210,17 @@ const handleLogout = () => {
         setExpandedBookingId(expandedBookingId === id ? null : id);
     };
 
+    const isCarPartner = user?.partnerType?.toLowerCase().includes('car');
+
+    const totalAllocatedRooms = !isCarPartner ? myInventory.reduce((sum, item) => sum + (item.totalAllocated || 0), 0) : 0;
+    const totalRentalDays = isCarPartner ? myBookings.reduce((sum, b) => {
+        if (!b.checkIn || !b.checkOut) return sum;
+        const start = new Date(b.checkIn);
+        const end = new Date(b.checkOut);
+        const days = Math.max(Math.ceil((end.getTime() - start.getTime()) / (1000 * 3600 * 24)), 1);
+        return sum + days;
+    }, 0) : 0;
+
     if (!user) return null;
 
     return (
@@ -254,7 +265,11 @@ const handleLogout = () => {
             {/* MAIN CONTENT */}
             <main className="flex-1 flex flex-col h-screen overflow-y-auto relative w-full bg-gray-100">
                 <header className="bg-white px-8 py-5 border-b border-gray-200 hidden md:flex items-center justify-between sticky top-0 z-10">
-                    <h1 className="text-2xl font-black text-gray-900 capitalize">{activeTab}</h1>
+                    <h1 className="text-2xl font-black text-gray-900 capitalize">
+                        {activeTab === 'overview' 
+                            ? (isCarPartner ? '🚘 Fleet Control Panel' : '🏨 Property Management Panel') 
+                            : activeTab}
+                    </h1>
                     <div className="flex items-center gap-4">
                         {!user.isApproved && <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Account Under Review</span>}
                         {user.isApproved && <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>}
@@ -276,15 +291,43 @@ const handleLogout = () => {
                             {/* OVERVIEW TAB */}
                             {activeTab === 'overview' && (
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-gradient-to-br from-[#004A99] to-blue-900 p-6 rounded-3xl shadow-lg text-white md:col-span-2">
-                                        <p className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-2">Gross Revenue (Escrow)</p>
-                                        <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalRevenue()}</p>
-                                        <p className="text-xs text-blue-300">Total value of all incoming and completed reservations.</p>
-                                    </div>
-                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
-                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Active Listings</p>
-                                        <p className="text-4xl font-black text-gray-900">{myInventory.length}</p>
-                                    </div>
+                                    {isCarPartner ? (
+                                        <>
+                                            <div className="bg-gradient-to-br from-slate-800 to-slate-950 p-6 rounded-3xl shadow-lg text-white md:col-span-2 border border-slate-800">
+                                                <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Fleet Rental Revenue</p>
+                                                <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalRevenue()}</p>
+                                                <p className="text-xs text-slate-400">Total gross revenue from vehicle rental escrow bookings.</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between min-h-[140px]">
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Active Fleet Vehicles</p>
+                                                <p className="text-4xl font-black text-slate-800">{myInventory.length}</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Vehicles registered on Airgo Matrix</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 md:col-span-1 flex flex-col justify-between min-h-[140px]">
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Rental Days Booked</p>
+                                                <p className="text-4xl font-black text-slate-800">{totalRentalDays} Days</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Cumulative time across all dispatches</p>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="bg-gradient-to-br from-[#004A99] to-blue-900 p-6 rounded-3xl shadow-lg text-white md:col-span-2">
+                                                <p className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-2">Hotel Stay Revenue</p>
+                                                <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalRevenue()}</p>
+                                                <p className="text-xs text-blue-300">Total gross revenue from hotel reservation escrow bookings.</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between min-h-[140px]">
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Room Categories</p>
+                                                <p className="text-4xl font-black text-gray-900">{myInventory.length}</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Active room tiers listed</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 md:col-span-1 flex flex-col justify-between min-h-[140px]">
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Allocated Rooms</p>
+                                                <p className="text-4xl font-black text-gray-900">{totalAllocatedRooms} Rooms</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Total room matrix inventory capacity</p>
+                                            </div>
+                                        </>
+                                    )}
                                 </div>
                             )}
 
@@ -309,8 +352,23 @@ const handleLogout = () => {
                                                         {user.partnerType?.toLowerCase().includes('car') ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
                                                     </p>
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
-                                                        <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
-                                                        {item.totalAllocated && <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md">Pool: {item.totalAllocated} Rooms</span>}
+                                                        {isCarPartner ? (
+                                                            <>
+                                                                <p className="font-black text-[#004A99]">₦{item.price?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ day</span></p>
+                                                                <span className="bg-amber-50 text-amber-700 font-bold text-xs px-2.5 py-1 rounded-md border border-amber-100">
+                                                                    Pool: {item.totalAllocated || 1} Vehicle{(item.totalAllocated || 1) > 1 ? 's' : ''}
+                                                                </span>
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <p className="font-black text-[#004A99]">₦{item.pricePerNight?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
+                                                                {item.totalAllocated && (
+                                                                    <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md border border-blue-100">
+                                                                        Pool: {item.totalAllocated} Room{item.totalAllocated > 1 ? 's' : ''}
+                                                                    </span>
+                                                                )}
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -327,8 +385,8 @@ const handleLogout = () => {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <th className="p-4 font-bold border-b">Asset</th>
-                                                    <th className="p-4 font-bold border-b">Dates</th>
+                                                    <th className="p-4 font-bold border-b">{isCarPartner ? 'Vehicle' : 'Room / Stay'}</th>
+                                                    <th className="p-4 font-bold border-b">{isCarPartner ? 'Rental Dates' : 'Stay Dates'}</th>
                                                     <th className="p-4 font-bold border-b text-right">Value</th>
                                                     <th className="p-4 font-bold border-b text-center">Status</th>
                                                 </tr>
@@ -339,10 +397,10 @@ const handleLogout = () => {
                                                     <tr>
                                                         <td colSpan={4} className="p-0">
                                                             <div className="p-12 text-center bg-white border border-gray-100 shadow-sm m-6 rounded-3xl">
-                                                                <div className="text-6xl mb-4">📭</div>
-                                                                <h3 className="text-2xl font-black text-[#004A99] mb-2">No Reservations Yet</h3>
-                                                                <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all booking details and dispatch information will appear here.</p>
-                                                            </div>
+                                                                 <div className="text-6xl mb-4">📭</div>
+                                                                 <h3 className="text-2xl font-black text-[#004A99] mb-2">No Reservations Yet</h3>
+                                                                 <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all booking details and dispatch information will appear here.</p>
+                                                             </div>
                                                         </td>
                                                     </tr>
                                                 ) : myBookings.map((booking) => (
@@ -353,7 +411,11 @@ const handleLogout = () => {
                                                                 <p className="text-[10px] text-[#004A99] font-bold uppercase mt-1">Tap to view details ▼</p>
                                                             </td>
                                                             <td className="p-4 text-sm text-gray-600 font-medium">
-                                                                <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                {isCarPartner ? (
+                                                                    <p>Out: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                ) : (
+                                                                    <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                )}
                                                             </td>
                                                             <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
@@ -367,14 +429,14 @@ const handleLogout = () => {
                                                                 <td colSpan={4} className="p-6">
                                                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Dispatch Contact</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">{isCarPartner ? 'Driver / Client' : 'Dispatch Contact'}</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
                                                                             <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery / Address</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">{isCarPartner ? 'Delivery Location' : 'Delivery / Address'}</p>
                                                                             <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
-                                                                                {booking.deliveryAddress || 'Walk-In / Property Visit'}
+                                                                                {booking.deliveryAddress || (isCarPartner ? 'Terminal Pick-Up' : 'Walk-In / Property Visit')}
                                                                             </p>
                                                                         </div>
                                                                         <div>
@@ -383,8 +445,17 @@ const handleLogout = () => {
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                            {isCarPartner ? (
+                                                                                <>
+                                                                                    <p className="text-xs font-bold text-green-700">Pick-up: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                                    <p className="text-xs font-bold text-red-700 mt-1">Return: {new Date(booking.checkOut).toLocaleDateString()}</p>
+                                                                                </>
+                                                                            ) : (
+                                                                                <>
+                                                                                    <p className="text-xs font-bold text-green-700">Check-in: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                                    <p className="text-xs font-bold text-red-700 mt-1">Check-out: {new Date(booking.checkOut).toLocaleDateString()}</p>
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </td>

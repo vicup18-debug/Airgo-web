@@ -18,7 +18,7 @@ export default function HotelsPage() {
     useEffect(() => {
         const fetchHotels = async () => {
             try {
-                const apiUrl = 'https://airgo-backend.onrender.com';
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
                 const response = await fetch(`${apiUrl}/api/hotels`);
 
                 if (response.ok) {

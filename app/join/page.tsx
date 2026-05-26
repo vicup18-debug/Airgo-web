@@ -83,11 +83,11 @@ export default function JoinPartnerPage() {
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
             // 🟢 SHOW GREEN BANNER & REDIRECT
-            setSuccessMessage("✅ Application Submitted! Admin review pending. Redirecting...");
+            setSuccessMessage("✅ Application Submitted! Please check your email for a verification link to activate your account. Redirecting...");
 
             setTimeout(() => {
-                router.push('/login');
-            }, 2500); // Waits 2.5 seconds so they can read the success message
+                router.push('/login?verifyEmail=true');
+            }, 5000); // Waits 5 seconds so they can read the success message
 
         } catch (err: any) {
             setError(err.message);

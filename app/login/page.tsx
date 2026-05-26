@@ -11,11 +11,21 @@ export default function LoginPage() {
     const [password, setPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
+    const [showVerifyBanner, setShowVerifyBanner] = useState(false);
 
     // 🟢 ADDED: Show/Hide Password State
     const [showPassword, setShowPassword] = useState(false);
 
     const router = useRouter();
+
+    React.useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('verifyEmail') === 'true') {
+                setShowVerifyBanner(true);
+            }
+        }
+    }, []);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -111,6 +121,18 @@ export default function LoginPage() {
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
                 <div className="bg-white py-8 px-6 shadow-xl rounded-3xl border border-gray-100">
                     <form className="space-y-6" onSubmit={handleLogin}>
+                        {showVerifyBanner && (
+                            <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl text-sm font-semibold border border-blue-100 flex flex-col gap-1 shadow-sm">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-lg">📧</span>
+                                    <span className="font-bold text-blue-900">Verify your Email Address</span>
+                                </div>
+                                <p className="text-xs text-blue-700 mt-1 leading-relaxed">
+                                    We have sent a verification link to your email. Please check your inbox (and spam/junk folder) and click the link to activate your account before logging in.
+                                </p>
+                            </div>
+                        )}
+
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
                                 ⚠️ {error}

@@ -43,12 +43,16 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
     const fetchRooms = async () => {
         setIsLoadingRooms(true);
         try {
-            const apiUrl = 'https://airgo-backend.onrender.com';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const res = await fetch(`${apiUrl}/api/rooms`);
             if (res.ok) {
                 const allRooms = await res.json();
-                // Find rooms belonging to this hotel's partner
-                const hotelRooms = allRooms.filter((r: any) => r.partnerId === hotel.partnerId || r.hotelName === hotel.name);
+                // Find rooms belonging to this hotel's partner (with robust case-insensitive and trimmed checking)
+                const hotelRooms = allRooms.filter((r: any) => {
+                    const matchPartner = r.partnerId && hotel.partnerId && r.partnerId.toString() === hotel.partnerId.toString();
+                    const matchName = r.hotelName && hotel.name && r.hotelName.toLowerCase().trim() === hotel.name.toLowerCase().trim();
+                    return matchPartner || matchName;
+                });
                 setRooms(hotelRooms);
             }
         } catch (e) {
@@ -89,7 +93,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
 
         try {
             const token = localStorage.getItem('airgo_token');
-            const apiUrl = 'https://airgo-backend.onrender.com';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
             // Send the booking to your live backend
             const res = await fetch(`${apiUrl}/api/bookings`, {
