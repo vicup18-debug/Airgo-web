@@ -20,6 +20,7 @@ export default function SuperadminDashboard() {
     // EXPANDABLE ESCROW STATE
     const [expandedEscrowId, setExpandedEscrowId] = useState<string | null>(null);
     const [expandedPartnerId, setExpandedPartnerId] = useState<string | null>(null);
+    const [partnerFilter, setPartnerFilter] = useState<'active' | 'deleted'>('active');
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
@@ -121,6 +122,30 @@ export default function SuperadminDashboard() {
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isActive: data.isActive } : p));
             }
         } catch (error) { toast.error("❌ Error changing partner status."); }
+    };
+
+    const handleDeletePartner = async (partnerId: string) => {
+        if (window.confirm("Are you sure you want to delete this partner? This will restrict their login and hide their listings.")) {
+            try {
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                const res = await fetch(`${apiUrl}/api/auth/delete-partner/${partnerId}`, { method: 'PUT' });
+                if (res.ok) {
+                    toast.success("Partner Deleted!");
+                    setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isDeleted: true } : p));
+                }
+            } catch (error) { toast.error("❌ Error connecting to server."); }
+        }
+    };
+
+    const handleRestorePartner = async (partnerId: string) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/restore-partner/${partnerId}`, { method: 'PUT' });
+            if (res.ok) {
+                toast.success("Partner Restored!");
+                setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isDeleted: false } : p));
+            }
+        } catch (error) { toast.error("❌ Error connecting to server."); }
     };
 
     // --- CLOUDINARY UPLOAD HELPER ---
@@ -374,7 +399,23 @@ export default function SuperadminDashboard() {
                             {/* PARTNER APPROVALS TAB */}
                             {activeTab === 'approvals' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
-                                    <div className="p-6 border-b border-gray-100 bg-gray-50"><h2 className="text-lg font-black text-gray-900">Partner Registrations</h2></div>
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                                        <h2 className="text-lg font-black text-gray-900">Partner Registrations</h2>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={() => setPartnerFilter('active')} 
+                                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${partnerFilter === 'active' ? 'bg-[#000080] text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+                                            >
+                                                Active ({partners.filter(p => !p.isDeleted).length})
+                                            </button>
+                                            <button 
+                                                onClick={() => setPartnerFilter('deleted')} 
+                                                className={`px-4 py-1.5 rounded-full text-xs font-bold transition ${partnerFilter === 'deleted' ? 'bg-red-600 text-white' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'}`}
+                                            >
+                                                Archived / Deleted ({partners.filter(p => p.isDeleted).length})
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
@@ -387,9 +428,9 @@ export default function SuperadminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
-                                                {partners.length === 0 ? (
-                                                    <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found.</td></tr>
-                                                ) : partners.map((partner) => (
+                                                {partners.filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted).length === 0 ? (
+                                                    <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found in this view.</td></tr>
+                                                ) : partners.filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted).map((partner) => (
                                                     <React.Fragment key={partner._id}>
                                                         <tr onClick={() => setExpandedPartnerId(expandedPartnerId === partner._id ? null : partner._id)} className={`transition cursor-pointer ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-blue-50'}`}>
                                                             <td className="p-4">
@@ -403,11 +444,22 @@ export default function SuperadminDashboard() {
                                                                 <span className={`px-2 py-1 rounded-full text-[10px] font-black uppercase ${partner.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>{partner.isApproved ? 'Approved' : 'Pending'}</span>
                                                                 {partner.isActive === false && <span className="block mt-1 text-[10px] font-bold text-red-600">Deactivated</span>}
                                                             </td>
-                                                            <td className="p-4 flex flex-wrap gap-2 justify-center">
-                                                                {!partner.isApproved && <button onClick={(e) => { e.stopPropagation(); handleApprovePartner(partner._id); }} className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition">Approve</button>}
-                                                                <button onClick={(e) => { e.stopPropagation(); handleToggleStatus(partner._id); }} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}>
-                                                                    {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
-                                                                </button>
+                                                            <td className="p-4 flex flex-wrap gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
+                                                                {partnerFilter === 'active' ? (
+                                                                    <>
+                                                                        {!partner.isApproved && <button onClick={() => handleApprovePartner(partner._id)} className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:scale-105 transition">Approve</button>}
+                                                                        <button onClick={() => handleToggleStatus(partner._id)} className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${partner.isActive !== false ? 'bg-red-50 text-red-600 border border-red-100 hover:bg-red-600 hover:text-white' : 'bg-green-600 text-white shadow-md'}`}>
+                                                                            {partner.isActive !== false ? 'Deactivate' : 'Reactivate'}
+                                                                        </button>
+                                                                        <button onClick={() => handleDeletePartner(partner._id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600 hover:text-white transition shadow-sm">
+                                                                            Delete
+                                                                        </button>
+                                                                    </>
+                                                                ) : (
+                                                                    <button onClick={() => handleRestorePartner(partner._id)} className="bg-green-600 text-white px-4 py-1.5 rounded-lg text-xs font-black shadow-md hover:bg-green-700 transition">
+                                                                        Restore / Add Back
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                         {expandedPartnerId === partner._id && (
