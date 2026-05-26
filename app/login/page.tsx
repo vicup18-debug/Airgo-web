@@ -51,7 +51,8 @@ export default function LoginPage() {
                 name: data.name,
                 email: data.email,
                 role: data.role,
-                isApproved: data.isApproved // Needed for partner dashboard routing
+                isApproved: data.isApproved, // Needed for partner dashboard routing
+                partnerType: data.partnerType
             }));
 
             // 🟢 SMART REDIRECT BASED ON ROLE

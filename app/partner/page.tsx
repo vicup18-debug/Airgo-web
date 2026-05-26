@@ -56,12 +56,19 @@ export default function PartnerDashboard() {
                 const allPartners = await partnersRes.json();
                 const myLatestData = allPartners.find((p: any) => p._id === secureId);
 
-                if (myLatestData && myLatestData.isApproved !== partnerData.isApproved) {
+                if (myLatestData) {
+                    const updatedStorage = { 
+                        ...partnerData, 
+                        isApproved: myLatestData.isApproved,
+                        partnerType: myLatestData.partnerType,
+                        businessName: myLatestData.businessName,
+                        name: myLatestData.name
+                    };
+                    
                     // Update React State
-                    setUser((prev: any) => ({ ...prev, isApproved: myLatestData.isApproved }));
+                    setUser(updatedStorage);
 
                     // Update LocalStorage so it remembers for next time!
-                    const updatedStorage = { ...partnerData, isApproved: myLatestData.isApproved };
                     localStorage.setItem('airgo_user', JSON.stringify(updatedStorage));
                 }
             }
