@@ -3,12 +3,36 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import toast from 'react-hot-toast';
+import dynamic from 'next/dynamic';
+
+const PaystackPaymentButton = dynamic(() => import('./paystack-button'), { ssr: false });
 
 export default function ClientDashboard() {
     const [user, setUser] = useState<any>(null);
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
+
+    const fetchMyBookings = async (parsedUser: any) => {
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings`);
+            if (res.ok) {
+                const allBookings = await res.json();
+
+                // 🟢 FILTER: Match the booking's userId to the logged-in client's ID
+                const clientBookings = allBookings.filter((b: any) =>
+                    b.userId === parsedUser.id || b.userId === parsedUser.userId
+                );
+                setMyBookings(clientBookings);
+            }
+        } catch (error) {
+            console.error("Failed to fetch bookings");
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         // 1. SECURITY CHECK: Ensure user is actually logged in
@@ -28,29 +52,41 @@ export default function ClientDashboard() {
 
         setUser(parsedUser);
 
-        // 3. FETCH ONLY THIS CLIENT'S LIVE BOOKINGS
-        const fetchMyBookings = async () => {
-            try {
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-                const res = await fetch(`${apiUrl}/api/bookings`);
-                if (res.ok) {
-                    const allBookings = await res.json();
-
-                    // 🟢 FILTER: Match the booking's userId to the logged-in client's ID
-                    const clientBookings = allBookings.filter((b: any) =>
-                        b.userId === parsedUser.id || b.userId === parsedUser.userId
-                    );
-                    setMyBookings(clientBookings);
-                }
-            } catch (error) {
-                console.error("Failed to fetch bookings");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchMyBookings();
+        fetchMyBookings(parsedUser);
     }, [router]);
+
+    const handlePaymentSuccess = async (bookingId: string, reference: string) => {
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    status: 'Paid',
+                    paymentReference: reference
+                })
+            });
+
+            if (res.ok) {
+                toast.success("🎉 Payment verified! Escrow holds activated.");
+                // Reload bookings
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error("Failed to update status on server.");
+            }
+        } catch (error) {
+            console.error("Error updating payment status:", error);
+            toast.error("Error confirming payment with server.");
+        }
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
@@ -111,12 +147,19 @@ export default function ClientDashboard() {
                                             <span className="font-bold">To:</span> {booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A'}
                                         </p>
                                     </div>
-                                    <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100">
+                                    <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end">
                                         <p className="text-sm text-gray-500 font-bold mb-1">Total Escrow</p>
                                         <p className="text-2xl font-black text-gray-900">₦{booking.totalPrice}</p>
                                         <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
                                             {booking.status}
                                         </span>
+                                        {booking.status === 'Pending Escrow' && (
+                                            <PaystackPaymentButton 
+                                                booking={booking} 
+                                                user={user} 
+                                                onSuccess={handlePaymentSuccess} 
+                                            />
+                                        )}
                                     </div>
                                 </div>
                             ))}
