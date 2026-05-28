@@ -230,6 +230,26 @@ const handleLogout = () => {
 
     if (!user) return null;
 
+    if (!user.isApproved) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans">
+                <div className="bg-white rounded-3xl p-10 text-center shadow-xl border border-gray-200 max-w-md w-full">
+                    <div className="text-6xl mb-6 animate-pulse">🛡️</div>
+                    <h2 className="text-2xl font-black text-gray-900 mb-2">Verification Pending</h2>
+                    <p className="text-gray-500 text-sm leading-relaxed mb-8">
+                        Your partner registration has been received and is currently under review by our compliance team. You will be granted dashboard access once approved.
+                    </p>
+                    <button 
+                        onClick={handleLogout} 
+                        className="w-full bg-[#004A99] hover:bg-blue-800 text-white py-3 rounded-xl font-bold transition shadow-md"
+                    >
+                        Sign Out
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen flex flex-col md:flex-row bg-gray-50 font-sans">
 
@@ -271,20 +291,13 @@ const handleLogout = () => {
                             : activeTab}
                     </h1>
                     <div className="flex items-center gap-4">
-                        {!user.isApproved && <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Account Under Review</span>}
-                        {user.isApproved && <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>}
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>
                         <div className="w-10 h-10 bg-[#004A99] rounded-full flex items-center justify-center text-white font-black shadow-inner">{user.name.charAt(0)}</div>
                     </div>
                 </header>
 
                 <div className="p-4 md:p-8">
-                    {!user.isApproved ? (
-                        <div className="bg-white rounded-3xl p-10 text-center shadow-sm border border-gray-200 max-w-2xl mx-auto mt-10">
-                            <div className="text-5xl mb-4">🛡️</div>
-                            <h2 className="text-2xl font-black text-gray-900 mb-2">Verification Pending</h2>
-                            <p className="text-gray-500">Your documents are currently being reviewed by the Airgo compliance team. You will be able to upload inventory once approved.</p>
-                        </div>
-                    ) : isLoading ? (
+                    {isLoading ? (
                         <div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004A99]"></div></div>
                     ) : (
                         <>
