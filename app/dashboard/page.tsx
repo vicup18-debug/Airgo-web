@@ -142,11 +142,20 @@ export default function ClientDashboard() {
                                         <p className="text-sm text-gray-600 font-medium">
                                             <span className="font-bold">To:</span> {booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A'}
                                         </p>
+                                        <p className="text-xs text-gray-400 font-medium mt-2">
+                                            Reserved at: {booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
+                                        </p>
                                     </div>
                                     <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end">
                                         <p className="text-sm text-gray-500 font-bold mb-1">Total Escrow</p>
                                         <p className="text-2xl font-black text-gray-900">₦{booking.totalPrice}</p>
-                                        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
+                                        <span className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold ${
+                                            booking.status === 'Pending Escrow' 
+                                                ? 'bg-yellow-100 text-yellow-800' 
+                                                : booking.status === 'Approved for Disbursement'
+                                                    ? 'bg-blue-100 text-blue-800'
+                                                    : 'bg-green-100 text-green-800'
+                                        }`}>
                                             {booking.status}
                                         </span>
                                         {booking.status === 'Pending Escrow' && (

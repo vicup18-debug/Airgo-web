@@ -5,6 +5,21 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const AMENITIES_LIST = [
+  "High-speed WiFi",
+  "Swimming Pool",
+  "Gym / Fitness Center",
+  "Spa & Wellness",
+  "Restaurant & Bar",
+  "Room Service",
+  "Air Conditioning",
+  "Free Parking",
+  "Complimentary Breakfast",
+  "King Bed",
+  "Private Balcony",
+  "Mini Bar"
+];
+
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals' | 'fleet' | 'rooms'>('overview');
@@ -34,6 +49,16 @@ export default function SuperadminDashboard() {
 
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
+
+    const toggleRoomAmenity = (amenity: string) => {
+        let list: string[] = newRoom.amenities ? newRoom.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+        if (list.includes(amenity)) {
+            list = list.filter(item => item !== amenity);
+        } else {
+            list.push(amenity);
+        }
+        setNewRoom({ ...newRoom, amenities: list.join(', ') });
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('airgo_token');
@@ -79,21 +104,21 @@ export default function SuperadminDashboard() {
     };
 
     // --- ESCROW & PARTNER ACTIONS ---
-    const handleDisburse = async (bookingId: string) => {
-        if (window.confirm(`Authorize payout?`)) {
+    const handleUpdateEscrowStatus = async (bookingId: string, nextStatus: string, actionLabel: string) => {
+        if (window.confirm(`${actionLabel} for this reservation?`)) {
             try {
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
                 const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ status: 'Paid Out' })
+                    body: JSON.stringify({ status: nextStatus })
                 });
 
                 if (res.ok) {
-                    toast.success(`Payout Authorized!`);
-                    setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'Paid Out' } : b));
+                    toast.success(`${actionLabel} Successful!`);
+                    setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: nextStatus } : b));
                 } else {
-                    toast.success("❌ Failed to authorize payout.");
+                    toast.error(`❌ Failed to update status.`);
                 }
             } catch (error) {
                 toast.error("❌ Error connecting to server.");
@@ -345,11 +370,24 @@ export default function SuperadminDashboard() {
                                                                 <p className="font-black text-gray-900">{booking.itemName}</p>
                                                                 <p className="text-[10px] text-[#000080] font-bold uppercase mt-1">Tap for details ▼</p>
                                                             </td>
-                                                            <td className="p-4"><span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{booking.status}</span></td>
+                                                            <td className="p-4">
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                                    booking.status === 'Pending Escrow' 
+                                                                        ? 'bg-yellow-100 text-yellow-800' 
+                                                                        : booking.status === 'Approved for Disbursement'
+                                                                            ? 'bg-blue-100 text-blue-800'
+                                                                            : 'bg-green-100 text-green-800'
+                                                                }`}>
+                                                                    {booking.status}
+                                                                </span>
+                                                            </td>
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
                                                                 {booking.status === 'Pending Escrow' && (
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleDisburse(booking._id); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse</button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
+                                                                )}
+                                                                {booking.status === 'Approved for Disbursement' && (
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
                                                                 )}
                                                             </td>
                                                         </tr>
@@ -378,6 +416,8 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
                                                                             <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
                                                                             <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
+                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -599,7 +639,36 @@ export default function SuperadminDashboard() {
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price Per Night (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.pricePerNight} onChange={e => setNewRoom({ ...newRoom, pricePerNight: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
                             </div>
-                            <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Private Pool, Free WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.amenities} onChange={e => setNewRoom({ ...newRoom, amenities: e.target.value })} /></div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
+                                <input 
+                                    type="text" 
+                                    required 
+                                    readOnly
+                                    placeholder="Select amenities from list below..."
+                                    className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none"
+                                    value={newRoom.amenities}
+                                />
+                                <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
+                                    {AMENITIES_LIST.map((amenity) => {
+                                        const isSelected = newRoom.amenities ? newRoom.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
+                                        return (
+                                            <button
+                                                type="button"
+                                                key={amenity}
+                                                onClick={() => toggleRoomAmenity(amenity)}
+                                                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                                    isSelected 
+                                                        ? 'bg-[#000080] text-white border-[#000080] shadow-sm' 
+                                                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                                }`}
+                                            >
+                                                {amenity}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo</label>
                                 <input required type="file" accept="image/*" className="w-full px-4 py-2 border rounded-xl text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#000080]" onChange={(e) => setRoomImageFile(e.target.files?.[0] || null)} />

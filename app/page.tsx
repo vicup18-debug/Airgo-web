@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import HotelBookingModal from './hotels/bookings-modal';
 
 // 🟢 PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
 const FALLBACK_ROOMS = [
@@ -220,17 +221,48 @@ export default function HotelHomepage() {
   };
 
   // Search & filter logic
-  const filteredRooms = liveRooms.filter((room) => {
+  // Group rooms by hotel name
+  const groupedHotels = React.useMemo(() => {
+    const hotelsMap = new Map<string, any>();
+    
+    liveRooms.forEach(room => {
+      const key = room.hotelName ? room.hotelName.trim() : 'Unknown Hotel';
+      if (!hotelsMap.has(key)) {
+        hotelsMap.set(key, {
+          _id: room._id,
+          name: room.hotelName,
+          location: room.hotelAddress || 'Nigeria',
+          image: room.image,
+          partnerId: room.partnerId,
+          pricePerNight: room.pricePerNight, // starting price
+          amenities: room.amenities,
+          rooms: []
+        });
+      }
+      const hotel = hotelsMap.get(key);
+      hotel.rooms.push(room);
+      if (room.pricePerNight < hotel.pricePerNight) {
+        hotel.pricePerNight = room.pricePerNight; // keep lowest price
+        hotel.image = room.image;
+        hotel.amenities = room.amenities;
+      }
+    });
+    
+    return Array.from(hotelsMap.values());
+  }, [liveRooms]);
+
+  const isHotelAvailable = (hotel: any) => {
+    if (!checkIn || !checkOut) return true;
+    return hotel.rooms.some((room: any) => isItemAvailable(room, false));
+  };
+
+  const filteredRooms = groupedHotels.filter((hotel) => {
     // 1. Location match
-    const matchesLocation = !location || 
-      room.hotelName?.toLowerCase().includes(location.toLowerCase()) ||
-      room.name?.toLowerCase().includes(location.toLowerCase()) ||
-      room.hotelAddress?.toLowerCase().includes(location.toLowerCase());
+    const matchesLocation = !location ||
+      hotel.name?.toLowerCase().includes(location.toLowerCase()) ||
+      hotel.location?.toLowerCase().includes(location.toLowerCase());
 
-    // 2. Availability match (using dates)
-    const matchesAvailability = isItemAvailable(room, false);
-
-    return matchesLocation && matchesAvailability;
+    return matchesLocation;
   });
 
   const filteredCars = liveCars.filter((car) => {
@@ -261,15 +293,21 @@ export default function HotelHomepage() {
             <div className="flex justify-center gap-4 mb-6">
               <button 
                 onClick={() => setActiveTab('stays')} 
-                className={`px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'stays' ? 'bg-[#FFB81C] text-[#000080]' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'stays' ? 'bg-[#FFB81C] text-[#000080]' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
-                🏨 Luxury Stays
+                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L15.39 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.61 8.26L12 2Z" />
+                </svg>
+                Luxury Star
               </button>
               <button 
                 onClick={() => setActiveTab('transport')} 
-                className={`px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all ${activeTab === 'transport' ? 'bg-[#FFB81C] text-[#000080]' : 'bg-white/10 text-white hover:bg-white/20'}`}
+                className={`px-8 py-3 rounded-full font-bold text-sm uppercase tracking-wide transition-all flex items-center justify-center gap-2 ${activeTab === 'transport' ? 'bg-[#FFB81C] text-[#000080]' : 'bg-white/10 text-white hover:bg-white/20'}`}
               >
-                🚘 Executive Fleet
+                <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                </svg>
+                Executive Fleet
               </button>
             </div>
           </div>
@@ -333,16 +371,17 @@ export default function HotelHomepage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {(activeTab === 'stays' ? filteredRooms : filteredCars).map((item) => {
-                const available = isItemAvailable(item, activeTab === 'transport');
+              {(activeTab === 'stays' ? filteredRooms : filteredCars).map((item, idx) => {
                 const isCar = activeTab === 'transport';
+                const available = isCar ? isItemAvailable(item, true) : isHotelAvailable(item);
                 const basePrice = isCar ? item.price : item.pricePerNight;
 
                 return (
                   <div 
                     key={item._id} 
                     onClick={() => available ? handleItemSelect(item) : null}
-                    className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer ${!available && 'opacity-60 grayscale'}`}
+                    style={{ animationDelay: `${idx * 80}ms` }}
+                    className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer opacity-0 animate-slide-up ${!available && 'opacity-60 grayscale'}`}
                   >
                     <div className="h-64 overflow-hidden relative">
                       <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
@@ -353,17 +392,35 @@ export default function HotelHomepage() {
                       ) : isCar ? (
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50">
                            <p className="text-sm font-black text-gray-900">₦{basePrice.toLocaleString()}<span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">/day</span></p>
-                        </div>
-                      ) : null}
+                         </div>
+                      ) : (
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50">
+                           <p className="text-sm font-black text-[#000080]">₦{basePrice.toLocaleString()}<span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">/night</span></p>
+                         </div>
+                      )}
                     </div>
                     <div className="p-8 flex flex-col flex-grow">
-                      {!isCar && <p className="text-[10px] font-black text-[#000080] uppercase tracking-widest mb-2 truncate">{item.hotelName}</p>}
-                      <h3 className="font-black text-gray-900 text-2xl mb-3 leading-tight">{item.name}</h3>
+                      {!isCar ? (
+                        <div className="flex items-center gap-1.5 mb-2 bg-[#FFB81C]/10 text-[#000080] px-2.5 py-1 rounded-lg w-fit border border-[#FFB81C]/20">
+                          <svg className="w-3 h-3 text-[#FFB81C] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2L15.39 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.61 8.26L12 2Z" />
+                          </svg>
+                          <span className="text-[9px] font-black tracking-wider uppercase">Luxury Star Partner</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 mb-2 bg-blue-50 text-[#000080] px-2.5 py-1 rounded-lg w-fit border border-blue-100">
+                          <svg className="w-3 h-3 text-[#000080] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z" />
+                          </svg>
+                          <span className="text-[9px] font-black tracking-wider uppercase">Executive Fleet Partner</span>
+                        </div>
+                      )}
+                      <h3 className="font-black text-gray-900 text-2xl mb-3 leading-tight truncate">{item.name}</h3>
                       
-                      {!isCar && item.hotelAddress && (
+                      {!isCar && item.location && (
                         <div className="flex items-start gap-2 mb-4 text-gray-500">
                           <span className="text-sm mt-0.5">📍</span>
-                          <p className="text-sm font-medium leading-relaxed">{item.hotelAddress}</p>
+                          <p className="text-sm font-medium leading-relaxed line-clamp-1">{item.location}</p>
                         </div>
                       )}
                       
@@ -373,9 +430,9 @@ export default function HotelHomepage() {
                            <p className="text-sm font-bold uppercase tracking-wide">{item.type} <span className="mx-2">•</span> {item.capacity} Seats</p>
                          </div>
                       )}
-
+                      
                       <div className="bg-gray-50 p-4 rounded-2xl mb-8 border border-gray-100 flex-grow">
-                        <p className="text-xs text-gray-600 font-medium leading-relaxed">{isCar ? item.features : item.amenities}</p>
+                        <p className="text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">{isCar ? item.features : item.amenities}</p>
                       </div>
 
                       <div className="flex justify-between items-center pt-2 mt-auto">
@@ -386,8 +443,8 @@ export default function HotelHomepage() {
                           </div>
                         ) : (
                           <div>
-                            <p className="text-sm font-bold text-[#000080]">Rate visible on select</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Escrow holding active</p>
+                            <p className="text-xl font-black text-gray-900">₦{basePrice.toLocaleString()}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Starting Rate / Night</p>
                           </div>
                         )}
                         <button
@@ -411,13 +468,21 @@ export default function HotelHomepage() {
       </div>
 
       {/* FRICTIONLESS BOOKING MODAL */}
-      {selectedItem && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden my-auto border border-gray-100 transform transition-all">
+      {selectedItem && activeTab === 'stays' && (
+        <HotelBookingModal
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          hotel={selectedItem}
+        />
+      )}
+
+      {selectedItem && activeTab === 'transport' && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden my-auto border border-gray-100 transform transition-all animate-scale-in">
             <div className="bg-gradient-to-r from-[#000080] to-[#000060] p-8 text-white relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
               <div className="relative z-10 pr-8">
-                <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">{activeTab === 'stays' ? selectedItem.hotelName : `${selectedItem.type} Vehicle`}</p>
+                <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">{`${selectedItem.type} Vehicle`}</p>
                 <h2 className="text-3xl font-black leading-tight">{selectedItem.name}</h2>
               </div>
               <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all z-20">✕</button>
@@ -426,19 +491,19 @@ export default function HotelHomepage() {
             <div className="p-8 bg-gray-50/50 border-b border-gray-100">
               <div className="flex justify-between items-center mb-6">
                  <div className="flex flex-col">
-                   <span className="text-[10px] uppercase font-black text-gray-400 mb-1">{activeTab === 'stays' ? 'Check-In' : 'Pickup Date'}</span>
+                   <span className="text-[10px] uppercase font-black text-gray-400 mb-1">Pickup Date</span>
                    <span className="text-sm font-bold text-gray-900">{new Date(checkIn).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                  </div>
                  <div className="h-px bg-gray-300 w-12 flex-1 mx-4"></div>
                  <div className="flex flex-col text-right">
-                   <span className="text-[10px] uppercase font-black text-gray-400 mb-1">{activeTab === 'stays' ? 'Check-Out' : 'Return Date'}</span>
+                   <span className="text-[10px] uppercase font-black text-gray-400 mb-1">Return Date</span>
                    <span className="text-sm font-bold text-gray-900">{new Date(checkOut).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
                  </div>
               </div>
 
               <div className="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
                 <span className="text-xs uppercase font-black text-gray-500 tracking-wider">Total Escrow Hold</span>
-                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(activeTab === 'transport' ? selectedItem.price : selectedItem.pricePerNight).toLocaleString()}</span>
+                <span className="text-3xl font-black text-[#000080]">₦{calculateTotal(selectedItem.price).toLocaleString()}</span>
               </div>
             </div>
 
@@ -461,7 +526,7 @@ export default function HotelHomepage() {
                 </p>
               </div>
 
-              <button disabled={isBooking || !user} type="submit" className={`w-full py-4.5 rounded-2xl shadow-xl text-lg font-black transition-all duration-300 mt-4 ${(isBooking || !user) ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#FFB81C] text-[#000080] hover:bg-[#e5a519] hover:shadow-[0_10px_25px_rgba(255,184,28,0.4)] hover:-translate-y-1'}`}>
+              <button disabled={isBooking || !user} type="submit" className={`w-full py-3.5 md:py-4.5 rounded-2xl shadow-xl text-sm md:text-lg font-black transition-all duration-300 mt-4 ${(isBooking || !user) ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#FFB81C] text-[#000080] hover:bg-[#e5a519] hover:shadow-[0_10px_25px_rgba(255,184,28,0.4)] hover:-translate-y-1'}`}>
                 {isBooking ? (
                    <span className="flex items-center justify-center gap-2">
                      <svg className="animate-spin h-5 w-5 text-[#000080]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>

@@ -5,6 +5,21 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const AMENITIES_LIST = [
+  "High-speed WiFi",
+  "Swimming Pool",
+  "Gym / Fitness Center",
+  "Spa & Wellness",
+  "Restaurant & Bar",
+  "Room Service",
+  "Air Conditioning",
+  "Free Parking",
+  "Complimentary Breakfast",
+  "King Bed",
+  "Private Balcony",
+  "Mini Bar"
+];
+
 export default function PartnerDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings'>('overview');
@@ -27,6 +42,16 @@ export default function PartnerDashboard() {
     });
 
     const router = useRouter();
+
+    const togglePartnerAmenity = (amenity: string) => {
+        let list: string[] = newItem.amenities ? newItem.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+        if (list.includes(amenity)) {
+            list = list.filter(item => item !== amenity);
+        } else {
+            list.push(amenity);
+        }
+        setNewItem({ ...newItem, amenities: list.join(', ') });
+    };
 
     useEffect(() => {
         const token = localStorage.getItem('airgo_token');
@@ -432,9 +457,15 @@ const handleLogout = () => {
                                                             </td>
                                                             <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'Pending Escrow' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>
-                                                                    {booking.status}
-                                                                </span>
+                                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                                     booking.status === 'Pending Escrow' 
+                                                                         ? 'bg-yellow-100 text-yellow-800' 
+                                                                         : booking.status === 'Approved for Disbursement'
+                                                                             ? 'bg-blue-100 text-blue-800'
+                                                                             : 'bg-green-100 text-green-800'
+                                                                 }`}>
+                                                                     {booking.status}
+                                                                 </span>
                                                             </td>
                                                         </tr>
                                                         {expandedBookingId === booking._id && (
@@ -469,6 +500,8 @@ const handleLogout = () => {
                                                                                     <p className="text-xs font-bold text-red-700 mt-1">Check-out: {new Date(booking.checkOut).toLocaleDateString()}</p>
                                                                                 </>
                                                                             )}
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
+                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -511,7 +544,36 @@ const handleLogout = () => {
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label><input required type="text" placeholder="e.g. Pool, WiFi, King Bed" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.amenities} onChange={e => setNewItem({ ...newItem, amenities: e.target.value })} /></div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
+                                        <input 
+                                            type="text" 
+                                            required 
+                                            readOnly
+                                            placeholder="Select amenities from list below..."
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none"
+                                            value={newItem.amenities}
+                                        />
+                                        <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
+                                            {AMENITIES_LIST.map((amenity) => {
+                                                const isSelected = newItem.amenities ? newItem.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        key={amenity}
+                                                        onClick={() => togglePartnerAmenity(amenity)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                                            isSelected 
+                                                                ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' 
+                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    >
+                                                        {amenity}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 

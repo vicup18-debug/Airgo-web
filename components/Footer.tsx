@@ -31,7 +31,9 @@ export default function Footer() {
       <footer className="bg-[#000080] text-white py-16 px-6 mt-auto border-t-4 border-[#FFB81C]">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
-            <h3 className="text-2xl font-black mb-4">Airgo<span className="text-[#FFB81C]">.ng</span></h3>
+            <Link href="/">
+              <h3 className="text-2xl font-black mb-4 cursor-pointer">Airgo<span className="text-[#FFB81C]">.ng</span></h3>
+            </Link>
             <p className="text-blue-200 text-sm leading-relaxed max-w-sm">
               Airgo.ng is Nigeria's premier escrow-protected luxury asset marketplace. We secure your transactions, holding booking funds safely until your stay or rental is completed flawlessly.
             </p>

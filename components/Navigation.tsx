@@ -52,7 +52,9 @@ export default function Navigation() {
 
       {/* SMART MOBILE TOP BAR */}
       <div className="md:hidden bg-[#000080] text-white py-4 px-6 sticky top-0 z-40 shadow-md flex justify-between items-center">
-        <div className="text-xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.ng</span></div>
+        <Link href="/">
+          <div className="text-xl font-black tracking-tight cursor-pointer">Airgo<span className="text-[#FFB81C]">.ng</span></div>
+        </Link>
         <Link href={user ? (user.role === 'admin' ? '/admin' : user.role === 'partner' ? '/partner' : '/dashboard') : '/login'}>
           <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center text-[#000080] font-bold shadow-sm">
             {user ? user.name.charAt(0).toUpperCase() : '👤'}
