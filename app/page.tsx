@@ -82,33 +82,6 @@ export default function HotelHomepage() {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
 
-  // Search & filter logic
-  const filteredRooms = liveRooms.filter((room) => {
-    // 1. Location match
-    const matchesLocation = !location || 
-      room.hotelName?.toLowerCase().includes(location.toLowerCase()) ||
-      room.name?.toLowerCase().includes(location.toLowerCase()) ||
-      room.hotelAddress?.toLowerCase().includes(location.toLowerCase());
-
-    // 2. Availability match (using dates)
-    const matchesAvailability = isItemAvailable(room, false);
-
-    return matchesLocation && matchesAvailability;
-  });
-
-  const filteredCars = liveCars.filter((car) => {
-    // 1. Location/Type/Features match
-    const matchesLocation = !location ||
-      car.name?.toLowerCase().includes(location.toLowerCase()) ||
-      car.type?.toLowerCase().includes(location.toLowerCase()) ||
-      car.features?.toLowerCase().includes(location.toLowerCase());
-
-    // 2. Availability match (using dates)
-    const matchesAvailability = isItemAvailable(car, true);
-
-    return matchesLocation && matchesAvailability;
-  });
-
   // BOOKING MODAL STATES
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
@@ -245,6 +218,33 @@ export default function HotelHomepage() {
       setIsBooking(false);
     }
   };
+
+  // Search & filter logic
+  const filteredRooms = liveRooms.filter((room) => {
+    // 1. Location match
+    const matchesLocation = !location || 
+      room.hotelName?.toLowerCase().includes(location.toLowerCase()) ||
+      room.name?.toLowerCase().includes(location.toLowerCase()) ||
+      room.hotelAddress?.toLowerCase().includes(location.toLowerCase());
+
+    // 2. Availability match (using dates)
+    const matchesAvailability = isItemAvailable(room, false);
+
+    return matchesLocation && matchesAvailability;
+  });
+
+  const filteredCars = liveCars.filter((car) => {
+    // 1. Location/Type/Features match
+    const matchesLocation = !location ||
+      car.name?.toLowerCase().includes(location.toLowerCase()) ||
+      car.type?.toLowerCase().includes(location.toLowerCase()) ||
+      car.features?.toLowerCase().includes(location.toLowerCase());
+
+    // 2. Availability match (using dates)
+    const matchesAvailability = isItemAvailable(car, true);
+
+    return matchesLocation && matchesAvailability;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-[72px] md:pb-0 flex flex-col">
@@ -406,7 +406,7 @@ export default function HotelHomepage() {
                 );
               })}
             </div>
-          ) }}
+          )}
         </div>
       </div>
 
