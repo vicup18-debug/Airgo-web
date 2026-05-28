@@ -82,6 +82,33 @@ export default function HotelHomepage() {
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
 
+  // Search & filter logic
+  const filteredRooms = liveRooms.filter((room) => {
+    // 1. Location match
+    const matchesLocation = !location || 
+      room.hotelName?.toLowerCase().includes(location.toLowerCase()) ||
+      room.name?.toLowerCase().includes(location.toLowerCase()) ||
+      room.hotelAddress?.toLowerCase().includes(location.toLowerCase());
+
+    // 2. Availability match (using dates)
+    const matchesAvailability = isItemAvailable(room, false);
+
+    return matchesLocation && matchesAvailability;
+  });
+
+  const filteredCars = liveCars.filter((car) => {
+    // 1. Location/Type/Features match
+    const matchesLocation = !location ||
+      car.name?.toLowerCase().includes(location.toLowerCase()) ||
+      car.type?.toLowerCase().includes(location.toLowerCase()) ||
+      car.features?.toLowerCase().includes(location.toLowerCase());
+
+    // 2. Availability match (using dates)
+    const matchesAvailability = isItemAvailable(car, true);
+
+    return matchesLocation && matchesAvailability;
+  });
+
   // BOOKING MODAL STATES
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
@@ -145,6 +172,26 @@ export default function HotelHomepage() {
     if (!checkIn || !checkOut) return pricePerUnit;
     const days = Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24));
     return (days > 0 ? days : 1) * pricePerUnit;
+  };
+
+  const handleItemSelect = (item: any) => {
+    let checkInVal = checkIn;
+    let checkOutVal = checkOut;
+
+    if (!checkInVal || !checkOutVal) {
+      const today = new Date();
+      checkInVal = today.toISOString().split('T')[0];
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      checkOutVal = tomorrow.toISOString().split('T')[0];
+      
+      setCheckIn(checkInVal);
+      setCheckOut(checkOutVal);
+      toast.success("📅 We've set default stay dates for your convenience.");
+    }
+    
+    setSelectedItem(item);
   };
 
   const handleConfirmBooking = async (e: React.FormEvent) => {
@@ -228,21 +275,21 @@ export default function HotelHomepage() {
           </div>
           
           {/* TRUST BAR */}
-          <div className="mt-10 bg-[#000060] rounded-2xl p-6 md:p-8 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-2">✅</span>
-              <span className="font-bold text-white text-base">Verified Partners</span>
-              <span className="text-xs text-blue-200 mt-1">Strictly vetted luxury properties and verified chauffeurs.</span>
+          <div className="mt-10 bg-[#000060] rounded-2xl p-4 md:p-6 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
+            <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
+              <span className="text-3xl mb-2 group-hover:scale-125 transition-transform duration-300">✅</span>
+              <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Verified Partners</span>
+              <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Strictly vetted luxury properties and verified chauffeurs.</span>
             </div>
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-2">🔒</span>
-              <span className="font-bold text-white text-base">Escrow-Protected</span>
-              <span className="text-xs text-blue-200 mt-1">Your funds are held securely until service is completely delivered.</span>
+            <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
+              <span className="text-3xl mb-2 group-hover:scale-125 transition-transform duration-300">🔒</span>
+              <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Escrow-Protected</span>
+              <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Your funds are held securely until service is completely delivered.</span>
             </div>
-            <div className="flex flex-col items-center text-center">
-              <span className="text-3xl mb-2">📞</span>
-              <span className="font-bold text-white text-base">24/7 Support</span>
-              <span className="text-xs text-blue-200 mt-1">Always available for VIP assistance and priority booking support.</span>
+            <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
+              <span className="text-3xl mb-2 group-hover:scale-125 transition-transform duration-300">📞</span>
+              <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">24/7 Support</span>
+              <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Always available for VIP assistance and priority booking support.</span>
             </div>
           </div>
         </header>
@@ -250,7 +297,7 @@ export default function HotelHomepage() {
         {/* SEARCH BOX & CALENDAR PICKER */}
         <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-20">
           <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-gray-100">
-            <form className="flex flex-col md:flex-row gap-4">
+            <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4">
               <div className="flex-[2]">
                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Hotel, City or Region' : 'Pickup Location'}</label>
                 <input type="text" placeholder={activeTab === 'stays' ? 'Abuja, Lagos, Hilton...' : 'Lekki, Airport, Victoria Island...'} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={location} onChange={(e) => setLocation(e.target.value)} />
@@ -278,15 +325,25 @@ export default function HotelHomepage() {
 
           {isLoading ? (
             <div className="text-center py-20 text-gray-400 font-bold animate-pulse text-lg">Scanning live matrices...</div>
+          ) : (activeTab === 'stays' ? filteredRooms : filteredCars).length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-[2rem] border border-gray-100 shadow-sm max-w-xl mx-auto p-8 my-8">
+              <div className="text-5xl mb-4">🔍</div>
+              <h3 className="text-xl font-bold text-gray-800">No Matches Found</h3>
+              <p className="text-gray-500 mt-2">Try adjusting your search query or choosing different dates.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {(activeTab === 'stays' ? liveRooms : liveCars).map((item) => {
+              {(activeTab === 'stays' ? filteredRooms : filteredCars).map((item) => {
                 const available = isItemAvailable(item, activeTab === 'transport');
                 const isCar = activeTab === 'transport';
                 const basePrice = isCar ? item.price : item.pricePerNight;
 
                 return (
-                  <div key={item._id} className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group ${!available && 'opacity-60 grayscale'}`}>
+                  <div 
+                    key={item._id} 
+                    onClick={() => available ? handleItemSelect(item) : null}
+                    className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer ${!available && 'opacity-60 grayscale'}`}
+                  >
                     <div className="h-64 overflow-hidden relative">
                       <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
                       {!available ? (
@@ -334,9 +391,12 @@ export default function HotelHomepage() {
                           </div>
                         )}
                         <button
-                          onClick={() => available ? setSelectedItem(item) : null}
-                          disabled={!available || !checkIn || !checkOut}
-                          className={`px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${!checkIn || !checkOut ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' : available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (available) handleItemSelect(item);
+                          }}
+                          disabled={!available}
+                          className={`px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
                         >
                           {available ? (isCar ? 'Reserve Now' : 'Book Room') : 'Unavailable'}
                         </button>
@@ -346,7 +406,7 @@ export default function HotelHomepage() {
                 );
               })}
             </div>
-          )}
+          ) }}
         </div>
       </div>
 

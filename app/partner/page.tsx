@@ -242,27 +242,18 @@ const handleLogout = () => {
             {/* SIDEBAR */}
             <aside className={`fixed md:relative top-0 left-0 h-full w-64 bg-[#004A99] text-white flex-col shadow-xl z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} flex`}>
                 <div className="p-6 border-b border-blue-800 flex justify-between items-center">
-                    <div>
+                    <Link href="/" className="hover:opacity-80 transition block text-left">
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
                             {user.partnerType?.toLowerCase().includes('car') ? 'Fleet Manager' : 'Hotelier'}
                         </p>
-                    </div>
+                    </Link>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
                     <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType?.toLowerCase().includes('car') ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
-
-                    {/* 🟢 UPGRADED: Home Button in Sidebar */}
-                    <div className="my-4 border-b border-blue-800"></div>
-                    <Link 
-                        href="/" 
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition font-black text-blue-200 hover:bg-blue-800 border border-blue-800/50"
-                    >
-                        🏠 Back to Homepage
-                    </Link>
                 </nav>
                 <div className="p-4 border-t border-blue-800">
                     <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold transition shadow-md">Sign Out</button>

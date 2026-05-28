@@ -100,14 +100,10 @@ export default function ClientDashboard() {
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
             {/* 🟢 NAVBAR */}
             <div className="bg-[#000080] p-4 flex justify-between items-center text-white shadow-md">
-                <Link href="/" className="font-black text-xl tracking-tight">Airgo</Link>
+                <Link href="/" className="font-black text-xl tracking-tight hover:text-blue-200 transition">
+                    Airgo<span className="text-[#FFB81C]">.ng</span>
+                </Link>
                 <div className="flex gap-4">
-                    <Link 
-                        href="/" 
-                        className="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-sm font-bold transition"
-                    >
-                        🏠 Back to Homepage
-                    </Link>
                     <button onClick={handleLogout} className="bg-red-500 hover:bg-red-600 px-4 py-2 rounded-lg text-sm font-bold transition shadow-md">
                         Sign Out
                     </button>

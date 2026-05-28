@@ -258,10 +258,10 @@ export default function SuperadminDashboard() {
             {/* SIDEBAR COMMAND CENTER */}
             <aside className={`fixed md:relative top-0 left-0 h-full w-64 bg-gray-900 text-white flex-col shadow-xl z-50 transition-transform duration-300 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} flex`}>
                 <div className="p-6 border-b border-gray-800 flex justify-between items-center">
-                    <div>
+                    <Link href="/" className="hover:opacity-80 transition block">
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.HQ</span></h2>
                         <p className="text-xs text-green-400 mt-1 uppercase tracking-widest font-bold">System Online</p>
-                    </div>
+                    </Link>
                     <button className="md:hidden text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -271,13 +271,6 @@ export default function SuperadminDashboard() {
                     <div className="my-2 border-b border-gray-800"></div>
                     <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🚘 Manage Fleet</button>
                     <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🏨 Manage Room Matrix</button>
-                    <div className="my-4 border-b border-gray-800"></div>
-                    <Link 
-                        href="/" 
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-black text-gray-300 hover:bg-gray-800 border border-gray-800"
-                    >
-                        🏠 Back to Homepage
-                    </Link>
                 </nav>
                 <div className="p-4 border-t border-gray-800">
                     <button onClick={handleLogout} className="w-full bg-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900 hover:text-white transition">Sign Out</button>

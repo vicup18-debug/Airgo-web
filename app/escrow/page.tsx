@@ -5,9 +5,11 @@ export default function EscrowAgreementPage() {
     return (
         <div className="min-h-screen bg-gray-50 py-12 px-6 lg:px-8 font-sans">
             <div className="max-w-4xl mx-auto bg-white p-8 md:p-12 rounded-3xl shadow-xl border border-gray-100">
-                <Link href="/" className="inline-flex items-center text-[#000080] font-bold hover:underline mb-8">
-                    ← Back to Homepage
-                </Link>
+                <div className="flex justify-between items-center mb-8 border-b border-gray-100 pb-4">
+                    <Link href="/" className="font-black text-2xl tracking-tight text-[#000080] hover:opacity-85 transition">
+                        Airgo<span className="text-[#FFB81C]">.ng</span>
+                    </Link>
+                </div>
 
                 <h1 className="text-3xl md:text-4xl font-black text-[#000080] mb-2">AIRGO ESCROW PROTECTION AGREEMENT</h1>
                 <p className="text-gray-500 font-medium mb-8">For Hotel Bookings, Car Hire, Tour & Travel Reservations on Airgo.ng</p>
