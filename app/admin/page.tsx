@@ -107,10 +107,11 @@ export default function SuperadminDashboard() {
     const fetchAllSystemData = async () => {
         setIsLoading(true);
         try {
+            const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
             const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes] = await Promise.all([
-                fetch(`${apiUrl}/api/bookings`),
+                fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/auth/partners`),
                 fetch(`${apiUrl}/api/cars`),
                 fetch(`${apiUrl}/api/rooms`),

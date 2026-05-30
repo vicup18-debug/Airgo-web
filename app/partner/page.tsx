@@ -48,18 +48,7 @@ export default function PartnerDashboard() {
         name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
     });
 
-    // EDIT BOOKING MODAL STATE
-    const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<any>(null);
-    const [isEditBookingModalOpen, setIsEditBookingModalOpen] = useState(false);
-    const [editBookingData, setEditBookingData] = useState({
-        clientName: '',
-        clientEmail: '',
-        clientPhone: '',
-        deliveryAddress: '',
-        checkIn: '',
-        checkOut: '',
-        guests: 1
-    });
+
 
     const router = useRouter();
 
@@ -118,7 +107,12 @@ export default function PartnerDashboard() {
             }
 
             // Fetch Bookings with unified secure ID
-            const bookingsRes = await fetch(`${apiUrl}/api/bookings`);
+            const token = localStorage.getItem('airgo_token');
+            const bookingsRes = await fetch(`${apiUrl}/api/bookings`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (bookingsRes.ok) {
                 const allBookings = await bookingsRes.json();
                 const filteredBookings = allBookings.filter((b: any) => b.partnerId === secureId);
@@ -289,50 +283,7 @@ export default function PartnerDashboard() {
         }
     };
 
-    const handleEditBookingClick = (booking: any) => {
-        setSelectedBookingForEdit(booking);
-        setEditBookingData({
-            clientName: booking.clientName || '',
-            clientEmail: booking.clientEmail || '',
-            clientPhone: booking.clientPhone || '',
-            deliveryAddress: booking.deliveryAddress || '',
-            checkIn: booking.checkIn || '',
-            checkOut: booking.checkOut || '',
-            guests: booking.guests || 1
-        });
-        setIsEditBookingModalOpen(true);
-    };
 
-    const handleSaveEditBooking = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!selectedBookingForEdit) return;
-        setIsUploading(true);
-        try {
-            const token = localStorage.getItem('airgo_token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings/${selectedBookingForEdit._id}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify(editBookingData)
-            });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success("Booking details corrected successfully!");
-                setIsEditBookingModalOpen(false);
-                setSelectedBookingForEdit(null);
-                fetchPartnerData(user);
-            } else {
-                toast.error(data.message || "Failed to update booking details.");
-            }
-        } catch (err) {
-            toast.error("Error connecting to server.");
-        } finally {
-            setIsUploading(false);
-        }
-    };
 
     const handleUpdateInventory = async (id: string, updates: any) => {
         try {
@@ -639,19 +590,7 @@ export default function PartnerDashboard() {
                                                         {expandedBookingId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">{isCarPartner ? 'Driver / Client' : 'Dispatch Contact'}</p>
-                                                                            <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
-                                                                            <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
-                                                                            <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email'}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">{isCarPartner ? 'Delivery Location' : 'Delivery / Address'}</p>
-                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
-                                                                                {booking.deliveryAddress || (isCarPartner ? 'Terminal Pick-Up' : 'Walk-In / Property Visit')}
-                                                                            </p>
-                                                                        </div>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Info</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 12).toUpperCase()}</p>
@@ -659,19 +598,12 @@ export default function PartnerDashboard() {
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
+                                                                            <p className="text-xs font-bold text-green-700">In / Out: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out / Return: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Reserved At</p>
                                                                             <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
-                                                                            
-                                                                            {booking.status === 'Pending Escrow' && (
-                                                                                <button 
-                                                                                    onClick={() => handleEditBookingClick(booking)}
-                                                                                    className="mt-3 bg-white text-gray-700 hover:bg-[#004A99] hover:text-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-sm"
-                                                                                >
-                                                                                    ✏️ Correct Details
-                                                                                </button>
-                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -829,60 +761,6 @@ export default function PartnerDashboard() {
                                 <button type="button" onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
                                 <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition">
                                     {isUploading ? 'Saving...' : 'Save Corrections'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
-
-            {/* EDIT BOOKING DETAILS MODAL */}
-            {isEditBookingModalOpen && selectedBookingForEdit && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
-                            <h2 className="text-xl font-black text-[#004A99]">Correct Reservation Contact Details</h2>
-                            <button onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
-                        </div>
-                        <form onSubmit={handleSaveEditBooking} className="p-6 space-y-4 overflow-y-auto flex-1">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Name</label>
-                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientName} onChange={e => setEditBookingData({ ...editBookingData, clientName: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
-                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.guests} onChange={e => setEditBookingData({ ...editBookingData, guests: parseInt(e.target.value) || 1 })} />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Email Address</label>
-                                    <input required type="email" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientEmail} onChange={e => setEditBookingData({ ...editBookingData, clientEmail: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Phone Number</label>
-                                    <input required type="tel" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientPhone} onChange={e => setEditBookingData({ ...editBookingData, clientPhone: e.target.value })} />
-                                </div>
-                            </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Delivery / Stay Address</label>
-                                <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.deliveryAddress} onChange={e => setEditBookingData({ ...editBookingData, deliveryAddress: e.target.value })} />
-                            </div>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">In / Pickup Date</label>
-                                    <input required type="date" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.checkIn ? editBookingData.checkIn.split('T')[0] : ''} onChange={e => setEditBookingData({ ...editBookingData, checkIn: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Out / Return Date</label>
-                                    <input required type="date" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.checkOut ? editBookingData.checkOut.split('T')[0] : ''} onChange={e => setEditBookingData({ ...editBookingData, checkOut: e.target.value })} />
-                                </div>
-                            </div>
-                            <div className="pt-4 flex justify-end gap-3 shrink-0">
-                                <button type="button" onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
-                                <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition">
-                                    {isUploading ? 'Applying...' : 'Apply Corrections'}
                                 </button>
                             </div>
                         </form>

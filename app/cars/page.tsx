@@ -158,56 +158,75 @@ export default function CarsPage() {
                                     <p className="text-gray-500 mt-2">Try adjusting your filters or search terms.</p>
                                 </div>
                             ) : (
-                                filteredCars.map((car) => (
-                                    <div key={car._id || car.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-shadow duration-300 group flex flex-col">
-                                        <div className="relative h-56 overflow-hidden">
-                                            <img
-                                                src={car.image}
-                                                alt={car.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                            />
-                                            <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-md">
-                                                {car.type}
-                                            </div>
-                                        </div>
-                                        <div className="p-6 flex flex-col flex-grow">
-                                            <h3 className="text-xl font-bold text-gray-900 leading-tight">{car.name}</h3>
-                                            <p className="text-sm text-gray-500 mt-1 mb-4 flex items-center gap-1 font-bold">
-                                                <span>👤 Up to {car.capacity} Passengers</span>
-                                            </p>
+                                filteredCars.map((car) => {
+                                    const numericPrice = typeof car.price === 'string'
+                                        ? parseInt(car.price.replace(/[^0-9]/g, ''))
+                                        : (typeof car.price === 'object' && car.price !== null && car.price.$numberDecimal)
+                                            ? Number(car.price.$numberDecimal)
+                                            : Number(car.price) || 0;
+                                    const discountedPrice = Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100));
 
-                                            <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100 flex-grow">
-                                                <p className="text-xs text-gray-600 font-medium leading-relaxed">{car.features}</p>
-                                            </div>
-
-                                            <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
-                                                <div>
-                                                    <p className="text-2xl font-black text-[#000080]">
-                                                        {typeof car.price === 'number' ? `₦${car.price.toLocaleString()}` : (typeof car.price === 'object' && car.price !== null && car.price.$numberDecimal) ? `₦${Number(car.price.$numberDecimal).toLocaleString()}` : (typeof car.price === 'string' && !isNaN(Number(car.price)) ? `₦${Number(car.price).toLocaleString()}` : `₦${car.price}`)}
-                                                    </p>
-                                                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">per day</p>
+                                    return (
+                                        <div key={car._id || car.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-shadow duration-300 group flex flex-col animate-fade-in">
+                                            <div className="relative h-56 overflow-hidden">
+                                                <img
+                                                    src={car.image}
+                                                    alt={car.name}
+                                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                />
+                                                <div className="absolute top-4 left-4 bg-black bg-opacity-70 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm shadow-md">
+                                                    {car.type}
                                                 </div>
-                                                {car.isFallback ? (
-                                                    <a
-                                                        href={`https://wa.me/2348026696170?text=Hi, I want to enquire about the ${encodeURIComponent(car.name)}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="bg-[#25D366] text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#1ebd57] transition shadow-md text-center whitespace-nowrap"
-                                                    >
-                                                        Enquire via WhatsApp
-                                                    </a>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => setSelectedCar(car)}
-                                                        className="bg-[#FFB81C] text-[#000080] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
-                                                    >
-                                                        Book Escrow
-                                                    </button>
+                                                {car.discountPercentage > 0 && (
+                                                    <div className="absolute top-4 right-4 bg-red-500 text-white text-xs font-black px-3 py-1 rounded-xl shadow-md animate-pulse">
+                                                        {car.discountPercentage}% OFF
+                                                    </div>
                                                 )}
                                             </div>
+                                            <div className="p-6 flex flex-col flex-grow">
+                                                <h3 className="text-xl font-bold text-gray-900 leading-tight">{car.name}</h3>
+                                                <p className="text-sm text-gray-500 mt-1 mb-4 flex items-center gap-1 font-bold">
+                                                    <span>👤 Up to {car.capacity} Passengers</span>
+                                                </p>
+
+                                                <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100 flex-grow">
+                                                    <p className="text-xs text-gray-600 font-medium leading-relaxed">{car.features}</p>
+                                                </div>
+
+                                                <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
+                                                    <div>
+                                                        <p className="text-2xl font-black text-[#000080]">
+                                                            {car.discountPercentage > 0 && (
+                                                                <span className="text-sm text-gray-400 line-through mr-2 font-bold">
+                                                                    ₦{numericPrice.toLocaleString()}
+                                                                </span>
+                                                            )}
+                                                            ₦{discountedPrice.toLocaleString()}
+                                                        </p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">per day</p>
+                                                    </div>
+                                                    {car.isFallback ? (
+                                                        <a
+                                                            href={`https://wa.me/2348026696170?text=Hi, I want to enquire about the ${encodeURIComponent(car.name)}`}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="bg-[#25D366] text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#1ebd57] transition shadow-md text-center whitespace-nowrap"
+                                                        >
+                                                            Enquire via WhatsApp
+                                                        </a>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => setSelectedCar(car)}
+                                                            className="bg-[#FFB81C] text-[#000080] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
+                                                        >
+                                                            Book Escrow
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
                     )}
@@ -251,12 +270,14 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
             : Number(car.price) || 0;
 
     const calculateTotal = () => {
-        if (!bookingDetails.checkIn || !bookingDetails.checkOut) return numericPrice;
+        const discount = car.discountPercentage || 0;
+        const discountedRate = Math.round(numericPrice * (1 - discount / 100));
+        if (!bookingDetails.checkIn || !bookingDetails.checkOut) return discountedRate;
         const start = new Date(bookingDetails.checkIn);
         const end = new Date(bookingDetails.checkOut);
         const hours = Math.max((end.getTime() - start.getTime()) / (1000 * 3600), 1);
         const days = Math.ceil(hours / 24);
-        return numericPrice * days;
+        return discountedRate * days;
     };
 
     const finalPrice = calculateTotal();
@@ -322,11 +343,11 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm overflow-y-auto">
+            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 max-h-[90vh] flex flex-col">
 
                 {step === 1 && (
-                    <div className="p-8">
+                    <div className="p-8 overflow-y-auto flex-1">
                         <div className="flex justify-between items-start mb-6">
                             <h2 className="text-2xl font-black text-gray-900 leading-tight">Confirm Vehicle</h2>
                             <button onClick={handleClose} className="text-gray-400 hover:text-red-500 transition text-2xl font-black">✕</button>
@@ -342,7 +363,17 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                                 <div className="mt-2">
                                     <h3 className="text-xl font-bold text-[#000080]">{car.name}</h3>
                                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-0.5">₦{numericPrice.toLocaleString()}</p>
+                                    <p className="text-2xl font-black text-gray-900 mt-0.5">
+                                        {car.discountPercentage > 0 && (
+                                            <span className="text-sm text-gray-400 line-through mr-2 font-bold">
+                                                ₦{numericPrice.toLocaleString()}
+                                            </span>
+                                        )}
+                                        ₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}
+                                        {car.discountPercentage > 0 && (
+                                            <span className="text-xs text-red-600 font-black ml-2 uppercase">({car.discountPercentage}% OFF)</span>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         ) : (
@@ -351,7 +382,17 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                                 <div>
                                     <h3 className="text-lg font-bold text-[#000080]">{car.name}</h3>
                                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-0.5">₦{numericPrice.toLocaleString()}</p>
+                                    <p className="text-2xl font-black text-gray-900 mt-0.5">
+                                        {car.discountPercentage > 0 && (
+                                            <span className="text-sm text-gray-400 line-through mr-2 font-bold">
+                                                ₦{numericPrice.toLocaleString()}
+                                            </span>
+                                        )}
+                                        ₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}
+                                        {car.discountPercentage > 0 && (
+                                            <span className="text-xs text-red-600 font-black ml-2 uppercase">({car.discountPercentage}% OFF)</span>
+                                        )}
+                                    </p>
                                 </div>
                             </div>
                         )}
@@ -373,7 +414,7 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                 )}
 
                 {step === 2 && (
-                    <div className="p-8 max-h-[85vh] overflow-y-auto">
+                    <div className="p-8 overflow-y-auto flex-1">
                         <div className="flex items-center mb-6 border-b border-gray-100 pb-4">
                             <button onClick={() => setStep(1)} className="text-[#000080] font-black text-sm mr-4 hover:underline">← Back</button>
                             <h2 className="text-xl font-black text-gray-900">Delivery Logistics</h2>
@@ -414,7 +455,17 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
 
                             <div className="flex justify-between items-end pt-4 mt-2 border-t border-gray-100">
                                 <span className="text-gray-500 font-bold uppercase tracking-wider text-xs">Total Escrow</span>
-                                <span className="text-3xl font-black text-[#000080]">₦{finalPrice.toLocaleString()}</span>
+                                <div className="flex flex-col items-end">
+                                    {car.discountPercentage > 0 && (
+                                        <span className="text-xs text-gray-400 line-through font-bold">
+                                            ₦{((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1 * numericPrice).toLocaleString()}
+                                        </span>
+                                    )}
+                                    <span className="text-3xl font-black text-[#000080]">₦{finalPrice.toLocaleString()}</span>
+                                    {car.discountPercentage > 0 && (
+                                        <span className="text-[10px] text-red-600 font-bold uppercase mt-0.5">🔥 {car.discountPercentage}% Discount Applied</span>
+                                    )}
+                                </div>
                             </div>
 
                             <button type="submit" disabled={isProcessing} className={`w-full py-4 rounded-xl font-black text-lg transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
@@ -425,7 +476,7 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                 )}
 
                 {step === 3 && (
-                    <div className="p-10 text-center flex flex-col items-center">
+                    <div className="p-10 text-center flex flex-col items-center overflow-y-auto flex-1">
                         <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
                             <span className="text-5xl text-green-600">✓</span>
                         </div>
@@ -446,4 +497,4 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
             </div>
         </div>
     );
-}
+}

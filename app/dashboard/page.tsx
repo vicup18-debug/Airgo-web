@@ -27,11 +27,15 @@ export default function ClientDashboard() {
         checkOut: '',
         guests: 1
     });
-
     const fetchMyBookings = async (parsedUser: any) => {
         try {
+            const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings`);
+            const res = await fetch(`${apiUrl}/api/bookings`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             if (res.ok) {
                 const allBookings = await res.json();
 

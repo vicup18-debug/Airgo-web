@@ -76,12 +76,13 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
             ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, ''))
             : selectedRoom.pricePerNight;
 
-        return (rawPrice * nights).toLocaleString();
+        const discount = selectedRoom.discountPercentage || 0;
+        const discountedRate = Math.round(rawPrice * (1 - discount / 100));
+
+        return (discountedRate * nights).toLocaleString();
     };
 
     const handleBooking = async (e: React.FormEvent) => {
-        e.preventDefault();
-
         // 🟢 REQUIRE LOGIN BEFORE BOOKING
         if (!user) {
             toast.success("Please sign in to secure this booking.");
@@ -103,7 +104,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    userId: user.id,
+                    userId: user.id || user.userId || user._id,
                     itemId: selectedRoom._id,
                     itemName: `${hotel.name} - ${selectedRoom.name}`,
                     itemType: 'hotel',
@@ -130,11 +131,11 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm">
-            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm overflow-y-auto">
+            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
 
                 {/* Header */}
-                <div className="relative h-32 overflow-hidden bg-gray-200">
+                <div className="relative h-32 overflow-hidden bg-gray-200 shrink-0">
                     <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                         <h2 className="text-2xl font-black text-white leading-tight">{hotel.name}</h2>
@@ -146,7 +147,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto flex-1">
                     {!user && (
                         <div className="bg-blue-50 text-[#000080] p-3 rounded-xl text-sm font-bold border border-blue-100 mb-6 flex justify-between items-center">
                             <span>You must be signed in to book.</span>
@@ -165,19 +166,42 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                 <div className="text-center py-10 text-gray-500">No rooms available for this hotel yet.</div>
                             ) : (
                                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                                    {rooms.map(room => (
-                                        <div key={room._id} className="border border-gray-100 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-[#000080] hover:shadow-md transition bg-gray-50" onClick={() => setSelectedRoom(room)}>
-                                            <img src={room.image} className="w-24 h-24 rounded-lg object-cover shadow-sm" />
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-lg text-gray-900">{room.name}</h4>
-                                                <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
-                                                <div className="flex justify-between items-end mt-2">
-                                                    <p className="font-black text-[#004A99]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
-                                                    <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold">Select</button>
+                                    {rooms.map(room => {
+                                        const rawRoomPrice = typeof room.pricePerNight === 'string'
+                                            ? parseInt(room.pricePerNight.replace(/\D/g, ''))
+                                            : room.pricePerNight || 0;
+                                        const discountedRoomRate = Math.round(rawRoomPrice * (1 - (room.discountPercentage || 0) / 100));
+
+                                        return (
+                                            <div key={room._id} className="border border-gray-100 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-[#000080] hover:shadow-md transition bg-gray-50 animate-fade-in" onClick={() => setSelectedRoom(room)}>
+                                                <img src={room.image} className="w-24 h-24 rounded-lg object-cover shadow-sm" />
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <h4 className="font-bold text-lg text-gray-900">{room.name}</h4>
+                                                        {room.discountPercentage > 0 && (
+                                                            <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
+                                                                {room.discountPercentage}% OFF
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
+                                                    <div className="flex justify-between items-end mt-2">
+                                                        <div>
+                                                            <p className="font-black text-[#004A99]">
+                                                                {room.discountPercentage > 0 && (
+                                                                    <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                                                        ₦{rawRoomPrice.toLocaleString()}
+                                                                    </span>
+                                                                )}
+                                                                ₦{discountedRoomRate.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span>
+                                                            </p>
+                                                        </div>
+                                                        <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400">Select</button>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -189,9 +213,19 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                             
                             <div className="p-4 bg-blue-50 rounded-xl mb-6 border border-blue-100 flex gap-4">
                                 <img src={selectedRoom.image} className="w-16 h-16 rounded-lg object-cover shadow-sm" />
-                                <div>
+                                <div className="flex-grow">
                                     <h4 className="font-bold text-lg text-[#000080]">{selectedRoom.name}</h4>
-                                    <p className="font-black text-gray-900">₦{selectedRoom.pricePerNight?.toLocaleString()} / night</p>
+                                    <p className="font-black text-gray-900">
+                                        {selectedRoom.discountPercentage > 0 && (
+                                            <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                                ₦{(typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight)?.toLocaleString()}
+                                            </span>
+                                        )}
+                                        ₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()} / night
+                                    </p>
+                                    {selectedRoom.discountPercentage > 0 && (
+                                        <p className="text-[10px] text-red-600 font-black uppercase mt-0.5 animate-pulse">🔥 {selectedRoom.discountPercentage}% Discount Applied</p>
+                                    )}
                                 </div>
                             </div>
 
@@ -216,7 +250,9 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                             <div className="border-t border-gray-100 pt-4 mb-6">
                                 <div className="flex justify-between items-center mb-1">
                                     <span className="text-gray-500 font-medium">Rate per night</span>
-                                    <span className="font-bold text-gray-900">₦{typeof selectedRoom.pricePerNight === 'string' ? selectedRoom.pricePerNight : selectedRoom.pricePerNight?.toLocaleString()}</span>
+                                    <span className="font-bold text-gray-900">
+                                        ₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()}
+                                    </span>
                                 </div>
                                 <div className="flex justify-between items-end">
                                     <span className="text-lg font-black text-gray-900">Total Escrow</span>
