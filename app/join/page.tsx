@@ -139,6 +139,7 @@ export default function JoinPartnerPage() {
                                 >
                                     <option value="car">Car Rental</option>
                                     <option value="hotel">Hotel</option>
+                                    <option value="apartment">Apartment / Host</option>
                                 </select>
                             </div>
                             <div>
@@ -211,15 +212,15 @@ export default function JoinPartnerPage() {
                                     <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.businessAddress} onChange={(e) => setFormData({ ...formData, businessAddress: e.target.value })} />
                                 </div>
 
-                                {/* CONDITIONAL FIELDS: HOTEL vs CAR RENTAL */}
-                                {formData.partnerType === 'hotel' && (
+                                {/* CONDITIONAL FIELDS: HOTEL / APARTMENT vs CAR RENTAL */}
+                                {(formData.partnerType === 'hotel' || formData.partnerType === 'apartment') && (
                                     <>
                                         <div>
-                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration Number *</label>
-                                            <input required type="text" pattern="^(RC|BN|rc|bn)?\d{4,8}$" title="Enter a valid CAC number (e.g. RC123456)" placeholder="e.g. RC123456 or BN123456" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration or Tax/ID Number *</label>
+                                            <input required type="text" pattern="^(RC|BN|rc|bn)?\d{4,8}$" title="Enter a valid registration number (e.g. RC123456)" placeholder="e.g. RC123456 or BN123456" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
                                         </div>
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
-                                            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC Certificate *</label>
+                                            <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC / Ownership Document *</label>
                                             <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
                                         </div>
                                     </>

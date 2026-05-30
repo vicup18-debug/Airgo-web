@@ -41,16 +41,39 @@ export default function PartnerDashboard() {
         name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
     });
 
+    // EDIT INVENTORY MODAL STATE
+    const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
+    const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
+    const [editItemData, setEditItemData] = useState<any>({
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
+    });
+
+    // EDIT BOOKING MODAL STATE
+    const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<any>(null);
+    const [isEditBookingModalOpen, setIsEditBookingModalOpen] = useState(false);
+    const [editBookingData, setEditBookingData] = useState({
+        clientName: '',
+        clientEmail: '',
+        clientPhone: '',
+        deliveryAddress: '',
+        checkIn: '',
+        checkOut: '',
+        guests: 1
+    });
+
     const router = useRouter();
 
-    const togglePartnerAmenity = (amenity: string) => {
-        let list: string[] = newItem.amenities ? newItem.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    const togglePartnerAmenity = (amenity: string, isEdit: boolean = false) => {
+        const target = isEdit ? editItemData : newItem;
+        const setTarget = isEdit ? setEditItemData : setNewItem;
+
+        let list: string[] = target.amenities ? target.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
         if (list.includes(amenity)) {
             list = list.filter(item => item !== amenity);
         } else {
             list.push(amenity);
         }
-        setNewItem({ ...newItem, amenities: list.join(', ') });
+        setTarget({ ...target, amenities: list.join(', ') });
     };
 
     useEffect(() => {
@@ -89,11 +112,7 @@ export default function PartnerDashboard() {
                         businessName: myLatestData.businessName,
                         name: myLatestData.name
                     };
-                    
-                    // Update React State
                     setUser(updatedStorage);
-
-                    // Update LocalStorage so it remembers for next time!
                     localStorage.setItem('airgo_user', JSON.stringify(updatedStorage));
                 }
             }
@@ -107,13 +126,14 @@ export default function PartnerDashboard() {
             }
 
             // Fetch Inventory with unified secure ID maps
-            if (partnerData.partnerType?.toLowerCase().includes('car')) {
+            const currentPartnerType = partnerData.partnerType || '';
+            if (currentPartnerType.toLowerCase().includes('car')) {
                 const carsRes = await fetch(`${apiUrl}/api/cars`);
                 if (carsRes.ok) {
                     const allCars = await carsRes.json();
                     setMyInventory(allCars.filter((c: any) => c.partnerId === secureId));
                 }
-            } else if (partnerData.partnerType === 'hotel') {
+            } else if (currentPartnerType === 'hotel' || currentPartnerType === 'apartment') {
                 const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${secureId}`);
                 if (roomsRes.ok) {
                     setMyInventory(await roomsRes.json());
@@ -124,6 +144,16 @@ export default function PartnerDashboard() {
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleUploadToCloudinary = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('upload_preset', 'airgo_fleet');
+        const res = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.secure_url) return data.secure_url;
+        throw new Error("Upload failed");
     };
 
     const handleAddItem = async (e: React.FormEvent) => {
@@ -137,42 +167,21 @@ export default function PartnerDashboard() {
             if (isCar) {
                 if (carImageFiles.length > 0) {
                     for (const file of carImageFiles) {
-                        const imgData = new FormData();
-                        imgData.append('file', file);
-                        imgData.append('upload_preset', 'airgo_fleet');
-
-                        const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
-                            method: 'POST', body: imgData
-                        });
-                        const cloudData = await cloudRes.json();
-                        if (cloudData.secure_url) {
-                            finalImageUrls.push(cloudData.secure_url);
-                        }
+                        const url = await handleUploadToCloudinary(file);
+                        finalImageUrls.push(url);
                     }
                     if (finalImageUrls.length > 0) {
                         finalImageUrl = finalImageUrls[0];
-                    } else {
-                        throw new Error("Upload failed");
                     }
                 }
             } else {
                 if (imageFile) {
-                    const imgData = new FormData();
-                    imgData.append('file', imageFile);
-                    imgData.append('upload_preset', 'airgo_fleet');
-
-                    const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/drdosbrru/image/upload`, {
-                        method: 'POST', body: imgData
-                    });
-                    const cloudData = await cloudRes.json();
-                    if (cloudData.secure_url) finalImageUrl = cloudData.secure_url;
-                    else throw new Error("Upload failed");
+                    finalImageUrl = await handleUploadToCloudinary(imageFile);
                 }
             }
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const secureId = user.id || user.userId || user._id;
-
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
@@ -188,7 +197,7 @@ export default function PartnerDashboard() {
             });
 
             if (response.ok) {
-                toast.success(`${user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'} listed successfully!`);
+                toast.success(`${user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
@@ -197,6 +206,129 @@ export default function PartnerDashboard() {
             }
         } catch (error) {
             toast.error("❌ Error listing item. Please try again.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleEditListingClick = (item: any) => {
+        setSelectedInventoryForEdit(item);
+        setEditItemData({
+            name: item.name || '',
+            price: String(item.price || item.pricePerNight || ''),
+            totalAllocated: String(item.totalAllocated || '1'),
+            amenities: item.amenities || '',
+            type: item.type || '',
+            capacity: String(item.capacity || ''),
+            features: item.features || '',
+            hotelAddress: item.hotelAddress || ''
+        });
+        setIsEditInventoryModalOpen(true);
+    };
+
+    const handleSaveEditListing = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedInventoryForEdit) return;
+        setIsUploading(true);
+        try {
+            const isCar = user.partnerType?.toLowerCase().includes('car');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const endpoint = isCar ? `/api/cars/${selectedInventoryForEdit._id}` : `/api/rooms/${selectedInventoryForEdit._id}`;
+
+            const payload = isCar ? {
+                name: editItemData.name,
+                type: editItemData.type,
+                price: Number(editItemData.price),
+                capacity: editItemData.capacity,
+                features: editItemData.features,
+                totalAllocated: Number(editItemData.totalAllocated)
+            } : {
+                hotelAddress: editItemData.hotelAddress,
+                name: editItemData.name,
+                pricePerNight: Number(editItemData.price),
+                totalAllocated: Number(editItemData.totalAllocated),
+                amenities: editItemData.amenities
+            };
+
+            const response = await fetch(`${apiUrl}${endpoint}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                toast.success("Listing updated successfully!");
+                setIsEditInventoryModalOpen(false);
+                setSelectedInventoryForEdit(null);
+                fetchPartnerData(user);
+            } else {
+                toast.error("Failed to update listing.");
+            }
+        } catch (error) {
+            toast.error("Error saving corrections.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleDeleteListing = async (id: string) => {
+        if (!window.confirm("Are you sure you want to remove this listing?")) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const isCar = user.partnerType?.toLowerCase().includes('car');
+            const endpoint = isCar ? `/api/cars/${id}` : `/api/rooms/${id}`;
+            const res = await fetch(`${apiUrl}${endpoint}`, { method: 'DELETE' });
+            if (res.ok) {
+                toast.success("Listing removed from matrix.");
+                fetchPartnerData(user);
+            } else {
+                toast.error("Failed to delete listing.");
+            }
+        } catch (error) {
+            toast.error("Connection error.");
+        }
+    };
+
+    const handleEditBookingClick = (booking: any) => {
+        setSelectedBookingForEdit(booking);
+        setEditBookingData({
+            clientName: booking.clientName || '',
+            clientEmail: booking.clientEmail || '',
+            clientPhone: booking.clientPhone || '',
+            deliveryAddress: booking.deliveryAddress || '',
+            checkIn: booking.checkIn || '',
+            checkOut: booking.checkOut || '',
+            guests: booking.guests || 1
+        });
+        setIsEditBookingModalOpen(true);
+    };
+
+    const handleSaveEditBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedBookingForEdit) return;
+        setIsUploading(true);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${selectedBookingForEdit._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(editBookingData)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Booking details corrected successfully!");
+                setIsEditBookingModalOpen(false);
+                setSelectedBookingForEdit(null);
+                fetchPartnerData(user);
+            } else {
+                toast.error(data.message || "Failed to update booking details.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
         } finally {
             setIsUploading(false);
         }
@@ -225,7 +357,7 @@ export default function PartnerDashboard() {
         }
     };
 
-const handleLogout = () => {
+    const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
         window.location.href = '/login';
@@ -243,8 +375,9 @@ const handleLogout = () => {
     };
 
     const isCarPartner = user?.partnerType?.toLowerCase().includes('car');
+    const isApartmentPartner = user?.partnerType === 'apartment';
 
-    const totalAllocatedRooms = !isCarPartner ? myInventory.reduce((sum, item) => sum + (item.totalAllocated || 0), 0) : 0;
+    const totalAllocatedRooms = (!isCarPartner) ? myInventory.reduce((sum, item) => sum + (item.totalAllocated || 0), 0) : 0;
     const totalRentalDays = isCarPartner ? myBookings.reduce((sum, b) => {
         if (!b.checkIn || !b.checkOut) return sum;
         const start = new Date(b.checkIn);
@@ -292,14 +425,16 @@ const handleLogout = () => {
                     <Link href="/" className="hover:opacity-80 transition block text-left">
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
-                            {user.partnerType?.toLowerCase().includes('car') ? 'Fleet Manager' : 'Hotelier'}
+                            {isApartmentPartner ? 'Apartment Host' : isCarPartner ? 'Fleet Manager' : 'Hotelier'}
                         </p>
                     </Link>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
-                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>{user.partnerType?.toLowerCase().includes('car') ? '🚘 My Fleet' : '🏨 Room Categories'}</button>
+                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>
+                        {isCarPartner ? '🚘 My Fleet' : isApartmentPartner ? '🏨 My Apartments' : '🏨 Room Categories'}
+                    </button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
                 </nav>
                 <div className="p-4 border-t border-blue-800">
@@ -312,8 +447,8 @@ const handleLogout = () => {
                 <header className="bg-white px-8 py-5 border-b border-gray-200 hidden md:flex items-center justify-between sticky top-0 z-10">
                     <h1 className="text-2xl font-black text-gray-900 capitalize">
                         {activeTab === 'overview' 
-                            ? (isCarPartner ? '🚘 Fleet Control Panel' : '🏨 Property Management Panel') 
-                            : activeTab}
+                            ? (isCarPartner ? '🚘 Fleet Control Panel' : isApartmentPartner ? '🏨 Apartment Host Panel' : '🏨 Property Management Panel') 
+                            : activeTab === 'inventory' ? (isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') : activeTab}
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>
@@ -350,19 +485,19 @@ const handleLogout = () => {
                                     ) : (
                                         <>
                                             <div className="bg-gradient-to-br from-[#004A99] to-blue-900 p-6 rounded-3xl shadow-lg text-white md:col-span-2">
-                                                <p className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-2">Hotel Stay Revenue</p>
+                                                <p className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-2">{isApartmentPartner ? 'Apartment Rental Revenue' : 'Hotel Stay Revenue'}</p>
                                                 <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalRevenue()}</p>
-                                                <p className="text-xs text-blue-300">Total gross revenue from hotel reservation escrow bookings.</p>
+                                                <p className="text-xs text-blue-300">Total gross revenue from {isApartmentPartner ? 'apartment' : 'hotel'} reservation escrow bookings.</p>
                                             </div>
                                             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between min-h-[140px]">
-                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Room Categories</p>
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{isApartmentPartner ? 'My Apartments' : 'Room Categories'}</p>
                                                 <p className="text-4xl font-black text-gray-900">{myInventory.length}</p>
-                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Active room tiers listed</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Active {isApartmentPartner ? 'apartment listings' : 'room tiers'} listed</p>
                                             </div>
                                             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 md:col-span-1 flex flex-col justify-between min-h-[140px]">
-                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Allocated Rooms</p>
-                                                <p className="text-4xl font-black text-gray-900">{totalAllocatedRooms} Rooms</p>
-                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Total room matrix inventory capacity</p>
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{isApartmentPartner ? 'Total Capacity units' : 'Total Allocated Rooms'}</p>
+                                                <p className="text-4xl font-black text-gray-900">{totalAllocatedRooms} Unit{(totalAllocatedRooms || 0) !== 1 ? 's' : ''}</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Total live matrix inventory capacity</p>
                                             </div>
                                         </>
                                     )}
@@ -373,40 +508,74 @@ const handleLogout = () => {
                             {activeTab === 'inventory' && (
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden">
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                                        <h2 className="text-lg font-bold text-gray-800">{user.partnerType?.toLowerCase().includes('car') ? 'My Fleet' : 'Room Categories'}</h2>
+                                        <h2 className="text-lg font-bold text-gray-800">{isCarPartner ? 'My Fleet' : isApartmentPartner ? 'My Apartments' : 'Room Categories'}</h2>
                                         <button onClick={() => setIsModalOpen(true)} className="bg-[#004A99] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-800 transition">
-                                            + Configure {user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'}
+                                            + Configure {isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment Unit' : 'Room Tier'}
                                         </button>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                         {myInventory.length === 0 ? (
                                             <p className="col-span-full text-center text-gray-500 py-10">You have not listed any inventory yet.</p>
                                         ) : myInventory.map(item => (
-                                            <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50">
-                                                <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
-                                                <div className="p-4">
-                                                    <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
-                                                    <p className="text-xs font-bold text-gray-400 uppercase mt-1">
-                                                        {user.partnerType?.toLowerCase().includes('car') ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
-                                                    </p>
-                                                    <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
-                                                        {isCarPartner ? (
-                                                            <>
-                                                                <p className="font-black text-[#004A99]">₦{item.price?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ day</span></p>
-                                                                <span className="bg-amber-50 text-amber-700 font-bold text-xs px-2.5 py-1 rounded-md border border-amber-100">
-                                                                    Pool: {item.totalAllocated || 1} Vehicle{(item.totalAllocated || 1) > 1 ? 's' : ''}
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <p className="font-black text-[#004A99]">₦{item.pricePerNight?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span></p>
-                                                                {item.totalAllocated && (
-                                                                    <span className="bg-blue-50 text-[#004A99] font-bold text-xs px-2.5 py-1 rounded-md border border-blue-100">
-                                                                        Pool: {item.totalAllocated} Room{item.totalAllocated > 1 ? 's' : ''}
-                                                                    </span>
-                                                                )}
-                                                            </>
+                                            <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50 flex flex-col justify-between">
+                                                <div>
+                                                    <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
+                                                    <div className="p-4">
+                                                        <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
+                                                        <p className="text-xs font-bold text-gray-400 uppercase mt-1">
+                                                            {isCarPartner ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
+                                                        </p>
+                                                        {item.hotelAddress && (
+                                                            <p className="text-[10px] text-gray-400 mt-1">📍 {item.hotelAddress}</p>
                                                         )}
+                                                    </div>
+                                                </div>
+                                                <div className="p-4 border-t border-gray-200">
+                                                    <div className="flex flex-col">
+                                                        <div className="flex justify-between items-center mb-2">
+                                                            <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ {isCarPartner ? 'day' : 'night'}</span></p>
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-xs font-bold text-gray-500">Discount:</span>
+                                                                <input 
+                                                                    type="number" 
+                                                                    className="w-16 px-2 py-1 border rounded text-xs text-center bg-white text-gray-900" 
+                                                                    value={item.discountPercentage || 0}
+                                                                    onChange={(e) => handleUpdateInventory(item._id, { discountPercentage: parseInt(e.target.value) || 0 })}
+                                                                    min="0" max="100"
+                                                                />
+                                                                <span className="text-xs font-bold text-gray-500">%</span>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
+                                                            <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation</span>
+                                                            <div className="flex items-center gap-3">
+                                                                <button 
+                                                                    onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
+                                                                    className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+                                                                >-</button>
+                                                                <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
+                                                                <button 
+                                                                    onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
+                                                                    className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
+                                                                >+</button>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex gap-2">
+                                                            <button 
+                                                                onClick={() => handleEditListingClick(item)} 
+                                                                className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-1.5 rounded-lg text-xs font-black transition cursor-pointer text-center"
+                                                            >
+                                                                ✏️ Edit Details
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleDeleteListing(item._id)} 
+                                                                className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer border border-red-100"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -423,14 +592,13 @@ const handleLogout = () => {
                                         <table className="w-full text-left border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <th className="p-4 font-bold border-b">{isCarPartner ? 'Vehicle' : 'Room / Stay'}</th>
+                                                    <th className="p-4 font-bold border-b">{isCarPartner ? 'Vehicle' : 'Room / Unit'}</th>
                                                     <th className="p-4 font-bold border-b">{isCarPartner ? 'Rental Dates' : 'Stay Dates'}</th>
                                                     <th className="p-4 font-bold border-b text-right">Value</th>
                                                     <th className="p-4 font-bold border-b text-center">Status</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
-                                                {/* 🟢 UPGRADED: Beautiful Empty State Banner */}
                                                 {myBookings.length === 0 ? (
                                                     <tr>
                                                         <td colSpan={4} className="p-0">
@@ -455,7 +623,7 @@ const handleLogout = () => {
                                                                     <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
                                                                 )}
                                                             </td>
-                                                            <td className="p-4 text-right font-black text-[#004A99]">₦{booking.totalPrice}</td>
+                                                            <td className="p-4 text-right font-black text-[#004A99]">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</td>
                                                             <td className="p-4 text-center">
                                                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                                                                      booking.status === 'Pending Escrow' 
@@ -476,6 +644,7 @@ const handleLogout = () => {
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">{isCarPartner ? 'Driver / Client' : 'Dispatch Contact'}</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
                                                                             <p className="text-xs font-bold text-[#004A99] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email'}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">{isCarPartner ? 'Delivery Location' : 'Delivery / Address'}</p>
@@ -484,24 +653,25 @@ const handleLogout = () => {
                                                                             </p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref</p>
-                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 10).toUpperCase()}</p>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Info</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 12).toUpperCase()}</p>
+                                                                            <p className="text-xs text-gray-500 font-bold mt-1">Guests: {booking.guests || 1}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            {isCarPartner ? (
-                                                                                <>
-                                                                                    <p className="text-xs font-bold text-green-700">Pick-up: {new Date(booking.checkIn).toLocaleDateString()}</p>
-                                                                                    <p className="text-xs font-bold text-red-700 mt-1">Return: {new Date(booking.checkOut).toLocaleDateString()}</p>
-                                                                                </>
-                                                                            ) : (
-                                                                                <>
-                                                                                    <p className="text-xs font-bold text-green-700">Check-in: {new Date(booking.checkIn).toLocaleDateString()}</p>
-                                                                                    <p className="text-xs font-bold text-red-700 mt-1">Check-out: {new Date(booking.checkOut).toLocaleDateString()}</p>
-                                                                                </>
-                                                                            )}
+                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
                                                                             <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
+                                                                            
+                                                                            {booking.status === 'Pending Escrow' && (
+                                                                                <button 
+                                                                                    onClick={() => handleEditBookingClick(booking)}
+                                                                                    className="mt-3 bg-white text-gray-700 hover:bg-[#004A99] hover:text-white border border-gray-200 px-3 py-1.5 rounded-lg text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-sm"
+                                                                                >
+                                                                                    ✏️ Correct Details
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -522,28 +692,28 @@ const handleLogout = () => {
             {/* DYNAMIC ADD INVENTORY MODAL */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                            <h2 className="text-xl font-black text-[#004A99]">List New {user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Room Tier'}</h2>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-900 text-xl font-bold">✕</button>
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#004A99]">List New {isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment' : 'Room Tier'}</h2>
+                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
                         </div>
-                        <form onSubmit={handleAddItem} className="p-6 space-y-4">
+                        <form onSubmit={handleAddItem} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
-                                {/* 🟢 UPGRADED: Smart Field - Min 0 */}
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per day (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per {isCarPartner ? 'day' : 'night'} (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
                             </div>
 
-                            {user.partnerType?.toLowerCase().includes('car') ? (
+                            {isCarPartner ? (
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
-                                    <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" placeholder="e.g. Wi-Fi, Bluetooth" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity (Seats)</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
+                                    <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" placeholder="e.g. Wi-Fi, Bluetooth" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Fleet Count</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Rooms Allocated to Airgo Matrix Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
                                         <input 
@@ -561,7 +731,7 @@ const handleLogout = () => {
                                                     <button
                                                         type="button"
                                                         key={amenity}
-                                                        onClick={() => togglePartnerAmenity(amenity)}
+                                                        onClick={() => togglePartnerAmenity(amenity, false)}
                                                         className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
                                                             isSelected 
                                                                 ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' 
@@ -578,9 +748,9 @@ const handleLogout = () => {
                             )}
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Listing Photo{user.partnerType?.toLowerCase().includes('car') ? '(s)' : ''} *</label>
-                                <input required type="file" multiple={user.partnerType?.toLowerCase().includes('car')} accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900" onChange={(e) => {
-                                    if (user.partnerType?.toLowerCase().includes('car')) {
+                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo *</label>
+                                <input required type="file" multiple={isCarPartner} accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900 bg-white" onChange={(e) => {
+                                    if (isCarPartner) {
                                         setCarImageFiles(Array.from(e.target.files || []));
                                     } else {
                                         setImageFile(e.target.files?.[0] || null);
@@ -588,9 +758,132 @@ const handleLogout = () => {
                                 }} />
                             </div>
 
-                            <div className="pt-4 flex justify-end gap-3">
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
                                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
                                 <button disabled={isUploading} type="submit" className={`px-6 py-2 rounded-xl font-bold text-white shadow-md ${isUploading ? 'bg-gray-400' : 'bg-[#004A99] hover:bg-blue-800'}`}>{isUploading ? 'Uploading...' : 'Publish Listing'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT INVENTORY MODAL */}
+            {isEditInventoryModalOpen && selectedInventoryForEdit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#004A99]">Edit Listing Specifications</h2>
+                            <button onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+                        </div>
+                        <form onSubmit={handleSaveEditListing} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per {isCarPartner ? 'day' : 'night'} (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.price} onChange={e => setEditItemData({ ...editItemData, price: e.target.value })} /></div>
+                            </div>
+
+                            {isCarPartner ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.type} onChange={e => setEditItemData({ ...editItemData, type: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity (Seats)</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
+                                    <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.features} onChange={e => setEditItemData({ ...editItemData, features: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Fleet Count</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
+                                        <input 
+                                            type="text" 
+                                            required 
+                                            readOnly
+                                            placeholder="Select amenities from list below..."
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none"
+                                            value={editItemData.amenities}
+                                        />
+                                        <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
+                                            {AMENITIES_LIST.map((amenity) => {
+                                                const isSelected = editItemData.amenities ? editItemData.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        key={amenity}
+                                                        onClick={() => togglePartnerAmenity(amenity, true)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                                            isSelected 
+                                                                ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' 
+                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    >
+                                                        {amenity}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
+                                <button type="button" onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
+                                <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition">
+                                    {isUploading ? 'Saving...' : 'Save Corrections'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT BOOKING DETAILS MODAL */}
+            {isEditBookingModalOpen && selectedBookingForEdit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#004A99]">Correct Reservation Contact Details</h2>
+                            <button onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+                        </div>
+                        <form onSubmit={handleSaveEditBooking} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Name</label>
+                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientName} onChange={e => setEditBookingData({ ...editBookingData, clientName: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
+                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.guests} onChange={e => setEditBookingData({ ...editBookingData, guests: parseInt(e.target.value) || 1 })} />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Email Address</label>
+                                    <input required type="email" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientEmail} onChange={e => setEditBookingData({ ...editBookingData, clientEmail: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Phone Number</label>
+                                    <input required type="tel" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientPhone} onChange={e => setEditBookingData({ ...editBookingData, clientPhone: e.target.value })} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Delivery / Stay Address</label>
+                                <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.deliveryAddress} onChange={e => setEditBookingData({ ...editBookingData, deliveryAddress: e.target.value })} />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">In / Pickup Date</label>
+                                    <input required type="date" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.checkIn ? editBookingData.checkIn.split('T')[0] : ''} onChange={e => setEditBookingData({ ...editBookingData, checkIn: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Out / Return Date</label>
+                                    <input required type="date" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.checkOut ? editBookingData.checkOut.split('T')[0] : ''} onChange={e => setEditBookingData({ ...editBookingData, checkOut: e.target.value })} />
+                                </div>
+                            </div>
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
+                                <button type="button" onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
+                                <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition">
+                                    {isUploading ? 'Applying...' : 'Apply Corrections'}
+                                </button>
                             </div>
                         </form>
                     </div>

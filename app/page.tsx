@@ -131,7 +131,7 @@ export default function HotelHomepage() {
     const endD = new Date(checkOut);
     
     // Total capacity vs allocated threshold
-    const capacityThreshold = isCar ? 1 : (item.totalAllocated || 1);
+    const capacityThreshold = item.totalAllocated || 1;
 
     while (d < endD) {
       const dateStr = d.toISOString().split('T')[0];

@@ -22,7 +22,7 @@ const AMENITIES_LIST = [
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals' | 'fleet' | 'rooms'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // ALL SYSTEM DATA STATES
@@ -30,6 +30,7 @@ export default function SuperadminDashboard() {
     const [partners, setPartners] = useState<any[]>([]);
     const [cars, setCars] = useState<any[]>([]);
     const [rooms, setRooms] = useState<any[]>([]);
+    const [affiliates, setAffiliates] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // EXPANDABLE ESCROW STATE
@@ -47,17 +48,40 @@ export default function SuperadminDashboard() {
     const [newRoom, setNewRoom] = useState({ hotelName: '', hotelAddress: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
     const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
 
+    // EDIT INVENTORY MODAL STATE
+    const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
+    const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
+    const [editItemData, setEditItemData] = useState<any>({
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
+    });
+
+    // EDIT BOOKING MODAL STATE
+    const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<any>(null);
+    const [isEditBookingModalOpen, setIsEditBookingModalOpen] = useState(false);
+    const [editBookingData, setEditBookingData] = useState({
+        clientName: '',
+        clientEmail: '',
+        clientPhone: '',
+        deliveryAddress: '',
+        checkIn: '',
+        checkOut: '',
+        guests: 1
+    });
+
     const [isUploading, setIsUploading] = useState(false);
     const router = useRouter();
 
-    const toggleRoomAmenity = (amenity: string) => {
-        let list: string[] = newRoom.amenities ? newRoom.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
+    const toggleRoomAmenity = (amenity: string, isEdit: boolean = false) => {
+        const target = isEdit ? editItemData : newRoom;
+        const setTarget = isEdit ? setEditItemData : setNewRoom;
+
+        let list: string[] = target.amenities ? target.amenities.split(',').map((s: string) => s.trim()).filter(Boolean) : [];
         if (list.includes(amenity)) {
             list = list.filter(item => item !== amenity);
         } else {
             list.push(amenity);
         }
-        setNewRoom({ ...newRoom, amenities: list.join(', ') });
+        setTarget({ ...target, amenities: list.join(', ') });
     };
 
     useEffect(() => {
@@ -85,17 +109,19 @@ export default function SuperadminDashboard() {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-            const [bookingsRes, partnersRes, carsRes, roomsRes] = await Promise.all([
+            const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes] = await Promise.all([
                 fetch(`${apiUrl}/api/bookings`),
                 fetch(`${apiUrl}/api/auth/partners`),
                 fetch(`${apiUrl}/api/cars`),
-                fetch(`${apiUrl}/api/rooms`)
+                fetch(`${apiUrl}/api/rooms`),
+                fetch(`${apiUrl}/api/affiliates`)
             ]);
 
             if (bookingsRes.ok) setAllBookings(await bookingsRes.json());
             if (partnersRes.ok) setPartners(await partnersRes.json());
             if (carsRes.ok) setCars(await carsRes.json());
             if (roomsRes.ok) setRooms(await roomsRes.json());
+            if (affiliatesRes.ok) setAffiliates(await affiliatesRes.json());
         } catch (error) {
             console.error("Error fetching system data:", error);
         } finally {
@@ -171,6 +197,131 @@ export default function SuperadminDashboard() {
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isDeleted: false } : p));
             }
         } catch (error) { toast.error("❌ Error connecting to server."); }
+    };
+
+    const handleEditListingClick = (item: any, type: 'room' | 'car') => {
+        setSelectedInventoryForEdit({ ...item, listingType: type });
+        setEditItemData({
+            name: item.name || '',
+            price: String(item.price || item.pricePerNight || ''),
+            totalAllocated: String(item.totalAllocated || '1'),
+            amenities: item.amenities || '',
+            type: item.type || '',
+            capacity: String(item.capacity || ''),
+            features: item.features || '',
+            hotelAddress: item.hotelAddress || ''
+        });
+        setIsEditInventoryModalOpen(true);
+    };
+
+    const handleSaveEditListing = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedInventoryForEdit) return;
+        setIsUploading(true);
+        try {
+            const isCar = selectedInventoryForEdit.listingType === 'car';
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const endpoint = isCar ? `/api/cars/${selectedInventoryForEdit._id}` : `/api/rooms/${selectedInventoryForEdit._id}`;
+
+            const payload = isCar ? {
+                name: editItemData.name,
+                type: editItemData.type,
+                price: Number(editItemData.price),
+                capacity: editItemData.capacity,
+                features: editItemData.features,
+                totalAllocated: Number(editItemData.totalAllocated)
+            } : {
+                hotelAddress: editItemData.hotelAddress,
+                name: editItemData.name,
+                pricePerNight: Number(editItemData.price),
+                totalAllocated: Number(editItemData.totalAllocated),
+                amenities: editItemData.amenities
+            };
+
+            const response = await fetch(`${apiUrl}${endpoint}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                toast.success("Listing updated successfully!");
+                setIsEditInventoryModalOpen(false);
+                setSelectedInventoryForEdit(null);
+                fetchAllSystemData();
+            } else {
+                toast.error("Failed to update listing.");
+            }
+        } catch (error) {
+            toast.error("Error saving corrections.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleEditBookingClick = (booking: any) => {
+        setSelectedBookingForEdit(booking);
+        setEditBookingData({
+            clientName: booking.clientName || '',
+            clientEmail: booking.clientEmail || '',
+            clientPhone: booking.clientPhone || '',
+            deliveryAddress: booking.deliveryAddress || '',
+            checkIn: booking.checkIn ? new Date(booking.checkIn).toISOString().slice(0, 16) : '',
+            checkOut: booking.checkOut ? new Date(booking.checkOut).toISOString().slice(0, 16) : '',
+            guests: booking.guests || 1
+        });
+        setIsEditBookingModalOpen(true);
+    };
+
+    const handleSaveEditBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedBookingForEdit) return;
+        setIsUploading(true);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${selectedBookingForEdit._id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(editBookingData)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Booking details corrected successfully!");
+                setIsEditBookingModalOpen(false);
+                setSelectedBookingForEdit(null);
+                fetchAllSystemData();
+            } else {
+                toast.error(data.message || "Failed to update booking details.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleUpdateAffiliateStatus = async (id: string, status: 'Approved' | 'Rejected') => {
+        if (!window.confirm(`Are you sure you want to update this affiliate's status to ${status}?`)) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/affiliates/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            if (res.ok) {
+                toast.success(`Affiliate application updated to ${status}!`);
+                fetchAllSystemData();
+            } else {
+                toast.error("Failed to update status.");
+            }
+        } catch (err) {
+            toast.error("Error updating affiliate status.");
+        }
     };
 
     // --- CLOUDINARY UPLOAD HELPER ---
@@ -298,6 +449,7 @@ export default function SuperadminDashboard() {
                     <div className="my-2 border-b border-gray-800"></div>
                     <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🚘 Manage Fleet</button>
                     <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🏨 Manage Room Matrix</button>
+                    <button onClick={() => { setActiveTab('affiliates'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'affiliates' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🤝 Affiliates Hub</button>
                 </nav>
                 <div className="p-4 border-t border-gray-800">
                     <button onClick={handleLogout} className="w-full bg-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900 hover:text-white transition">Sign Out</button>
@@ -307,7 +459,7 @@ export default function SuperadminDashboard() {
             {/* MAIN CONTENT */}
             <main className="flex-1 flex flex-col h-screen overflow-y-auto relative w-full bg-gray-100">
                 <header className="bg-white px-6 md:px-8 py-5 flex justify-between items-center border-b border-gray-200 sticky top-0 z-10 hidden md:flex">
-                    <h1 className="text-2xl font-black text-gray-900 capitalize">{activeTab === 'rooms' ? 'Room Matrix' : activeTab}</h1>
+                    <h1 className="text-2xl font-black text-gray-900 capitalize">{activeTab === 'rooms' ? 'Room Matrix' : activeTab === 'affiliates' ? 'Affiliates Hub' : activeTab}</h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Superadmin</span>
                         <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-black shadow-inner">{user.name.charAt(0)}</div>
@@ -394,7 +546,7 @@ export default function SuperadminDashboard() {
                                                         {expandedEscrowId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Client Details</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
@@ -410,7 +562,7 @@ export default function SuperadminDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Asset</p>
                                                                             <p className="text-xs font-black text-gray-900 mb-1">{booking._id.substring(0, 12).toUpperCase()}</p>
-                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Partner: {booking.partnerId.substring(0, 8)}</p>
+                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Partner: {booking.partnerId ? booking.partnerId.substring(0, 8) : 'N/A'}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
@@ -418,6 +570,23 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
                                                                             <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
+                                                                        </div>
+                                                                        <div className="flex flex-col gap-2 justify-center">
+                                                                            <button 
+                                                                                onClick={(e) => { e.stopPropagation(); handleEditBookingClick(booking); }} 
+                                                                                className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-700 transition"
+                                                                            >
+                                                                                ✏️ Correct Details
+                                                                            </button>
+                                                                            <a 
+                                                                                href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
+                                                                                target="_blank" 
+                                                                                rel="noreferrer"
+                                                                                onClick={(e) => e.stopPropagation()}
+                                                                                className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center"
+                                                                            >
+                                                                                📄 Get Receipt PDF
+                                                                            </a>
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -546,11 +715,91 @@ export default function SuperadminDashboard() {
                                                     <p className="text-sm text-gray-500 mb-2">{car.type}</p>
                                                     <div className="flex justify-between items-center mt-4">
                                                         <p className="font-bold text-[#000080]">₦{car.price?.toLocaleString()}</p>
-                                                        <button onClick={() => handleDelete('cars', car._id)} className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-3 py-1 rounded">Delete</button>
+                                                        <div className="flex gap-2">
+                                                            <button onClick={() => handleEditListingClick(car, 'car')} className="text-blue-600 hover:text-blue-800 text-xs font-bold bg-blue-50 px-3 py-1.5 rounded">Edit</button>
+                                                            <button onClick={() => handleDelete('cars', car._id)} className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-3 py-1.5 rounded">Delete</button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* AFFILIATE HUB TAB */}
+                            {activeTab === 'affiliates' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                        <h2 className="text-lg font-black text-gray-900">Affiliate Application Management</h2>
+                                    </div>
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                                                    <th className="p-4 font-bold border-b">Affiliate / Contact</th>
+                                                    <th className="p-4 font-bold border-b">Website / Channel</th>
+                                                    <th className="p-4 font-bold border-b">Strategy</th>
+                                                    <th className="p-4 font-bold border-b">Status</th>
+                                                    <th className="p-4 font-bold border-b text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {affiliates.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={5} className="p-8 text-center text-gray-500">
+                                                            No affiliate applications found.
+                                                        </td>
+                                                    </tr>
+                                                ) : (
+                                                    affiliates.map((app) => (
+                                                        <tr key={app._id} className="hover:bg-gray-50 transition">
+                                                            <td className="p-4">
+                                                                <p className="font-bold text-gray-900">{app.name}</p>
+                                                                <p className="text-xs text-gray-500">{app.email}</p>
+                                                                <p className="text-xs text-gray-500">{app.phone}</p>
+                                                            </td>
+                                                            <td className="p-4 text-sm text-gray-700">{app.websiteOrChannel}</td>
+                                                            <td className="p-4 text-xs text-gray-600 max-w-xs truncate" title={app.strategy}>
+                                                                {app.strategy}
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                                    app.status === 'Approved'
+                                                                        ? 'bg-green-100 text-green-800'
+                                                                        : app.status === 'Rejected'
+                                                                            ? 'bg-red-100 text-red-800'
+                                                                            : 'bg-yellow-100 text-yellow-800'
+                                                                }`}>
+                                                                    {app.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 flex gap-2 justify-center">
+                                                                {app.status === 'Pending' && (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => handleUpdateAffiliateStatus(app._id, 'Approved')}
+                                                                            className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 transition"
+                                                                        >
+                                                                            Approve
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleUpdateAffiliateStatus(app._id, 'Rejected')}
+                                                                            className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700 transition"
+                                                                        >
+                                                                            Reject
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                                {app.status !== 'Pending' && (
+                                                                    <span className="text-xs text-gray-400 font-bold">Processed</span>
+                                                                )}
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             )}
@@ -577,6 +826,7 @@ export default function SuperadminDashboard() {
                                                         <p className="font-bold text-[#000080]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">/ night</span></p>
                                                         <div className="flex items-center gap-2">
                                                             <span className="text-xs bg-blue-50 text-[#000080] font-bold px-2 py-1 rounded">Pool: {room.totalAllocated}</span>
+                                                            <button onClick={() => handleEditListingClick(room, 'room')} className="text-blue-600 hover:text-blue-800 text-xs font-bold bg-blue-50 px-2 py-1 rounded">Edit</button>
                                                             <button onClick={() => handleDelete('rooms', room._id)} className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded">Delete</button>
                                                         </div>
                                                     </div>
@@ -676,6 +926,124 @@ export default function SuperadminDashboard() {
                             <div className="pt-4 flex justify-end gap-3">
                                 <button type="button" onClick={() => setIsRoomModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600">Cancel</button>
                                 <button disabled={isUploading} type="submit" className={`px-6 py-2 rounded-xl font-bold text-white ${isUploading ? 'bg-gray-400' : 'bg-[#000080]'}`}>{isUploading ? 'Uploading Matrix...' : 'Publish Room'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* EDIT INVENTORY MODAL */}
+            {isEditInventoryModalOpen && selectedInventoryForEdit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#000080]">Edit Listing Specifications</h2>
+                            <button onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+                        </div>
+                        <form onSubmit={handleSaveEditListing} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.price} onChange={e => setEditItemData({ ...editItemData, price: e.target.value })} /></div>
+                            </div>
+
+                            {selectedInventoryForEdit.listingType === 'car' ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.type} onChange={e => setEditItemData({ ...editItemData, type: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity (Seats)</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
+                                    <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.features} onChange={e => setEditItemData({ ...editItemData, features: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Fleet Count</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
+                                        <input 
+                                            type="text" 
+                                            required 
+                                            readOnly
+                                            placeholder="Select amenities from list below..."
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none"
+                                            value={editItemData.amenities}
+                                        />
+                                        <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
+                                            {AMENITIES_LIST.map((amenity) => {
+                                                const isSelected = editItemData.amenities ? editItemData.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
+                                                return (
+                                                    <button
+                                                        type="button"
+                                                        key={amenity}
+                                                        onClick={() => toggleRoomAmenity(amenity, true)}
+                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
+                                                            isSelected 
+                                                                ? 'bg-[#000080] text-white border-[#000080] shadow-sm' 
+                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                                                        }`}
+                                                    >
+                                                        {amenity}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
+                                <button type="button" onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
+                                <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#000080] hover:bg-blue-900 transition">
+                                    {isUploading ? 'Saving...' : 'Save Corrections'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* EDIT BOOKING DETAILS MODAL */}
+            {isEditBookingModalOpen && selectedBookingForEdit && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#000080]">Correct Reservation Details</h2>
+                            <button onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+                        </div>
+                        <form onSubmit={handleSaveEditBooking} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Name</label>
+                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientName} onChange={e => setEditBookingData({ ...editBookingData, clientName: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Email</label>
+                                    <input required type="email" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientEmail} onChange={e => setEditBookingData({ ...editBookingData, clientEmail: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Phone</label>
+                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.clientPhone} onChange={e => setEditBookingData({ ...editBookingData, clientPhone: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
+                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.guests} onChange={e => setEditBookingData({ ...editBookingData, guests: Number(e.target.value) })} />
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Delivery / Hotel Address</label>
+                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.deliveryAddress} onChange={e => setEditBookingData({ ...editBookingData, deliveryAddress: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Start Date / Check-In</label>
+                                    <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.checkIn} onChange={e => setEditBookingData({ ...editBookingData, checkIn: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">End Date / Check-Out</label>
+                                    <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.checkOut} onChange={e => setEditBookingData({ ...editBookingData, checkOut: e.target.value })} />
+                                </div>
+                            </div>
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
+                                <button type="button" onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
+                                <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#000080] hover:bg-blue-900 transition">
+                                    {isUploading ? 'Saving...' : 'Apply Modifications'}
+                                </button>
                             </div>
                         </form>
                     </div>

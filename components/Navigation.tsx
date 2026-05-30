@@ -34,6 +34,7 @@ export default function Navigation() {
           <div className="flex space-x-6 font-semibold text-sm items-center">
             <Link href="/" className={`${pathname === '/' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Hotels</Link>
             <Link href="/cars" className={`${pathname === '/cars' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Car Rentals</Link>
+            <Link href="/affiliate" className={`${pathname === '/affiliate' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Affiliates</Link>
           </div>
         </div>
         <div>
