@@ -468,8 +468,8 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                                 </div>
                             </div>
 
-                            <button type="submit" disabled={isProcessing} className={`w-full py-4 rounded-xl font-black text-lg transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
-                                {isProcessing ? 'Locking Asset...' : 'Confirm Escrow Booking'}
+                            <button type="submit" disabled={isProcessing} className={`w-full py-3.5 rounded-xl font-black text-xs sm:text-sm md:text-base transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
+                                {isProcessing ? 'Locking Asset...' : 'Confirm Booking'}
                             </button>
                         </form>
                     </div>

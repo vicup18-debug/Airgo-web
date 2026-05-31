@@ -172,8 +172,10 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                             : room.pricePerNight || 0;
                                         const discountedRoomRate = Math.round(rawRoomPrice * (1 - (room.discountPercentage || 0) / 100));
 
+                                        const isSoldOut = (room.totalAllocated || 0) <= 0;
+
                                         return (
-                                            <div key={room._id} className="border border-gray-100 rounded-xl p-4 flex gap-4 cursor-pointer hover:border-[#000080] hover:shadow-md transition bg-gray-50 animate-fade-in" onClick={() => setSelectedRoom(room)}>
+                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex gap-4 transition bg-gray-50 animate-fade-in ${isSoldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[#000080] hover:shadow-md'}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
                                                 <img src={room.image} className="w-24 h-24 rounded-lg object-cover shadow-sm" />
                                                 <div className="flex-1">
                                                     <div className="flex justify-between items-start">
@@ -196,7 +198,11 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                                                 ₦{discountedRoomRate.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span>
                                                             </p>
                                                         </div>
-                                                        <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400">Select</button>
+                                                        {isSoldOut ? (
+                                                            <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider select-none">Sold Out</span>
+                                                        ) : (
+                                                            <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400">Select</button>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

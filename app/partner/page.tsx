@@ -158,20 +158,17 @@ export default function PartnerDashboard() {
             let finalImageUrls: string[] = [];
             const isCar = user.partnerType?.toLowerCase().includes('car');
 
-            if (isCar) {
-                if (carImageFiles.length > 0) {
-                    for (const file of carImageFiles) {
-                        const url = await handleUploadToCloudinary(file);
-                        finalImageUrls.push(url);
-                    }
-                    if (finalImageUrls.length > 0) {
-                        finalImageUrl = finalImageUrls[0];
-                    }
+            if (carImageFiles.length > 0) {
+                for (const file of carImageFiles) {
+                    const url = await handleUploadToCloudinary(file);
+                    finalImageUrls.push(url);
                 }
-            } else {
-                if (imageFile) {
-                    finalImageUrl = await handleUploadToCloudinary(imageFile);
+                if (finalImageUrls.length > 0) {
+                    finalImageUrl = finalImageUrls[0];
                 }
+            } else if (imageFile) {
+                finalImageUrl = await handleUploadToCloudinary(imageFile);
+                finalImageUrls.push(finalImageUrl);
             }
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -179,9 +176,9 @@ export default function PartnerDashboard() {
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
-                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, images: finalImageUrls, partnerId: secureId
+                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl, partnerId: secureId
             } : {
-                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl
+                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -215,7 +212,10 @@ export default function PartnerDashboard() {
             type: item.type || '',
             capacity: String(item.capacity || ''),
             features: item.features || '',
-            hotelAddress: item.hotelAddress || ''
+            hotelAddress: item.hotelAddress || '',
+            image: item.image || '',
+            images: item.images || [],
+            previewImage: item.previewImage || ''
         });
         setIsEditInventoryModalOpen(true);
     };
@@ -235,13 +235,19 @@ export default function PartnerDashboard() {
                 price: Number(editItemData.price),
                 capacity: editItemData.capacity,
                 features: editItemData.features,
-                totalAllocated: Number(editItemData.totalAllocated)
+                totalAllocated: Number(editItemData.totalAllocated),
+                image: editItemData.image,
+                images: editItemData.images,
+                previewImage: editItemData.previewImage
             } : {
                 hotelAddress: editItemData.hotelAddress,
                 name: editItemData.name,
                 pricePerNight: Number(editItemData.price),
                 totalAllocated: Number(editItemData.totalAllocated),
-                amenities: editItemData.amenities
+                amenities: editItemData.amenities,
+                image: editItemData.image,
+                images: editItemData.images,
+                previewImage: editItemData.previewImage
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -680,13 +686,9 @@ export default function PartnerDashboard() {
                             )}
 
                             <div>
-                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo *</label>
-                                <input required type="file" multiple={isCarPartner} accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900 bg-white" onChange={(e) => {
-                                    if (isCarPartner) {
-                                        setCarImageFiles(Array.from(e.target.files || []));
-                                    } else {
-                                        setImageFile(e.target.files?.[0] || null);
-                                    }
+                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo(s) *</label>
+                                <input required type="file" multiple accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900 bg-white" onChange={(e) => {
+                                    setCarImageFiles(Array.from(e.target.files || []));
                                 }} />
                             </div>
 
@@ -756,6 +758,93 @@ export default function PartnerDashboard() {
                                     </div>
                                 </div>
                             )}
+
+                            {/* Photo Gallery Manager */}
+                            <div className="border-t border-gray-200 pt-4 mt-4 col-span-1 md:col-span-2">
+                                <label className="block text-xs font-bold text-gray-900 uppercase mb-2">Listing Image Gallery</label>
+                                
+                                {/* Photo grid */}
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
+                                    {(editItemData.images && editItemData.images.length > 0 ? editItemData.images : (editItemData.image ? [editItemData.image] : [])).map((imgUrl: string, idx: number) => {
+                                        const isHomepage = editItemData.image === imgUrl;
+                                        const isPreview = editItemData.previewImage === imgUrl || (!editItemData.previewImage && idx === 0);
+                                        
+                                        return (
+                                            <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 bg-white">
+                                                <img src={imgUrl} className="w-full h-20 object-cover" />
+                                                
+                                                <div className="p-1 space-y-1 bg-gray-50 border-t flex flex-col">
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setEditItemData({ ...editItemData, image: imgUrl })}
+                                                        className={`w-full text-[8px] font-black uppercase py-0.5 rounded text-center transition ${isHomepage ? 'bg-green-600 text-white' : 'bg-white hover:bg-gray-200 text-gray-700 border'}`}
+                                                    >
+                                                        {isHomepage ? '✓ Homepage' : 'Set Homepage'}
+                                                    </button>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => setEditItemData({ ...editItemData, previewImage: imgUrl })}
+                                                        className={`w-full text-[8px] font-black uppercase py-0.5 rounded text-center transition ${isPreview ? 'bg-blue-600 text-white' : 'bg-white hover:bg-gray-200 text-gray-700 border'}`}
+                                                    >
+                                                        {isPreview ? '✓ Preview' : 'Set Preview'}
+                                                    </button>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => {
+                                                            const currentImages = editItemData.images && editItemData.images.length > 0 ? [...editItemData.images] : (editItemData.image ? [editItemData.image] : []);
+                                                            if (currentImages.length <= 1) {
+                                                                toast.error("You must keep at least 1 image.");
+                                                                return;
+                                                            }
+                                                            const newImages = currentImages.filter((img: string) => img !== imgUrl);
+                                                            setEditItemData({
+                                                                ...editItemData,
+                                                                images: newImages,
+                                                                image: editItemData.image === imgUrl ? newImages[0] : editItemData.image,
+                                                                previewImage: editItemData.previewImage === imgUrl ? newImages[0] : editItemData.previewImage
+                                                            });
+                                                        }}
+                                                        className="w-full text-[8px] font-bold text-red-600 hover:bg-red-50 py-0.5 rounded text-center cursor-pointer"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                
+                                {/* Upload More Photo */}
+                                <div className="bg-gray-50 p-3 rounded-xl border border-dashed border-gray-300">
+                                    <label className="block text-[9px] font-bold text-gray-500 uppercase mb-1">Add Photo to Gallery</label>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[9px] file:font-bold file:bg-blue-50 file:text-[#004A99] file:cursor-pointer" 
+                                        onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            setIsUploading(true);
+                                            try {
+                                                const url = await handleUploadToCloudinary(file);
+                                                const currentImages = editItemData.images && editItemData.images.length > 0 ? [...editItemData.images] : (editItemData.image ? [editItemData.image] : []);
+                                                const newImages = [...currentImages, url];
+                                                setEditItemData({
+                                                    ...editItemData,
+                                                    images: newImages,
+                                                    image: editItemData.image || url,
+                                                    previewImage: editItemData.previewImage || url
+                                                });
+                                                toast.success("Photo added to gallery!");
+                                            } catch (err) {
+                                                toast.error("Upload failed.");
+                                            } finally {
+                                                setIsUploading(false);
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            </div>
 
                             <div className="pt-4 flex justify-end gap-3 shrink-0">
                                 <button type="button" onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>

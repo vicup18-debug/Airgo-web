@@ -37,6 +37,7 @@ export default function SuperadminDashboard() {
     const [expandedEscrowId, setExpandedEscrowId] = useState<string | null>(null);
     const [expandedPartnerId, setExpandedPartnerId] = useState<string | null>(null);
     const [partnerFilter, setPartnerFilter] = useState<'active' | 'deleted'>('active');
+    const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
@@ -621,6 +622,21 @@ export default function SuperadminDashboard() {
                                             </button>
                                         </div>
                                     </div>
+                                    
+                                    {/* 🔍 PARTNER SEARCH BAR */}
+                                    <div className="p-4 border-b border-gray-100 bg-white">
+                                        <div className="relative">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search partners by name, business, email, phone..." 
+                                                className="w-full md:max-w-md pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-[#000080] focus:bg-white transition-all"
+                                                value={partnerSearchQuery}
+                                                onChange={(e) => setPartnerSearchQuery(e.target.value)}
+                                            />
+                                            <span className="absolute left-3.5 top-3 text-gray-400 text-sm">🔍</span>
+                                        </div>
+                                    </div>
+
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
@@ -633,9 +649,35 @@ export default function SuperadminDashboard() {
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
-                                                {partners.filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted).length === 0 ? (
-                                                    <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found in this view.</td></tr>
-                                                ) : partners.filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted).map((partner) => (
+                                                {partners
+                                                    .filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted)
+                                                    .filter(p => {
+                                                        if (!partnerSearchQuery) return true;
+                                                        const q = partnerSearchQuery.toLowerCase();
+                                                        return (
+                                                            (p.name && p.name.toLowerCase().includes(q)) ||
+                                                            (p.businessName && p.businessName.toLowerCase().includes(q)) ||
+                                                            (p.email && p.email.toLowerCase().includes(q)) ||
+                                                            (p.phone && p.phone.toLowerCase().includes(q)) ||
+                                                            (p.phoneNumber && p.phoneNumber.toLowerCase().includes(q)) ||
+                                                            (p.partnerType && p.partnerType.toLowerCase().includes(q))
+                                                        );
+                                                    }).length === 0 ? (
+                                                    <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found matching criteria.</td></tr>
+                                                ) : partners
+                                                    .filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted)
+                                                    .filter(p => {
+                                                        if (!partnerSearchQuery) return true;
+                                                        const q = partnerSearchQuery.toLowerCase();
+                                                        return (
+                                                            (p.name && p.name.toLowerCase().includes(q)) ||
+                                                            (p.businessName && p.businessName.toLowerCase().includes(q)) ||
+                                                            (p.email && p.email.toLowerCase().includes(q)) ||
+                                                            (p.phone && p.phone.toLowerCase().includes(q)) ||
+                                                            (p.phoneNumber && p.phoneNumber.toLowerCase().includes(q)) ||
+                                                            (p.partnerType && p.partnerType.toLowerCase().includes(q))
+                                                        );
+                                                    }).map((partner) => (
                                                     <React.Fragment key={partner._id}>
                                                         <tr onClick={() => setExpandedPartnerId(expandedPartnerId === partner._id ? null : partner._id)} className={`transition cursor-pointer ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-blue-50'}`}>
                                                             <td className="p-4">
