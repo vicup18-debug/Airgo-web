@@ -175,33 +175,36 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                         const isSoldOut = (room.totalAllocated || 0) <= 0;
 
                                         return (
-                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex gap-4 transition bg-gray-50 animate-fade-in ${isSoldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[#000080] hover:shadow-md'}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
-                                                <img src={room.image} className="w-24 h-24 rounded-lg object-cover shadow-sm" />
-                                                <div className="flex-1">
-                                                    <div className="flex justify-between items-start">
-                                                        <h4 className="font-bold text-lg text-gray-900">{room.name}</h4>
-                                                        {room.discountPercentage > 0 && (
-                                                            <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
-                                                                {room.discountPercentage}% OFF
-                                                            </span>
-                                                        )}
+                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in ${isSoldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[#000080] hover:shadow-md'}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
+                                                <img src={room.image} className="w-full h-36 sm:w-24 sm:h-24 rounded-lg object-cover shadow-sm shrink-0" />
+                                                <div className="flex-1 flex flex-col justify-between">
+                                                    <div>
+                                                        <div className="flex justify-between items-start gap-2">
+                                                            <h4 className="font-bold text-lg text-gray-900 leading-snug">{room.name}</h4>
+                                                            {room.discountPercentage > 0 && (
+                                                                <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shrink-0">
+                                                                    {room.discountPercentage}% OFF
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
                                                     </div>
-                                                    <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
-                                                    <div className="flex justify-between items-end mt-2">
+                                                    <div className="flex flex-wrap gap-2 justify-between items-end mt-2">
                                                         <div>
-                                                            <p className="font-black text-[#004A99]">
+                                                            <p className="font-black text-[#004A99] flex flex-wrap items-baseline gap-1">
                                                                 {room.discountPercentage > 0 && (
-                                                                    <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                                                    <span className="text-xs text-gray-400 line-through font-bold">
                                                                         ₦{rawRoomPrice.toLocaleString()}
                                                                     </span>
                                                                 )}
-                                                                ₦{discountedRoomRate.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ night</span>
+                                                                <span className="text-base">₦{discountedRoomRate.toLocaleString()}</span>
+                                                                <span className="text-[10px] text-gray-400 font-medium">/ night</span>
                                                             </p>
                                                         </div>
                                                         {isSoldOut ? (
-                                                            <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider select-none">Sold Out</span>
+                                                            <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider select-none text-center w-full sm:w-auto">Sold Out</span>
                                                         ) : (
-                                                            <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400">Select</button>
+                                                            <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400 w-full sm:w-auto">Select</button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -221,13 +224,14 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                 <img src={selectedRoom.image} className="w-16 h-16 rounded-lg object-cover shadow-sm" />
                                 <div className="flex-grow">
                                     <h4 className="font-bold text-lg text-[#000080]">{selectedRoom.name}</h4>
-                                    <p className="font-black text-gray-900">
+                                    <p className="font-black text-gray-900 flex flex-wrap items-baseline gap-1">
                                         {selectedRoom.discountPercentage > 0 && (
-                                            <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                            <span className="text-xs text-gray-400 line-through font-bold">
                                                 ₦{(typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight)?.toLocaleString()}
                                             </span>
                                         )}
-                                        ₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()} / night
+                                        <span>₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()}</span>
+                                        <span className="text-[10px] text-gray-400 font-medium">/ night</span>
                                     </p>
                                     {selectedRoom.discountPercentage > 0 && (
                                         <p className="text-[10px] text-red-600 font-black uppercase mt-0.5 animate-pulse">🔥 {selectedRoom.discountPercentage}% Discount Applied</p>

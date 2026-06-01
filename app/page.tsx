@@ -413,37 +413,37 @@ export default function HotelHomepage() {
                           <span className="bg-red-600 text-white font-black px-6 py-3 rounded-xl text-sm uppercase tracking-widest transform -rotate-12 shadow-2xl border border-white/20">Sold Out</span>
                         </div>
                       ) : isCar ? (
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50 flex flex-col items-end">
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50 flex flex-col items-end max-w-[calc(100%-2rem)]">
                             {item.discountPercentage > 0 && (
                               <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider mb-1 animate-pulse">
                                 {item.discountPercentage}% OFF
                               </span>
                             )}
-                            <p className="text-sm font-black text-gray-900">
+                            <p className="text-sm font-black text-gray-900 flex flex-wrap justify-end items-center gap-x-1.5 gap-y-0.5">
                               {item.discountPercentage > 0 && (
-                                <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                <span className="text-xs text-gray-400 line-through font-bold">
                                   ₦{basePrice.toLocaleString()}
                                 </span>
                               )}
-                              ₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}
-                              <span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">/day</span>
+                              <span>₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}</span>
+                              <span className="text-[10px] text-gray-500 font-bold uppercase">/day</span>
                             </p>
                          </div>
                       ) : (
-                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50 flex flex-col items-end">
+                        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50 flex flex-col items-end max-w-[calc(100%-2rem)]">
                             {item.discountPercentage > 0 && (
                               <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[9px] uppercase tracking-wider mb-1 animate-pulse">
                                 {item.discountPercentage}% OFF
                               </span>
                             )}
-                            <p className="text-sm font-black text-[#000080]">
+                            <p className="text-sm font-black text-[#000080] flex flex-wrap justify-end items-center gap-x-1.5 gap-y-0.5">
                               {item.discountPercentage > 0 && (
-                                <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                <span className="text-xs text-gray-400 line-through font-bold">
                                   ₦{basePrice.toLocaleString()}
                                 </span>
                               )}
-                              ₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}
-                              <span className="text-[10px] text-gray-500 font-bold ml-1 uppercase">/night</span>
+                              <span>₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}</span>
+                              <span className="text-[10px] text-gray-500 font-bold uppercase">/night</span>
                             </p>
                          </div>
                       )}
@@ -492,7 +492,7 @@ export default function HotelHomepage() {
                         <p className="text-xs text-gray-600 font-medium leading-relaxed line-clamp-2">{isCar ? item.features : item.amenities}</p>
                       </div>
 
-                      <div className="flex justify-between items-center pt-2 mt-auto">
+                      <div className="flex flex-col sm:flex-row gap-3 justify-between sm:items-center pt-2 mt-auto">
                         {isCar ? (
                           <div>
                             <p className="text-xl font-black text-gray-900">₦{calculateTotal(basePrice, item.discountPercentage).toLocaleString()}</p>
@@ -500,13 +500,13 @@ export default function HotelHomepage() {
                           </div>
                         ) : (
                           <div>
-                            <p className="text-xl font-black text-[#000080]">
+                            <p className="text-xl font-black text-[#000080] flex flex-wrap items-baseline gap-1">
                               {item.discountPercentage > 0 && (
-                                <span className="text-xs text-gray-400 line-through mr-1.5 font-bold">
+                                <span className="text-xs text-gray-400 line-through font-bold">
                                   ₦{basePrice.toLocaleString()}
                                 </span>
                               )}
-                              ₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}
+                              <span>₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}</span>
                             </p>
                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Starting Rate / Night</p>
                           </div>
@@ -517,7 +517,7 @@ export default function HotelHomepage() {
                             if (available) handleItemSelect(item);
                           }}
                           disabled={!available}
-                          className={`px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
+                          className={`w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
                         >
                           {available ? (isCar ? 'Reserve Now' : 'Book Room') : 'Unavailable'}
                         </button>

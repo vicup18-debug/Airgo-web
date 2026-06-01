@@ -495,7 +495,7 @@ export default function PartnerDashboard() {
                                                 </div>
                                                 <div className="p-4 border-t border-gray-200">
                                                     <div className="flex flex-col">
-                                                        <div className="flex justify-between items-center mb-2">
+                                                        <div className="flex flex-wrap gap-2 justify-between items-center mb-2">
                                                             <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ {isCarPartner ? 'day' : 'night'}</span></p>
                                                             <div className="flex items-center gap-2">
                                                                 <span className="text-xs font-bold text-gray-500">Discount:</span>

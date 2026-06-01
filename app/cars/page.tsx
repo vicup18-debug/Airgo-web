@@ -204,7 +204,7 @@ export default function CarsPage() {
                                                     <p className="text-xs text-gray-600 font-medium leading-relaxed">{car.features}</p>
                                                 </div>
 
-                                                <div className="flex justify-between items-center border-t border-gray-100 pt-4 mt-auto">
+                                                <div className="flex flex-col sm:flex-row gap-3 justify-between sm:items-center border-t border-gray-100 pt-4 mt-auto">
                                                     <div>
                                                         <p className="text-2xl font-black text-[#000080]">
                                                             {car.discountPercentage > 0 && (
@@ -221,14 +221,14 @@ export default function CarsPage() {
                                                             href={`https://wa.me/2348026696170?text=Hi, I want to enquire about the ${encodeURIComponent(car.name)}`}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="bg-[#25D366] text-white px-4 py-2 rounded-lg font-bold text-xs hover:bg-[#1ebd57] transition shadow-md text-center whitespace-nowrap"
+                                                            className="w-full sm:w-auto bg-[#25D366] text-white px-4 py-2.5 rounded-lg font-bold text-xs hover:bg-[#1ebd57] transition shadow-md text-center whitespace-nowrap"
                                                         >
                                                             Enquire via WhatsApp
                                                         </a>
                                                     ) : (
                                                         <button
                                                             onClick={() => setSelectedCar(car)}
-                                                            className="bg-[#FFB81C] text-[#000080] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md"
+                                                            className="w-full sm:w-auto bg-[#FFB81C] text-[#000080] px-6 py-3 rounded-xl font-black text-sm hover:bg-yellow-400 transition shadow-md text-center"
                                                         >
                                                             Book Escrow
                                                         </button>
@@ -374,15 +374,15 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                                 <div className="mt-2">
                                     <h3 className="text-xl font-bold text-[#000080]">{car.name}</h3>
                                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-0.5">
+                                    <p className="text-2xl font-black text-gray-900 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         {car.discountPercentage > 0 && (
-                                            <span className="text-sm text-gray-400 line-through mr-2 font-bold">
+                                            <span className="text-sm text-gray-400 line-through font-bold">
                                                 ₦{numericPrice.toLocaleString()}
                                             </span>
                                         )}
-                                        ₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}
+                                        <span>₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}</span>
                                         {car.discountPercentage > 0 && (
-                                            <span className="text-xs text-red-600 font-black ml-2 uppercase">({car.discountPercentage}% OFF)</span>
+                                            <span className="text-xs text-red-600 font-black uppercase">({car.discountPercentage}% OFF)</span>
                                         )}
                                     </p>
                                 </div>
@@ -393,15 +393,15 @@ function CarBookingModal({ isOpen, onClose, car }: { isOpen: boolean, onClose: (
                                 <div>
                                     <h3 className="text-lg font-bold text-[#000080]">{car.name}</h3>
                                     <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-0.5">
+                                    <p className="text-2xl font-black text-gray-900 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                         {car.discountPercentage > 0 && (
-                                            <span className="text-sm text-gray-400 line-through mr-2 font-bold">
+                                            <span className="text-sm text-gray-400 line-through font-bold">
                                                 ₦{numericPrice.toLocaleString()}
                                             </span>
                                         )}
-                                        ₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}
+                                        <span>₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}</span>
                                         {car.discountPercentage > 0 && (
-                                            <span className="text-xs text-red-600 font-black ml-2 uppercase">({car.discountPercentage}% OFF)</span>
+                                            <span className="text-xs text-red-600 font-black uppercase">({car.discountPercentage}% OFF)</span>
                                         )}
                                     </p>
                                 </div>
