@@ -38,6 +38,8 @@ export default function SuperadminDashboard() {
     const [expandedPartnerId, setExpandedPartnerId] = useState<string | null>(null);
     const [partnerFilter, setPartnerFilter] = useState<'active' | 'deleted'>('active');
     const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
+    const [fleetSearchQuery, setFleetSearchQuery] = useState('');
+    const [roomSearchQuery, setRoomSearchQuery] = useState('');
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
@@ -425,6 +427,31 @@ export default function SuperadminDashboard() {
         setExpandedEscrowId(expandedEscrowId === id ? null : id);
     };
 
+    const activeHotelsCount = new Set(rooms.map(r => r.hotelName?.trim()).filter(Boolean)).size;
+
+    const filteredCars = cars.filter(car => {
+        const query = fleetSearchQuery.toLowerCase().trim();
+        if (!query) return true;
+        return (
+            (car.name && car.name.toLowerCase().includes(query)) ||
+            (car.type && car.type.toLowerCase().includes(query)) ||
+            (car.location && car.location.toLowerCase().includes(query)) ||
+            (car.state && car.state.toLowerCase().includes(query)) ||
+            (car.vehicleNumber && car.vehicleNumber.toLowerCase().includes(query))
+        );
+    });
+
+    const filteredRooms = rooms.filter(room => {
+        const query = roomSearchQuery.toLowerCase().trim();
+        if (!query) return true;
+        return (
+            (room.name && room.name.toLowerCase().includes(query)) ||
+            (room.hotelName && room.hotelName.toLowerCase().includes(query)) ||
+            (room.hotelAddress && room.hotelAddress.toLowerCase().includes(query)) ||
+            (room.amenities && room.amenities.toLowerCase().includes(query))
+        );
+    });
+
     if (!user) return null;
 
     return (
@@ -481,19 +508,26 @@ export default function SuperadminDashboard() {
                         <>
                             {/* OVERVIEW TAB */}
                             {activeTab === 'overview' && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                                    <div className="bg-gradient-to-br from-[#000080] to-blue-900 p-6 rounded-3xl shadow-lg text-white col-span-1 lg:col-span-2">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                                    <div className="bg-gradient-to-br from-[#000080] to-blue-900 p-6 rounded-3xl shadow-lg text-white">
                                         <p className="text-sm font-bold text-blue-200 uppercase tracking-wider mb-2">Funds in Escrow</p>
-                                        <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalEscrow()}</p>
+                                        <p className="text-3xl font-black mb-2">₦{calculateTotalEscrow()}</p>
                                         <p className="text-xs text-blue-300">Awaiting partner disbursement</p>
                                     </div>
                                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Bookings</p>
                                         <p className="text-4xl font-black text-gray-900">{allBookings.length}</p>
+                                        <p className="text-xs text-gray-400 mt-2 font-bold">Escrow transactions ledger</p>
                                     </div>
                                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Active Vehicles</p>
                                         <p className="text-4xl font-black text-[#000080]">{cars.length}</p>
+                                        <p className="text-xs text-gray-400 mt-2 font-bold">Global fleet listed</p>
+                                    </div>
+                                    <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
+                                        <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Active Hotels</p>
+                                        <p className="text-4xl font-black text-[#000080]">{activeHotelsCount}</p>
+                                        <p className="text-xs text-gray-400 mt-2 font-bold">Unique properties in grid</p>
                                     </div>
                                 </div>
                             )}
@@ -756,10 +790,22 @@ export default function SuperadminDashboard() {
                                         <h2 className="text-lg font-bold text-gray-800">Global Fleet</h2>
                                         <button onClick={() => setIsCarModalOpen(true)} className="bg-[#000080] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-900 transition">+ Add Vehicle</button>
                                     </div>
+                                    <div className="px-6 pt-6 pb-2 border-b border-gray-100 bg-white">
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search fleet by name, class, location, state, or plate number..." 
+                                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 outline-none text-sm text-gray-900 font-medium"
+                                                value={fleetSearchQuery}
+                                                onChange={(e) => setFleetSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {cars.length === 0 ? (
-                                            <p className="col-span-full text-center text-gray-500 py-10">No vehicles in the database.</p>
-                                        ) : cars.map(car => (
+                                        {filteredCars.length === 0 ? (
+                                            <p className="col-span-full text-center text-gray-500 py-10">No vehicles found matching search criteria.</p>
+                                        ) : filteredCars.map(car => (
                                             <div key={car._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                                                 <img src={car.image} alt={car.name} className="w-full h-40 object-cover" />
                                                 <div className="p-4">
@@ -863,10 +909,22 @@ export default function SuperadminDashboard() {
                                         <h2 className="text-lg font-bold text-gray-800">Global Properties & Room Pools</h2>
                                         <button onClick={() => setIsRoomModalOpen(true)} className="bg-[#000080] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-900 transition">+ Add Room Category</button>
                                     </div>
+                                    <div className="px-6 pt-6 pb-2 border-b border-gray-100 bg-white">
+                                        <div className="relative">
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search rooms by name, hotel, address, or amenities..." 
+                                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 outline-none text-sm text-gray-900 font-medium"
+                                                value={roomSearchQuery}
+                                                onChange={(e) => setRoomSearchQuery(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {rooms.length === 0 ? (
-                                            <p className="col-span-full text-center text-gray-500 py-10">No room allocations active in the grid.</p>
-                                        ) : rooms.map(room => (
+                                        {filteredRooms.length === 0 ? (
+                                            <p className="col-span-full text-center text-gray-500 py-10">No room allocations found matching search criteria.</p>
+                                        ) : filteredRooms.map(room => (
                                             <div key={room._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50">
                                                 <img src={room.image} alt={room.name} className="w-full h-40 object-cover" />
                                                 <div className="p-4">

@@ -181,11 +181,16 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                                     <div>
                                                         <div className="flex justify-between items-start gap-2">
                                                             <h4 className="font-bold text-lg text-gray-900 leading-snug">{room.name}</h4>
-                                                            {room.discountPercentage > 0 && (
-                                                                <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider shrink-0">
-                                                                    {room.discountPercentage}% OFF
+                                                            <div className="flex flex-col items-end gap-1 shrink-0">
+                                                                {room.discountPercentage > 0 && (
+                                                                    <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
+                                                                        {room.discountPercentage}% OFF
+                                                                    </span>
+                                                                )}
+                                                                <span className="bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-wider border border-red-100/50">
+                                                                    {room.totalAllocated} left
                                                                 </span>
-                                                            )}
+                                                            </div>
                                                         </div>
                                                         <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
                                                     </div>
