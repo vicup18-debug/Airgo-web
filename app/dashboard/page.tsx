@@ -310,7 +310,7 @@ export default function ClientDashboard() {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Guests Count</label>
-                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={editData.guests} onChange={e => setEditData({ ...editData, guests: parseInt(e.target.value) || 1 })} />
+                                    <input required type="number" min="1" max="2" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={editData.guests} onChange={e => setEditData({ ...editData, guests: Math.min(2, Math.max(1, parseInt(e.target.value) || 1)) })} />
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

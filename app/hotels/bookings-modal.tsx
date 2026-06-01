@@ -253,7 +253,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                             <div className="mb-6">
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Number of Guests</label>
                                 <select className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900 bg-white" value={guests} onChange={(e) => setGuests(Number(e.target.value))}>
-                                    {[1, 2, 3, 4, 5, 6].map(num => <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>)}
+                                    {[1, 2].map(num => <option key={num} value={num}>{num} Guest{num > 1 ? 's' : ''}</option>)}
                                 </select>
                             </div>
 

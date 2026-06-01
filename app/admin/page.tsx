@@ -1082,7 +1082,7 @@ export default function SuperadminDashboard() {
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
-                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.guests} onChange={e => setEditBookingData({ ...editBookingData, guests: Number(e.target.value) })} />
+                                    <input required type="number" min="1" max="2" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editBookingData.guests} onChange={e => setEditBookingData({ ...editBookingData, guests: Math.min(2, Math.max(1, Number(e.target.value) || 1)) })} />
                                 </div>
                                 <div className="col-span-2">
                                     <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Delivery / Hotel Address</label>
