@@ -9,9 +9,11 @@ interface BookingModalProps {
     isOpen: boolean;
     onClose: () => void;
     hotel: any;
+    initialCheckIn?: string;
+    initialCheckOut?: string;
 }
 
-export default function BookingModal({ isOpen, onClose, hotel }: BookingModalProps) {
+export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, initialCheckOut }: BookingModalProps) {
     const [checkIn, setCheckIn] = useState('');
     const [checkOut, setCheckOut] = useState('');
     const [guests, setGuests] = useState(1);
@@ -31,6 +33,8 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
         
         if (isOpen && hotel) {
             fetchRooms();
+            if (initialCheckIn) setCheckIn(initialCheckIn);
+            if (initialCheckOut) setCheckOut(initialCheckOut);
         } else {
             setSelectedRoom(null);
             setRooms([]);
@@ -38,7 +42,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
             setCheckOut('');
             setGuests(1);
         }
-    }, [isOpen, hotel]);
+    }, [isOpen, hotel, initialCheckIn, initialCheckOut]);
 
     const fetchRooms = async () => {
         setIsLoadingRooms(true);
@@ -172,7 +176,28 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                             : room.pricePerNight || 0;
                                         const discountedRoomRate = Math.round(rawRoomPrice * (1 - (room.discountPercentage || 0) / 100));
 
-                                        const isSoldOut = (room.totalAllocated || 0) <= 0;
+                                        // 🛡️ DYNAMIC REMAINING ROOMS ENGINE
+                                        const getRemainingRooms = (r: any) => {
+                                            if ((r.totalAllocated || 0) <= 0) return 0;
+                                            if (!checkIn || !checkOut || !r.bookedDates) return r.totalAllocated;
+
+                                            let d = new Date(checkIn);
+                                            const endD = new Date(checkOut);
+                                            let maxBooked = 0;
+
+                                            while (d < endD) {
+                                                const dateStr = d.toISOString().split('T')[0];
+                                                const dayMatch = r.bookedDates?.find((b: any) => b.date === dateStr);
+                                                if (dayMatch && dayMatch.count > maxBooked) {
+                                                    maxBooked = dayMatch.count;
+                                                }
+                                                d.setDate(d.getDate() + 1);
+                                            }
+                                            return Math.max(0, r.totalAllocated - maxBooked);
+                                        };
+
+                                        const remainingCount = getRemainingRooms(room);
+                                        const isSoldOut = remainingCount <= 0;
 
                                         return (
                                             <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in ${isSoldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[#000080] hover:shadow-md'}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
@@ -188,7 +213,7 @@ export default function BookingModal({ isOpen, onClose, hotel }: BookingModalPro
                                                                     </span>
                                                                 )}
                                                                 <span className="bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-wider border border-red-100/50">
-                                                                    {room.totalAllocated} left
+                                                                    {remainingCount} left
                                                                 </span>
                                                             </div>
                                                         </div>
