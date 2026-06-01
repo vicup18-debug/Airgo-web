@@ -133,6 +133,29 @@ export default function ClientDashboard() {
         }
     };
 
+    const handleCancelBooking = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to cancel this reservation and release the locked inventory?")) return;
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Reservation cancelled and inventory released!");
+                fetchMyBookings(user);
+            } else {
+                toast.error(data.message || "Failed to cancel reservation.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
@@ -219,24 +242,32 @@ export default function ClientDashboard() {
                                                 📄 Receipt/Invoice
                                             </a>
                                             {booking.status === 'Pending Escrow' && (
-                                                <button 
-                                                    onClick={() => { 
-                                                        setSelectedBooking(booking); 
-                                                        setEditData({ 
-                                                            clientName: booking.clientName || '', 
-                                                            clientEmail: booking.clientEmail || '', 
-                                                            clientPhone: booking.clientPhone || '', 
-                                                            deliveryAddress: booking.deliveryAddress || '', 
-                                                            checkIn: booking.checkIn || '', 
-                                                            checkOut: booking.checkOut || '', 
-                                                            guests: booking.guests || 1 
-                                                        }); 
-                                                        setIsEditModalOpen(true); 
-                                                    }}
-                                                    className="text-xs font-bold text-gray-600 hover:text-[#000080] flex items-center gap-1 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-white"
-                                                >
-                                                    ✏️ Correct Details
-                                                </button>
+                                                <>
+                                                    <button 
+                                                        onClick={() => { 
+                                                            setSelectedBooking(booking); 
+                                                            setEditData({ 
+                                                                clientName: booking.clientName || '', 
+                                                                clientEmail: booking.clientEmail || '', 
+                                                                clientPhone: booking.clientPhone || '', 
+                                                                deliveryAddress: booking.deliveryAddress || '', 
+                                                                checkIn: booking.checkIn || '', 
+                                                                checkOut: booking.checkOut || '', 
+                                                                guests: booking.guests || 1 
+                                                            }); 
+                                                            setIsEditModalOpen(true); 
+                                                        }}
+                                                        className="text-xs font-bold text-gray-600 hover:text-[#000080] flex items-center gap-1 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-white"
+                                                    >
+                                                        ✏️ Correct Details
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleCancelBooking(booking._id)}
+                                                        className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 border border-red-100 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition"
+                                                    >
+                                                        ✕ Cancel Booking
+                                                    </button>
+                                                </>
                                             )}
                                         </div>
 

@@ -191,7 +191,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                 if (dayMatch && dayMatch.count > maxBooked) {
                                                     maxBooked = dayMatch.count;
                                                 }
-                                                d.setDate(d.getDate() + 1);
+                                                d.setUTCDate(d.getUTCDate() + 1);
                                             }
                                             return Math.max(0, r.totalAllocated - maxBooked);
                                         };

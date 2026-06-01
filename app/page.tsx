@@ -144,7 +144,7 @@ export default function HotelHomepage() {
       const dateStr = d.toISOString().split('T')[0];
       const dayMatch = item.bookedDates?.find((b: any) => b.date === dateStr);
       if (dayMatch && dayMatch.count >= capacityThreshold) return false;
-      d.setDate(d.getDate() + 1);
+      d.setUTCDate(d.getUTCDate() + 1);
     }
     return true;
   };

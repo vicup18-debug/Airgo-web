@@ -410,6 +410,30 @@ export default function SuperadminDashboard() {
         } catch (error) { console.error("Error deleting item:", error); }
     };
 
+    const handleDeleteBooking = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to permanently delete this booking and release its inventory?")) return;
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                toast.success("Booking deleted and inventory slots released!");
+                fetchAllSystemData();
+            } else {
+                const data = await res.json();
+                toast.error(data.message || "Failed to delete booking.");
+            }
+        } catch (error) {
+            console.error("Error deleting booking:", error);
+            toast.error("Network error deleting booking.");
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
@@ -628,10 +652,16 @@ export default function SuperadminDashboard() {
                                                                                 target="_blank" 
                                                                                 rel="noreferrer"
                                                                                 onClick={(e) => e.stopPropagation()}
-                                                                                className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center"
+                                                                                className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center animate-fade-in"
                                                                             >
                                                                                 📄 Get Receipt PDF
                                                                             </a>
+                                                                            <button 
+                                                                                onClick={(e) => { e.stopPropagation(); handleDeleteBooking(booking._id); }} 
+                                                                                className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition"
+                                                                            >
+                                                                                ✕ Delete Booking
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 </td>
