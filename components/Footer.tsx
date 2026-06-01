@@ -55,7 +55,7 @@ export default function Footer() {
   return (
     <>
       {/* UPGRADED: Clean, Institutional Labeled Footer */}
-      <footer className="bg-[#000080] text-white py-16 px-6 mt-auto border-t-4 border-[#FFB81C]">
+      <footer className="bg-[#000080] text-white pt-16 pb-28 md:pb-16 px-6 mt-auto border-t-4 border-[#FFB81C]">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <Link href="/">
