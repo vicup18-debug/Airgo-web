@@ -91,6 +91,7 @@ export default function CarsPage() {
 
     // LIVE FILTERING LOGIC
     const filteredCars = carFleet.filter(car => {
+        if (!searchQuery) return true;
         const searchLower = searchQuery.toLowerCase();
         return (
             (car.location && car.location.toLowerCase().includes(searchLower)) ||
