@@ -41,7 +41,7 @@ export default function SuperadminDashboard() {
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
-    const [newCar, setNewCar] = useState({ name: '', type: '', price: '', capacity: '', features: '' });
+    const [newCar, setNewCar] = useState({ name: '', type: '', price: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
     const [carImageFile, setCarImageFile] = useState<File | null>(null);
 
     // ROOM MATRIX FORM STATES 
@@ -53,7 +53,7 @@ export default function SuperadminDashboard() {
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: ''
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
     });
 
     // EDIT BOOKING MODAL STATE
@@ -211,7 +211,10 @@ export default function SuperadminDashboard() {
             type: item.type || '',
             capacity: String(item.capacity || ''),
             features: item.features || '',
-            hotelAddress: item.hotelAddress || ''
+            hotelAddress: item.hotelAddress || '',
+            vehicleNumber: item.vehicleNumber || '',
+            location: item.location || '',
+            state: item.state || ''
         });
         setIsEditInventoryModalOpen(true);
     };
@@ -231,7 +234,10 @@ export default function SuperadminDashboard() {
                 price: Number(editItemData.price),
                 capacity: editItemData.capacity,
                 features: editItemData.features,
-                totalAllocated: Number(editItemData.totalAllocated)
+                totalAllocated: Number(editItemData.totalAllocated),
+                vehicleNumber: editItemData.vehicleNumber,
+                location: editItemData.location,
+                state: editItemData.state
             } : {
                 hotelAddress: editItemData.hotelAddress,
                 name: editItemData.name,
@@ -353,7 +359,7 @@ export default function SuperadminDashboard() {
             if (response.ok) {
                 toast.success("Vehicle deployed successfully!");
                 setIsCarModalOpen(false);
-                setNewCar({ name: '', type: '', price: '', capacity: '', features: '' });
+                setNewCar({ name: '', type: '', price: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
                 setCarImageFile(null);
                 fetchAllSystemData();
             }
@@ -564,7 +570,10 @@ export default function SuperadminDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Asset</p>
                                                                             <p className="text-xs font-black text-gray-900 mb-1">{booking._id.substring(0, 12).toUpperCase()}</p>
-                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Partner: {booking.partnerId ? booking.partnerId.substring(0, 8) : 'N/A'}</p>
+                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Partner: {booking.partnerId ? booking.partnerId.substring(0, 8) : 'N/A'}</p>
+                                                                            {booking.itemType === 'car' && booking.vehicleNumber && (
+                                                                                <p className="text-[10px] font-bold text-green-700 uppercase">Plate: {booking.vehicleNumber}</p>
+                                                                            )}
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
@@ -898,6 +907,9 @@ export default function SuperadminDashboard() {
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.vehicleNumber} onChange={e => setNewCar({ ...newCar, vehicleNumber: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.location} onChange={e => setNewCar({ ...newCar, location: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.state} onChange={e => setNewCar({ ...newCar, state: e.target.value })} /></div>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo</label>
@@ -994,6 +1006,9 @@ export default function SuperadminDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity (Seats)</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.features} onChange={e => setEditItemData({ ...editItemData, features: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Fleet Count</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.vehicleNumber} onChange={e => setEditItemData({ ...editItemData, vehicleNumber: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.location} onChange={e => setEditItemData({ ...editItemData, location: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.state} onChange={e => setEditItemData({ ...editItemData, state: e.target.value })} /></div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">

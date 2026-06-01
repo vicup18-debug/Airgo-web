@@ -56,7 +56,10 @@ const FALLBACK_CARS = [
     features: 'Bulletproof, Chauffeur, Leather Interior',
     image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80',
     partnerId: 'airgo_direct',
-    bookedDates: []
+    bookedDates: [],
+    location: 'Maitama',
+    state: 'Abuja',
+    vehicleNumber: 'ABJ-888-GW'
   },
   {
     _id: 'airgo_car_02',
@@ -67,7 +70,10 @@ const FALLBACK_CARS = [
     features: 'Massaging Seats, Panoramic Roof, Wi-Fi',
     image: 'https://images.unsplash.com/photo-1606016159991-efa9f131a48c?auto=format&fit=crop&w=800&q=80',
     partnerId: 'airgo_direct',
-    bookedDates: []
+    bookedDates: [],
+    location: 'Ikoyi',
+    state: 'Lagos',
+    vehicleNumber: 'LAG-123-RR'
   }
 ];
 
@@ -284,11 +290,10 @@ export default function HotelHomepage() {
   });
 
   const filteredCars = liveCars.filter((car) => {
-    // 1. Location/Type/Features match
+    // 1. Location/State match
     const matchesLocation = !location ||
-      car.name?.toLowerCase().includes(location.toLowerCase()) ||
-      car.type?.toLowerCase().includes(location.toLowerCase()) ||
-      car.features?.toLowerCase().includes(location.toLowerCase());
+      car.location?.toLowerCase().includes(location.toLowerCase()) ||
+      car.state?.toLowerCase().includes(location.toLowerCase());
 
     // 2. Availability match (using dates)
     const matchesAvailability = isItemAvailable(car, true);
@@ -355,8 +360,8 @@ export default function HotelHomepage() {
           <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-gray-100">
             <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4">
               <div className="flex-[2]">
-                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Hotel, City or Region' : 'Pickup Location'}</label>
-                <input type="text" placeholder={activeTab === 'stays' ? 'Abuja, Lagos, Hilton...' : 'Lekki, Airport, Victoria Island...'} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={location} onChange={(e) => setLocation(e.target.value)} />
+                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Hotel, City or Region' : 'Pickup Location (State / Area)'}</label>
+                <input type="text" placeholder={activeTab === 'stays' ? 'Abuja, Lagos, Hilton...' : 'e.g. Lagos, Abuja, Lekki...'} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={location} onChange={(e) => setLocation(e.target.value)} />
               </div>
               <div className="flex-1">
                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Check In' : 'Pickup Date'}</label>
@@ -469,9 +474,17 @@ export default function HotelHomepage() {
                       )}
                       
                       {isCar && item.type && (
-                         <div className="flex items-center gap-2 mb-4 text-gray-500">
-                           <span className="text-sm">🏷️</span>
-                           <p className="text-sm font-bold uppercase tracking-wide">{item.type} <span className="mx-2">•</span> {item.capacity} Seats</p>
+                         <div className="flex flex-col gap-1.5 mb-4 text-gray-500">
+                           <div className="flex items-center gap-2">
+                             <span className="text-sm">🏷️</span>
+                             <p className="text-sm font-bold uppercase tracking-wide">{item.type} <span className="mx-2">•</span> {item.capacity} Seats</p>
+                           </div>
+                           {item.location && item.state && (
+                             <div className="flex items-center gap-2 text-xs font-bold text-[#000080]">
+                               <span>📍</span>
+                               <span>{item.location}, {item.state}</span>
+                             </div>
+                           )}
                          </div>
                       )}
                       

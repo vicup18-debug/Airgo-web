@@ -15,7 +15,10 @@ const FALLBACK_FLEET = [
         features: 'Bulletproof (B6), VIP Chauffeur, Armed Escort Optional',
         image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80',
         partnerId: 'airgo_direct',
-        isFallback: true
+        isFallback: true,
+        location: 'Maitama',
+        state: 'Abuja',
+        vehicleNumber: 'ABJ-888-GW'
     },
     {
         id: 'airgo_fleet_02',
@@ -26,7 +29,10 @@ const FALLBACK_FLEET = [
         features: 'Chauffeur Included, Airport Meet & Greet, Deep Tint',
         image: 'https://images.unsplash.com/photo-1606016159991-d8544e311546?auto=format&fit=crop&w=800&q=80',
         partnerId: 'airgo_direct',
-        isFallback: true
+        isFallback: true,
+        location: 'Ikoyi',
+        state: 'Lagos',
+        vehicleNumber: 'LAG-123-RR'
     },
     {
         id: 'airgo_fleet_03',
@@ -37,7 +43,10 @@ const FALLBACK_FLEET = [
         features: 'Executive Rear Seating, Champagne Cooler, VIP Escort',
         image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0be2?auto=format&fit=crop&w=800&q=80',
         partnerId: 'airgo_direct',
-        isFallback: true
+        isFallback: true,
+        location: 'Victoria Island',
+        state: 'Lagos',
+        vehicleNumber: 'LAG-999-MB'
     }
 ];
 
@@ -84,9 +93,8 @@ export default function CarsPage() {
     const filteredCars = carFleet.filter(car => {
         const searchLower = searchQuery.toLowerCase();
         return (
-            (car.name && car.name.toLowerCase().includes(searchLower)) ||
-            (car.type && car.type.toLowerCase().includes(searchLower)) ||
-            (car.features && car.features.toLowerCase().includes(searchLower))
+            (car.location && car.location.toLowerCase().includes(searchLower)) ||
+            (car.state && car.state.toLowerCase().includes(searchLower))
         );
     });
 
@@ -113,10 +121,10 @@ export default function CarsPage() {
                     <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
                         <form className="flex flex-col md:flex-row gap-4">
                             <div className="flex-[2]">
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Where to / Vehicle?</label>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">State / Location</label>
                                 <input
                                     type="text"
-                                    placeholder="City, SUV, Bulletproof..."
+                                    placeholder="e.g. Lagos, Abuja, Lekki..."
                                     className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 outline-none"
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -185,9 +193,12 @@ export default function CarsPage() {
                                             </div>
                                             <div className="p-6 flex flex-col flex-grow">
                                                 <h3 className="text-xl font-bold text-gray-900 leading-tight">{car.name}</h3>
-                                                <p className="text-sm text-gray-500 mt-1 mb-4 flex items-center gap-1 font-bold">
-                                                    <span>👤 Up to {car.capacity} Passengers</span>
-                                                </p>
+                                                <div className="flex flex-wrap items-center gap-2 mt-1 mb-4">
+                                                    <span className="text-xs font-bold text-gray-500">👤 Up to {car.capacity} Passengers</span>
+                                                    {car.location && car.state && (
+                                                        <span className="text-xs font-black text-[#000080] bg-blue-50 px-2 py-0.5 rounded border border-blue-100/50">📍 {car.location}, {car.state}</span>
+                                                    )}
+                                                </div>
 
                                                 <div className="bg-gray-50 p-3 rounded-lg mb-6 border border-gray-100 flex-grow">
                                                     <p className="text-xs text-gray-600 font-medium leading-relaxed">{car.features}</p>

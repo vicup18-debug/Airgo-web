@@ -181,6 +181,11 @@ export default function ClientDashboard() {
                                     <div>
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{booking.itemType}</p>
                                         <h3 className="text-xl font-black text-[#004A99]">{booking.itemName}</h3>
+                                        {booking.itemType === 'car' && booking.vehicleNumber && (
+                                            <p className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1.5 rounded-xl border border-green-100 inline-block mt-2">
+                                                🚘 Plate No: {booking.vehicleNumber}
+                                            </p>
+                                        )}
                                         <p className="text-sm text-gray-600 font-medium mt-2">
                                             <span className="font-bold">From:</span> {booking.checkIn ? new Date(booking.checkIn).toLocaleString() : 'N/A'}
                                         </p>
