@@ -341,6 +341,14 @@ export default function PartnerDashboard() {
     const isApartmentPartner = user?.partnerType === 'apartment';
 
     const totalAllocatedRooms = (!isCarPartner) ? myInventory.reduce((sum, item) => sum + (item.totalAllocated || 0), 0) : 0;
+    const totalAvailableRoomsToday = (!isCarPartner)
+        ? myInventory.reduce((sum, item) => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const dayMatch = item.bookedDates?.find((b: any) => b.date === todayStr);
+            const bookedCount = dayMatch ? dayMatch.count : 0;
+            return sum + Math.max(0, (item.totalAllocated || 0) - bookedCount);
+          }, 0)
+        : 0;
     const totalRentalDays = isCarPartner ? myBookings.reduce((sum, b) => {
         if (!b.checkIn || !b.checkOut) return sum;
         const start = new Date(b.checkIn);
@@ -458,9 +466,9 @@ export default function PartnerDashboard() {
                                                 <p className="text-[10px] text-gray-400 mt-2 font-bold">Active {isApartmentPartner ? 'apartment listings' : 'room tiers'} listed</p>
                                             </div>
                                             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 md:col-span-1 flex flex-col justify-between min-h-[140px]">
-                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{isApartmentPartner ? 'Total Capacity units' : 'Total Allocated Rooms'}</p>
-                                                <p className="text-4xl font-black text-gray-900">{totalAllocatedRooms} Unit{(totalAllocatedRooms || 0) !== 1 ? 's' : ''}</p>
-                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Total live matrix inventory capacity</p>
+                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{isApartmentPartner ? 'Units Available Today' : 'Available Rooms Today'}</p>
+                                                <p className="text-4xl font-black text-[#004A99]">{totalAvailableRoomsToday} / {totalAllocatedRooms}</p>
+                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Currently unbooked units for today</p>
                                             </div>
                                         </>
                                     )}
@@ -524,6 +532,21 @@ export default function PartnerDashboard() {
                                                                 >+</button>
                                                             </div>
                                                         </div>
+
+                                                        {(() => {
+                                                            const todayStr = new Date().toISOString().split('T')[0];
+                                                            const dayMatch = item.bookedDates?.find((b: any) => b.date === todayStr);
+                                                            const bookedCount = dayMatch ? dayMatch.count : 0;
+                                                            const remaining = Math.max(0, (item.totalAllocated || 0) - bookedCount);
+                                                            return (
+                                                                <div className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2 rounded-lg mb-3">
+                                                                    <span className="text-xs text-gray-500 font-bold">Available Today</span>
+                                                                    <span className={`text-xs font-black px-2 py-0.5 rounded ${remaining > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                                        {remaining} left
+                                                                    </span>
+                                                                </div>
+                                                            );
+                                                        })()}
 
                                                         <div className="flex gap-2">
                                                             <button 
