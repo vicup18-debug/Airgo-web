@@ -518,9 +518,15 @@ export default function HotelHomepage() {
                             if (available) handleItemSelect(item);
                           }}
                           disabled={!available}
-                          className={`w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${available ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1' : 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none'}`}
+                          className={`w-full sm:w-auto px-6 py-3.5 rounded-xl font-black text-sm transition-all duration-300 ${
+                            !available 
+                              ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none' 
+                              : isCar 
+                                ? 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400 shadow-[0_8px_20px_rgba(255,184,28,0.2)] hover:shadow-[0_8px_25px_rgba(255,184,28,0.3)] hover:-translate-y-1' 
+                                : 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-1'
+                          }`}
                         >
-                          {available ? (isCar ? 'Reserve Now' : 'Book Room') : 'Unavailable'}
+                          {available ? (isCar ? 'Book Escrow' : 'Book Room') : 'Unavailable'}
                         </button>
                       </div>
                     </div>
