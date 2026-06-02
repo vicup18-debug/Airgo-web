@@ -9,45 +9,17 @@ import CarBookingModal from '../../components/CarBookingModal';
 const FALLBACK_FLEET = [
     {
         id: 'airgo_fleet_01',
-        name: 'Mercedes-Benz G63 AMG',
-        type: 'Luxury SUV',
-        price: 450000,
-        capacity: '4',
-        features: 'Bulletproof (B6), VIP Chauffeur, Armed Escort Optional',
-        image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80',
+        name: 'Mercedes-Benz G-Wagon G63',
+        type: 'SUV',
+        price: 350000,
+        capacity: '5',
+        features: 'Chauffeur Driven, V8 Biturbo, Leather Interior',
+        image: 'https://images.unsplash.com/photo-1520050206274-a1ae446cb3cc?auto=format&fit=crop&w=800&q=80',
         partnerId: 'airgo_direct',
         isFallback: true,
         location: 'Maitama',
         state: 'Abuja',
         vehicleNumber: 'ABJ-888-GW'
-    },
-    {
-        id: 'airgo_fleet_02',
-        name: 'Range Rover Autobiography',
-        type: 'Premium SUV',
-        price: 350000,
-        capacity: '4',
-        features: 'Chauffeur Included, Airport Meet & Greet, Deep Tint',
-        image: 'https://images.unsplash.com/photo-1606016159991-d8544e311546?auto=format&fit=crop&w=800&q=80',
-        partnerId: 'airgo_direct',
-        isFallback: true,
-        location: 'Ikoyi',
-        state: 'Lagos',
-        vehicleNumber: 'LAG-123-RR'
-    },
-    {
-        id: 'airgo_fleet_03',
-        name: 'Mercedes-Benz Maybach S680',
-        type: 'Executive Sedan',
-        price: 500000,
-        capacity: '3',
-        features: 'Executive Rear Seating, Champagne Cooler, VIP Escort',
-        image: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0be2?auto=format&fit=crop&w=800&q=80',
-        partnerId: 'airgo_direct',
-        isFallback: true,
-        location: 'Victoria Island',
-        state: 'Lagos',
-        vehicleNumber: 'LAG-999-MB'
     }
 ];
 
@@ -119,7 +91,7 @@ export default function CarsPage() {
                 </header>
 
                 {/* FLOATING SEARCH BAR */}
-                <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-10 mb-12">
+                <div className="max-w-3xl mx-auto px-4 -mt-24 relative z-10 mb-12">
                     <div className="bg-white p-6 rounded-3xl shadow-xl border border-gray-100">
                         <form className="flex flex-col md:flex-row gap-4">
                             <div className="flex-[2]">

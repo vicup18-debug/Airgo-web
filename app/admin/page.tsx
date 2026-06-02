@@ -36,6 +36,7 @@ export default function SuperadminDashboard() {
     // EXPANDABLE ESCROW STATE
     const [expandedEscrowId, setExpandedEscrowId] = useState<string | null>(null);
     const [expandedPartnerId, setExpandedPartnerId] = useState<string | null>(null);
+    const [expandedAffiliateId, setExpandedAffiliateId] = useState<string | null>(null);
     const [partnerFilter, setPartnerFilter] = useState<'active' | 'deleted'>('active');
     const [partnerSearchQuery, setPartnerSearchQuery] = useState('');
     const [fleetSearchQuery, setFleetSearchQuery] = useState('');
@@ -331,6 +332,62 @@ export default function SuperadminDashboard() {
             }
         } catch (err) {
             toast.error("Error updating affiliate status.");
+        }
+    };
+
+    const handleDisburseAffiliateCommission = async (id: string) => {
+        if (!window.confirm("Are you sure you have paid this affiliate and want to mark their commissions as settled/disbursed?")) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/affiliates/${id}/disburse`, {
+                method: 'POST'
+            });
+            if (res.ok) {
+                toast.success("Affiliate commissions marked as disbursed!");
+                fetchAllSystemData();
+            } else {
+                toast.error("Failed to disburse affiliate commissions.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
+    const handleToggleAffiliateActive = async (id: string, currentActive: boolean) => {
+        const actionLabel = currentActive !== false ? "Deactivate" : "Reactivate";
+        if (!window.confirm(`Are you sure you want to ${actionLabel} this affiliate account?`)) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/affiliates/${id}/toggle-active`, {
+                method: 'PUT'
+            });
+            if (res.ok) {
+                toast.success(`Affiliate account has been ${currentActive !== false ? 'Deactivated' : 'Reactivated'} successfully!`);
+                fetchAllSystemData();
+            } else {
+                toast.error("Failed to toggle affiliate active status.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
+    const handleDeleteAffiliate = async (id: string) => {
+        if (!window.confirm("Are you sure you want to permanently delete this affiliate application? This cannot be undone.")) return;
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/affiliates/${id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                toast.success("Affiliate application deleted successfully!");
+                setExpandedAffiliateId(null);
+                fetchAllSystemData();
+            } else {
+                toast.error("Failed to delete affiliate.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
         }
     };
 
@@ -826,7 +883,7 @@ export default function SuperadminDashboard() {
                                             <input 
                                                 type="text" 
                                                 placeholder="Search fleet by name, class, location, state, or plate number..." 
-                                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/10 outline-none text-sm text-gray-900 font-medium"
+                                                className="w-full md:max-w-md pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-[#000080] focus:bg-white transition-all"
                                                 value={fleetSearchQuery}
                                                 onChange={(e) => setFleetSearchQuery(e.target.value)}
                                             />
@@ -868,6 +925,7 @@ export default function SuperadminDashboard() {
                                                     <th className="p-4 font-bold border-b">Affiliate / Contact</th>
                                                     <th className="p-4 font-bold border-b">Website / Channel</th>
                                                     <th className="p-4 font-bold border-b">Strategy</th>
+                                                    <th className="p-4 font-bold border-b text-right">Commissions</th>
                                                     <th className="p-4 font-bold border-b">Status</th>
                                                     <th className="p-4 font-bold border-b text-center">Actions</th>
                                                 </tr>
@@ -875,55 +933,170 @@ export default function SuperadminDashboard() {
                                             <tbody className="divide-y divide-gray-100">
                                                 {affiliates.length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={5} className="p-8 text-center text-gray-500">
+                                                        <td colSpan={6} className="p-8 text-center text-gray-500">
                                                             No affiliate applications found.
                                                         </td>
                                                     </tr>
                                                 ) : (
                                                     affiliates.map((app) => (
-                                                        <tr key={app._id} className="hover:bg-gray-50 transition">
-                                                            <td className="p-4">
-                                                                <p className="font-bold text-gray-900">{app.name}</p>
-                                                                <p className="text-xs text-gray-500">{app.email}</p>
-                                                                <p className="text-xs text-gray-500">{app.phone}</p>
-                                                            </td>
-                                                            <td className="p-4 text-sm text-gray-700">{app.websiteOrChannel}</td>
-                                                            <td className="p-4 text-xs text-gray-600 max-w-xs truncate" title={app.strategy}>
-                                                                {app.strategy}
-                                                            </td>
-                                                            <td className="p-4">
-                                                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                                                    app.status === 'Approved'
-                                                                        ? 'bg-green-100 text-green-800'
-                                                                        : app.status === 'Rejected'
-                                                                            ? 'bg-red-100 text-red-800'
-                                                                            : 'bg-yellow-100 text-yellow-800'
-                                                                }`}>
-                                                                    {app.status}
-                                                                </span>
-                                                            </td>
-                                                            <td className="p-4 flex gap-2 justify-center">
-                                                                {app.status === 'Pending' && (
-                                                                    <>
-                                                                        <button
-                                                                            onClick={() => handleUpdateAffiliateStatus(app._id, 'Approved')}
-                                                                            className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 transition"
-                                                                        >
-                                                                            Approve
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleUpdateAffiliateStatus(app._id, 'Rejected')}
-                                                                            className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700 transition"
-                                                                        >
-                                                                            Reject
-                                                                        </button>
-                                                                    </>
-                                                                )}
-                                                                {app.status !== 'Pending' && (
-                                                                    <span className="text-xs text-gray-400 font-bold">Processed</span>
-                                                                )}
-                                                            </td>
-                                                        </tr>
+                                                        <React.Fragment key={app._id}>
+                                                            <tr 
+                                                                onClick={() => setExpandedAffiliateId(expandedAffiliateId === app._id ? null : app._id)}
+                                                                className={`hover:bg-gray-50 transition cursor-pointer ${app.isActive === false ? 'bg-red-50/50' : ''}`}
+                                                            >
+                                                                <td className="p-4">
+                                                                    <p className="font-bold text-gray-900">{app.name}</p>
+                                                                    <p className="text-xs text-gray-500">{app.email}</p>
+                                                                    <p className="text-[10px] text-[#000080] font-bold uppercase mt-1">Tap to manage ▼</p>
+                                                                </td>
+                                                                <td className="p-4 text-sm text-gray-700">{app.websiteOrChannel}</td>
+                                                                <td className="p-4 text-xs text-gray-600 max-w-xs truncate" title={app.strategy}>
+                                                                    {app.strategy}
+                                                                </td>
+                                                                <td className="p-4 text-right font-bold text-[#000080]">
+                                                                    ₦{app.commissionEarned?.toLocaleString() || 0}
+                                                                </td>
+                                                                <td className="p-4">
+                                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                                        app.status === 'Approved'
+                                                                            ? (app.isActive !== false ? 'bg-green-100 text-green-800' : 'bg-amber-100 text-amber-800')
+                                                                            : app.status === 'Rejected'
+                                                                                ? 'bg-red-100 text-red-800'
+                                                                                : 'bg-yellow-100 text-yellow-800'
+                                                                    }`}>
+                                                                        {app.status === 'Approved' && app.isActive === false ? 'Deactivated' : app.status}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="p-4 flex gap-2 justify-center" onClick={(e) => e.stopPropagation()}>
+                                                                    {app.status === 'Pending' && (
+                                                                        <>
+                                                                            <button
+                                                                                onClick={() => handleUpdateAffiliateStatus(app._id, 'Approved')}
+                                                                                className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-green-700 transition cursor-pointer"
+                                                                            >
+                                                                                Approve
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleUpdateAffiliateStatus(app._id, 'Rejected')}
+                                                                                className="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700 transition cursor-pointer"
+                                                                            >
+                                                                                Reject
+                                                                            </button>
+                                                                        </>
+                                                                    )}
+                                                                    {app.status === 'Approved' && (
+                                                                        <div className="flex flex-col gap-1 items-center">
+                                                                            <span className="text-xs text-green-700 font-black uppercase tracking-wider bg-green-50 px-2 py-0.5 rounded border border-green-100/50">Approved</span>
+                                                                            {app.commissionEarned > 0 && (
+                                                                                <button
+                                                                                    onClick={() => handleDisburseAffiliateCommission(app._id)}
+                                                                                    className="bg-[#000080] text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-blue-900 transition mt-1 cursor-pointer"
+                                                                                >
+                                                                                    💸 Payout
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                    {app.status === 'Rejected' && (
+                                                                        <span className="text-xs text-red-700 font-black uppercase tracking-wider bg-red-50 px-2 py-0.5 rounded border border-red-100/50">Rejected</span>
+                                                                    )}
+                                                                </td>
+                                                            </tr>
+                                                            {expandedAffiliateId === app._id && (
+                                                                <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
+                                                                    <td colSpan={6} className="p-6">
+                                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                                                            <div>
+                                                                                <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-1">Affiliate Profile Details</h4>
+                                                                                <p className="text-sm font-bold text-gray-900">Name: <span className="font-normal">{app.name}</span></p>
+                                                                                <p className="text-sm font-bold text-gray-900">Email: <span className="font-normal">{app.email}</span></p>
+                                                                                <p className="text-sm font-bold text-gray-900">Phone: <span className="font-normal">{app.phone}</span></p>
+                                                                                <p className="text-sm font-bold text-gray-900">Channel: <a href={app.websiteOrChannel} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline font-normal">{app.websiteOrChannel}</a></p>
+                                                                                <p className="text-sm font-bold text-gray-900 mt-2">Marketing Strategy:</p>
+                                                                                <p className="text-xs text-gray-700 bg-white p-3 rounded-lg border border-gray-200 mt-1 whitespace-pre-wrap font-medium leading-relaxed">{app.strategy}</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-1">Affiliate Account Actions</h4>
+                                                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                                                    {app.status === 'Approved' && (
+                                                                                        <button
+                                                                                            onClick={() => handleToggleAffiliateActive(app._id, app.isActive !== false)}
+                                                                                            className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer ${
+                                                                                                app.isActive !== false
+                                                                                                    ? 'bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-600 hover:text-white'
+                                                                                                    : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                                                                                            }`}
+                                                                                        >
+                                                                                            {app.isActive !== false ? 'Deactivate Affiliate' : 'Reactivate Affiliate'}
+                                                                                        </button>
+                                                                                    )}
+                                                                                    <button
+                                                                                        onClick={() => handleDeleteAffiliate(app._id)}
+                                                                                        className="bg-red-50 text-red-600 border border-red-100 px-4 py-2 rounded-xl text-xs font-black hover:bg-red-600 hover:text-white transition cursor-pointer"
+                                                                                    >
+                                                                                        Delete Application
+                                                                                    </button>
+                                                                                </div>
+                                                                                <p className="text-[10px] text-gray-400 font-medium mt-3">
+                                                                                    Status: <span className="font-bold text-gray-700">{app.status}</span> | 
+                                                                                    Account: <span className="font-bold text-gray-700">{app.isActive !== false ? 'Active' : 'Deactivated'}</span>
+                                                                                </p>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {/* Activities: Referred Bookings Ledger */}
+                                                                        <div>
+                                                                            <h4 className="text-[10px] uppercase font-bold text-gray-400 mb-2">Referred Bookings & Activities</h4>
+                                                                            {(() => {
+                                                                                const referred = allBookings.filter(b => b.referredBy && b.referredBy.toLowerCase() === app.email.toLowerCase());
+                                                                                if (referred.length === 0) {
+                                                                                    return <p className="text-xs text-gray-500 bg-white p-4 rounded-xl border border-gray-200/50">No referred bookings logged yet for this affiliate.</p>;
+                                                                                }
+                                                                                return (
+                                                                                    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                                                                                        <table className="w-full text-left text-xs border-collapse">
+                                                                                            <thead>
+                                                                                                <tr className="bg-gray-50 text-gray-400 uppercase text-[9px] tracking-wider font-bold">
+                                                                                                    <th className="p-3 border-b">Ref</th>
+                                                                                                    <th className="p-3 border-b">Client</th>
+                                                                                                    <th className="p-3 border-b">Item</th>
+                                                                                                    <th className="p-3 border-b text-right">Value</th>
+                                                                                                    <th className="p-3 border-b text-right">Commission</th>
+                                                                                                    <th className="p-3 border-b text-center">Status</th>
+                                                                                                </tr>
+                                                                                            </thead>
+                                                                                            <tbody>
+                                                                                                {referred.map(b => {
+                                                                                                    const price = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : Number(b.totalPrice) || 0;
+                                                                                                    const rate = b.itemType === 'hotel' ? 0.10 : 0.05;
+                                                                                                    const commission = Math.round(price * rate);
+                                                                                                    return (
+                                                                                                        <tr key={b._id} className="border-t border-gray-100 hover:bg-gray-50">
+                                                                                                            <td className="p-3 font-mono font-bold text-gray-400">{b._id.substring(0, 8)}</td>
+                                                                                                            <td className="p-3 font-bold text-gray-700">{b.clientName}</td>
+                                                                                                            <td className="p-3 font-medium text-gray-600">{b.itemName}</td>
+                                                                                                            <td className="p-3 text-right font-bold text-gray-700">₦{price.toLocaleString()}</td>
+                                                                                                            <td className="p-3 text-right font-black text-green-700">₦{commission.toLocaleString()}</td>
+                                                                                                            <td className="p-3 text-center">
+                                                                                                                <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
+                                                                                                                    b.status === 'Paid' || b.status === 'Paid Out' || b.status === 'Approved for Disbursement'
+                                                                                                                        ? 'bg-green-50 text-green-700'
+                                                                                                                        : 'bg-yellow-50 text-yellow-700'
+                                                                                                                }`}>{b.status}</span>
+                                                                                                            </td>
+                                                                                                        </tr>
+                                                                                                    );
+                                                                                                })}
+                                                                                            </tbody>
+                                                                                        </table>
+                                                                                    </div>
+                                                                                );
+                                                                            })()}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </React.Fragment>
                                                     ))
                                                 )}
                                             </tbody>

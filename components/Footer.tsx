@@ -128,7 +128,7 @@ export default function Footer() {
             </form>
           </div>
         </div>
-        <div className="max-w-6xl mx-auto mt-12 pt-6 border-t border-blue-900 text-center text-xs text-blue-300 font-medium">
+        <div className="max-w-6xl mx-auto mt-6 pt-4 border-t border-blue-900 text-center text-xs text-blue-300 font-medium">
           &copy; {new Date().getFullYear()} Airgo Travel & Tour Ltd (Airgo.ng). All rights reserved. Servicing the Nigerian market.
         </div>
       </footer>

@@ -11,37 +11,13 @@ import CarBookingModal from '../components/CarBookingModal';
 const FALLBACK_ROOMS = [
   {
     _id: 'airgo_room_01',
-    hotelName: 'Transcorp Hilton Abuja',
-    hotelAddress: '1 Aguiyi Ironsi St, Maitama, Abuja',
-    name: 'Presidential Suite',
-    pricePerNight: 350000,
+    hotelName: 'Sheraton Lagos Hotel',
+    hotelAddress: '30 Mobolaji Bank Anthony Way, Ikeja, Lagos',
+    name: 'Deluxe Suite',
+    pricePerNight: 120000,
     totalAllocated: 5,
-    amenities: 'Private Pool, Executive Lounge Access, City View',
-    image: 'https://images.unsplash.com/photo-1582719478250-c89404bb8a0e?auto=format&fit=crop&w=800&q=80',
-    partnerId: 'airgo_direct',
-    bookedDates: []
-  },
-  {
-    _id: 'airgo_room_02',
-    hotelName: 'The Wheatbaker Lagos',
-    hotelAddress: '4 Onitolo Rd, Ikoyi, Lagos',
-    name: 'Luxury Executive Penthouse',
-    pricePerNight: 280000,
-    totalAllocated: 3,
-    amenities: 'Spa Access, Free Wi-Fi, Chauffeur Service',
-    image: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?auto=format&fit=crop&w=800&q=80',
-    partnerId: 'airgo_direct',
-    bookedDates: []
-  },
-  {
-    _id: 'airgo_room_03',
-    hotelName: 'Fraser Suites Abuja',
-    hotelAddress: '294 Leventis Close, Central Business District, Abuja',
-    name: 'Diplomatic Studio',
-    pricePerNight: 195000,
-    totalAllocated: 8,
-    amenities: 'Kitchenette, Gym Access, Premium Security',
-    image: 'https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=800&q=80',
+    amenities: 'King Bed, Ocean View, High-speed WiFi, Minibar',
+    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4db85b?auto=format&fit=crop&w=800&q=80',
     partnerId: 'airgo_direct',
     bookedDates: []
   }
@@ -50,31 +26,17 @@ const FALLBACK_ROOMS = [
 const FALLBACK_CARS = [
   {
     _id: 'airgo_car_01',
-    name: 'Mercedes-Benz G-Wagon',
-    type: 'Luxury SUV',
-    price: 450000,
-    capacity: 4,
-    features: 'Bulletproof, Chauffeur, Leather Interior',
-    image: 'https://images.unsplash.com/photo-1520031441872-265e4ff70366?auto=format&fit=crop&w=800&q=80',
+    name: 'Mercedes-Benz G-Wagon G63',
+    type: 'SUV',
+    price: 350000,
+    capacity: 5,
+    features: 'Chauffeur Driven, V8 Biturbo, Leather Interior',
+    image: 'https://images.unsplash.com/photo-1520050206274-a1ae446cb3cc?auto=format&fit=crop&w=800&q=80',
     partnerId: 'airgo_direct',
     bookedDates: [],
     location: 'Maitama',
     state: 'Abuja',
     vehicleNumber: 'ABJ-888-GW'
-  },
-  {
-    _id: 'airgo_car_02',
-    name: 'Range Rover Autobiography',
-    type: 'Premium SUV',
-    price: 350000,
-    capacity: 5,
-    features: 'Massaging Seats, Panoramic Roof, Wi-Fi',
-    image: 'https://images.unsplash.com/photo-1606016159991-efa9f131a48c?auto=format&fit=crop&w=800&q=80',
-    partnerId: 'airgo_direct',
-    bookedDates: [],
-    location: 'Ikoyi',
-    state: 'Lagos',
-    vehicleNumber: 'LAG-123-RR'
   }
 ];
 
@@ -312,7 +274,6 @@ export default function HotelHomepage() {
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Find Your Perfect Stay</h1>
             <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto mb-8">Secure luxury hotel suites and premium executive lodgings across Nigeria with Airgo Escrow Protection.</p>
-            
             {/* TOGGLE: STAYS VS TRANSPORT */}
             <div className="flex justify-center gap-4 mb-6">
               <button 
@@ -322,7 +283,7 @@ export default function HotelHomepage() {
                 <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2L15.39 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.61 8.26L12 2Z" />
                 </svg>
-                Luxury Star
+                luxury stay
               </button>
               <button 
                 onClick={() => setActiveTab('transport')} 
@@ -355,9 +316,9 @@ export default function HotelHomepage() {
             </div>
           </div>
         </header>
-
+ 
         {/* SEARCH BOX & CALENDAR PICKER */}
-        <div className="max-w-5xl mx-auto px-4 -mt-24 relative z-20">
+        <div className="max-w-3xl mx-auto px-4 -mt-24 relative z-20">
           <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-gray-100">
             <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4">
               <div className="flex-[2]">

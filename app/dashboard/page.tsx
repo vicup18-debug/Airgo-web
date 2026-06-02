@@ -156,6 +156,36 @@ export default function ClientDashboard() {
         }
     };
 
+    const handleShareBooking = async (booking: any) => {
+        const checkInDate = booking.checkIn ? new Date(booking.checkIn).toLocaleString() : 'N/A';
+        const checkOutDate = booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A';
+        const priceNum = Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0);
+        
+        const shareText = `Airgo Car Rental Booking Details:\n---------------------------------\nVehicle: ${booking.itemName}\nPlate Number: ${booking.vehicleNumber || 'N/A'}\nClient Name: ${booking.clientName || 'N/A'}\nPickup: ${checkInDate}\nReturn: ${checkOutDate}\nStatus: ${booking.status}\nTotal Price: ₦${priceNum.toLocaleString()}\n---------------------------------\nBook securely via Airgo Escrow.`;
+        
+        const invoiceUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Airgo Booking - ${booking.itemName}`,
+                    text: shareText,
+                    url: invoiceUrl
+                });
+                toast.success("Booking details shared successfully!");
+            } catch (err) {
+                console.error("Native share failed:", err);
+            }
+        } else {
+            try {
+                await navigator.clipboard.writeText(`${shareText}\nInvoice: ${invoiceUrl}`);
+                toast.success("📋 Booking details copied to clipboard!");
+            } catch (err) {
+                toast.error("Failed to copy booking details.");
+            }
+        }
+    };
+
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
         localStorage.removeItem('airgo_user');
@@ -241,6 +271,14 @@ export default function ClientDashboard() {
                                             >
                                                 📄 Receipt/Invoice
                                             </a>
+                                            {booking.itemType === 'car' && (
+                                                <button
+                                                    onClick={() => handleShareBooking(booking)}
+                                                    className="text-xs font-bold text-green-700 hover:text-green-800 flex items-center gap-1 bg-green-50 border border-green-100 px-2.5 py-1.5 rounded-lg hover:bg-green-100 transition"
+                                                >
+                                                    🔗 Share Booking
+                                                </button>
+                                            )}
                                             {booking.status === 'Pending Escrow' && (
                                                 <>
                                                     <button 

@@ -106,12 +106,19 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             return;
         }
 
+        const storedUser = localStorage.getItem('airgo_user');
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+        if (parsedUser && parsedUser.role === 'partner') {
+            toast.error("Partners are not authorized to make bookings.");
+            return;
+        }
+
         setIsProcessing(true);
 
         try {
-            const storedUser = localStorage.getItem('airgo_user');
-            const finalUserId = storedUser ? JSON.parse(storedUser).id || JSON.parse(storedUser).userId || JSON.parse(storedUser)._id : '';
+            const finalUserId = parsedUser ? parsedUser.id || parsedUser.userId || parsedUser._id : '';
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const referredBy = localStorage.getItem('airgo_ref') || '';
 
             const payload = {
                 userId: finalUserId,
@@ -127,7 +134,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 clientName: bookingDetails.name,
                 clientEmail: bookingDetails.email,
                 clientPhone: bookingDetails.phone,
-                deliveryAddress: bookingDetails.address
+                deliveryAddress: bookingDetails.address,
+                referredBy
             };
 
             const response = await fetch(`${apiUrl}/api/bookings`, {

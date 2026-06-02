@@ -519,7 +519,7 @@ export default function PartnerDashboard() {
                                                         </div>
 
                                                         <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
-                                                            <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation</span>
+                                                            <span className="text-xs font-bold text-gray-600">{!isCarPartner ? 'Airgo Pool Allocation (Available Today)' : 'Airgo Pool Allocation'}</span>
                                                             <div className="flex items-center gap-3">
                                                                 <button 
                                                                     onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}

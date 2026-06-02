@@ -22,6 +22,13 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     const [rooms, setRooms] = useState<any[]>([]);
     const [selectedRoom, setSelectedRoom] = useState<any>(null);
     const [isLoadingRooms, setIsLoadingRooms] = useState(false);
+    
+    // Concierge third-party details for super admin bookings
+    const [clientName, setClientName] = useState('');
+    const [clientEmail, setClientEmail] = useState('');
+    const [clientPhone, setClientPhone] = useState('');
+    const [deliveryAddress, setDeliveryAddress] = useState('');
+
     const router = useRouter();
 
     // 🟢 SECURITY: Check if user is logged in
@@ -35,12 +42,20 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             fetchRooms();
             if (initialCheckIn) setCheckIn(initialCheckIn);
             if (initialCheckOut) setCheckOut(initialCheckOut);
+            setClientName('');
+            setClientEmail('');
+            setClientPhone('');
+            setDeliveryAddress('');
         } else {
             setSelectedRoom(null);
             setRooms([]);
             setCheckIn('');
             setCheckOut('');
             setGuests(1);
+            setClientName('');
+            setClientEmail('');
+            setClientPhone('');
+            setDeliveryAddress('');
         }
     }, [isOpen, hotel, initialCheckIn, initialCheckOut]);
 
@@ -87,6 +102,8 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     };
 
     const handleBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+
         // 🟢 REQUIRE LOGIN BEFORE BOOKING
         if (!user) {
             toast.success("Please sign in to secure this booking.");
@@ -94,11 +111,28 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             return;
         }
 
+        if (user.role === 'partner') {
+            toast.error("Partners are not authorized to make bookings.");
+            return;
+        }
+
+        // Validate check-in time strictly between 12:00 AM (midnight) and 12:00 PM (noon)
+        if (checkIn && checkIn.includes('T')) {
+            const timePart = checkIn.split('T')[1];
+            const hour = parseInt(timePart.split(':')[0], 10);
+            if (hour < 0 || hour > 12) {
+                toast.error("Hotel check-in time must be between 12:00 AM (midnight) and 12:00 PM (noon).");
+                return;
+            }
+        }
+
         setIsSubmitting(true);
 
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const referredBy = localStorage.getItem('airgo_ref') || '';
+            const isAdmin = user.role === 'admin';
 
             // Send the booking to your live backend
             const res = await fetch(`${apiUrl}/api/bookings`, {
@@ -117,13 +151,21 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                     checkOut,
                     guests,
                     totalPrice: calculateTotal(),
-                    status: 'Pending Escrow'
+                    status: 'Pending Escrow',
+                    clientName: isAdmin ? clientName : user.name,
+                    clientEmail: isAdmin ? clientEmail : user.email,
+                    clientPhone: isAdmin ? clientPhone : user.phoneNumber || user.phone,
+                    deliveryAddress: isAdmin ? deliveryAddress : '',
+                    referredBy
                 }),
             });
 
-            if (!res.ok) throw new Error("Booking failed to process.");
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.message || "Booking failed to process.");
+            }
 
-            toast.success("Booking Secured! Redirecting to your dashboard to complete escrow payment.");
+            toast.success("Booking Secured! Redirecting to dashboard to complete escrow payment.");
             onClose();
             router.push('/dashboard');
 
@@ -269,14 +311,38 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                 </div>
                             </div>
 
+                            {user && user.role === 'admin' && (
+                                <div className="space-y-4 mb-6 p-4 bg-yellow-50/50 border border-yellow-100 rounded-2xl animate-fade-in">
+                                    <h4 className="font-black text-[#000080] text-xs uppercase tracking-wider mb-2">Concierge: Book as Third Party</h4>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Client Full Name</label>
+                                        <input required type="text" className="w-full px-4 py-3 border rounded-xl text-gray-900 bg-white outline-none focus:border-[#000080] transition" placeholder="e.g. John Doe" value={clientName} onChange={e => setClientName(e.target.value)} />
+                                    </div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Client Email Address</label>
+                                            <input required type="email" className="w-full px-4 py-3 border rounded-xl text-gray-900 bg-white outline-none focus:border-[#000080] transition" placeholder="client@example.com" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Client Phone Number</label>
+                                            <input required type="tel" className="w-full px-4 py-3 border rounded-xl text-gray-900 bg-white outline-none focus:border-[#000080] transition" placeholder="e.g. +234..." value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stay / Location Address</label>
+                                        <input required type="text" className="w-full px-4 py-3 border rounded-xl text-gray-900 bg-white outline-none focus:border-[#000080] transition" placeholder="Stay destination/delivery address" value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)} />
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-in</label>
-                                    <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-in Date & Time</label>
+                                    <input required type="datetime-local" min={new Date().toISOString().slice(0, 16)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-out</label>
-                                    <input required type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-out Date & Time</label>
+                                    <input required type="datetime-local" min={checkIn || new Date().toISOString().slice(0, 16)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
                                 </div>
                             </div>
 
