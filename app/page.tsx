@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HotelBookingModal from './hotels/bookings-modal';
+import CarBookingModal from '../components/CarBookingModal';
 
 // 🟢 PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
 const FALLBACK_ROOMS = [
@@ -543,80 +544,13 @@ export default function HotelHomepage() {
       )}
 
       {selectedItem && activeTab === 'transport' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-          <div className="bg-white rounded-[2.5rem] w-full max-w-xl shadow-2xl overflow-hidden my-auto border border-gray-100 transform transition-all animate-scale-in max-h-[90vh] flex flex-col">
-            <div className="bg-gradient-to-r from-[#000080] to-[#000060] p-8 text-white relative overflow-hidden shrink-0">
-               <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
-              <div className="relative z-10 pr-8">
-                <p className="text-xs font-bold text-blue-300 uppercase tracking-widest mb-2">{`${selectedItem.type} Vehicle`}</p>
-                <h2 className="text-3xl font-black leading-tight">{selectedItem.name}</h2>
-              </div>
-              <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xl font-bold transition-all z-20">✕</button>
-            </div>
-
-            <div className="overflow-y-auto flex-1">
-              <div className="p-8 bg-gray-50/50 border-b border-gray-100">
-                <div className="flex justify-between items-center mb-6">
-                   <div className="flex flex-col">
-                     <span className="text-[10px] uppercase font-black text-gray-400 mb-1">Pickup Date</span>
-                     <span className="text-sm font-bold text-gray-900">{new Date(checkIn).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                   </div>
-                   <div className="h-px bg-gray-300 w-12 flex-1 mx-4"></div>
-                   <div className="flex flex-col text-right">
-                     <span className="text-[10px] uppercase font-black text-gray-400 mb-1">Return Date</span>
-                     <span className="text-sm font-bold text-gray-900">{new Date(checkOut).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                   </div>
-                </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-gray-100 flex justify-between items-center shadow-sm">
-                  <span className="text-xs uppercase font-black text-gray-500 tracking-wider">Total Escrow Hold</span>
-                  <div className="flex flex-col items-end">
-                    {selectedItem.discountPercentage > 0 && (
-                      <span className="text-xs text-gray-400 line-through font-bold mb-0.5">
-                        ₦{calculateTotal(selectedItem.price, 0).toLocaleString()}
-                      </span>
-                    )}
-                    <span className="text-3xl font-black text-[#000080]">
-                      ₦{calculateTotal(selectedItem.price, selectedItem.discountPercentage).toLocaleString()}
-                    </span>
-                    {selectedItem.discountPercentage > 0 && (
-                      <span className="text-[10px] text-red-600 font-bold uppercase mt-1">🔥 {selectedItem.discountPercentage}% OFF APPLIED</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <form onSubmit={handleConfirmBooking} className="p-8 space-y-5">
-                {!user && <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-2xl text-sm font-bold mb-6 flex items-start gap-3">
-                   <span className="text-xl">⚠️</span>
-                   <p>Please log in to your Airgo account to secure this escrow reservation.</p>
-                </div>}
-
-                <div><label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Primary Guest Name</label><input required type="text" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] focus:ring-4 focus:ring-[#000080]/10 outline-none transition-all font-medium" value={clientData.name} onChange={(e) => setClientData({ ...clientData, name: e.target.value })} /></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div><label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Email Address</label><input required type="email" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] focus:ring-4 focus:ring-[#000080]/10 outline-none transition-all font-medium" value={clientData.email} onChange={(e) => setClientData({ ...clientData, email: e.target.value })} /></div>
-                  <div><label className="block text-xs font-black text-gray-600 uppercase tracking-wider mb-2">Phone Number</label><input required type="tel" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] focus:ring-4 focus:ring-[#000080]/10 outline-none transition-all font-medium" value={clientData.phone} onChange={(e) => setClientData({ ...clientData, phone: e.target.value })} /></div>
-                </div>
-
-                <div className="flex items-start gap-3 mt-6 bg-blue-50/50 p-4 rounded-2xl border border-blue-100">
-                  <span className="text-xl mt-0.5">🛡️</span>
-                  <p className="text-[11px] text-gray-600 font-medium leading-relaxed">
-                    By confirming, your funds are encrypted and held securely in the <strong className="text-[#000080]">Airgo Escrow framework</strong>. The partner is only paid upon successful completion of your service.
-                  </p>
-                </div>
-
-                <button disabled={isBooking || !user} type="submit" className={`w-full py-3.5 md:py-4 rounded-2xl shadow-xl text-xs sm:text-sm md:text-base font-black transition-all duration-300 mt-4 ${(isBooking || !user) ? 'bg-gray-200 text-gray-400 cursor-not-allowed shadow-none' : 'bg-[#FFB81C] text-[#000080] hover:bg-[#e5a519] hover:shadow-[0_10px_25px_rgba(255,184,28,0.4)] hover:-translate-y-1'}`}>
-                  {isBooking ? (
-                     <span className="flex items-center justify-center gap-2">
-                       <svg className="animate-spin h-5 w-5 text-[#000080]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                       Locking Inventory...
-                     </span>
-                  ) : 'Confirm Reservation'}
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
+        <CarBookingModal
+          isOpen={!!selectedItem}
+          onClose={() => setSelectedItem(null)}
+          car={selectedItem}
+          initialCheckIn={checkIn}
+          initialCheckOut={checkOut}
+        />
       )}
     </div>
   );
