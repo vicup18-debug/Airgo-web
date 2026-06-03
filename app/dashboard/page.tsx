@@ -218,14 +218,21 @@ export default function ClientDashboard() {
                         <div className="text-gray-500 animate-pulse font-bold">Loading your itinerary...</div>
                     ) : myBookings.length === 0 ? (
                         <div className="bg-white p-8 md:p-12 rounded-3xl border border-gray-200 text-center shadow-sm">
-                            <div className="text-5xl mb-4">🛣️</div>
+                            <div className="text-5xl mb-4">🏨</div>
                             <h3 className="text-xl font-bold text-gray-800">No Active Bookings</h3>
-                            <p className="text-gray-500 mb-6">Ready for your next executive trip?</p>
-                            <Link href="/cars">
-                                <button className="bg-[#004A99] text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-blue-800 transition">
-                                    Browse Fleet
-                                </button>
-                            </Link>
+                            <p className="text-gray-500 mb-6">Ready for your next luxury stay or executive trip?</p>
+                            <div className="flex flex-wrap justify-center gap-4">
+                                <Link href="/hotels">
+                                    <button className="bg-[#000080] text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-blue-900 transition">
+                                        Browse Hotels
+                                    </button>
+                                </Link>
+                                <Link href="/cars">
+                                    <button className="bg-white text-[#000080] border border-[#000080] px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition">
+                                        Browse Fleet
+                                    </button>
+                                </Link>
+                            </div>
                         </div>
                     ) : (
                         <div className="space-y-4">
