@@ -217,7 +217,7 @@ export default function JoinPartnerPage() {
                                     <>
                                         <div>
                                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Registration or Tax/ID Number *</label>
-                                            <input required type="text" pattern="^(RC|BN|rc|bn)?\d{4,8}$" title="Enter a valid registration number (e.g. RC123456)" placeholder="e.g. RC123456 or BN123456" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
+                                            <input required type="text" pattern="^(RC|BN|rc|bn)\d{7}$" title="Enter a valid registration number (e.g. RC1234567)" placeholder="e.g. RC1234567 or BN1234567" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none uppercase" value={formData.cacNumber} onChange={(e) => setFormData({ ...formData, cacNumber: e.target.value })} />
                                         </div>
                                         <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                                             <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload CAC / Ownership Document *</label>
