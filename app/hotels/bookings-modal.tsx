@@ -327,12 +327,12 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
 
                             <div className="grid grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-in Date & Time</label>
-                                    <input required type="datetime-local" min={new Date().toISOString().slice(0, 16)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-in Date</label>
+                                    <input required type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkIn ? checkIn.split('T')[0] : ''} onChange={(e) => setCheckIn(e.target.value)} />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-out Date & Time</label>
-                                    <input required type="datetime-local" min={checkIn || new Date().toISOString().slice(0, 16)} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check-out Date</label>
+                                    <input required type="date" min={checkIn ? checkIn.split('T')[0] : new Date().toISOString().split('T')[0]} className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-[#000080] outline-none text-gray-900" value={checkOut ? checkOut.split('T')[0] : ''} onChange={(e) => setCheckOut(e.target.value)} />
                                 </div>
                             </div>
 
