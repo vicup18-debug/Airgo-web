@@ -625,7 +625,7 @@ export default function PartnerDashboard() {
                                                         {expandedBookingId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Info</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 12).toUpperCase()}</p>
@@ -633,6 +633,12 @@ export default function PartnerDashboard() {
                                                                             {booking.itemType === 'car' && booking.vehicleNumber && (
                                                                                 <p className="text-xs text-green-700 font-bold mt-1 uppercase">Plate: {booking.vehicleNumber}</p>
                                                                             )}
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Guest Details</p>
+                                                                            <p className="text-xs font-black text-gray-900">Name: {booking.clientName || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 font-bold mt-1">Email: {booking.clientEmail || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 font-bold mt-1">Phone: {booking.clientPhone || 'N/A'}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
