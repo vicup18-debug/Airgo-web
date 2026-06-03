@@ -68,7 +68,7 @@ export default function JoinPartnerPage() {
                 ...formData,
                 email: formData.email.toLowerCase(), // 🟢 SMART UPGRADE: Force email to lowercase for DB consistency
                 role: 'partner',
-                cacCertificateUrl: formData.partnerType === 'hotel' ? finalFileUrl : '',
+                cacCertificateUrl: (formData.partnerType === 'hotel' || formData.partnerType === 'apartment') ? finalFileUrl : '',
                 driversLicenseUrl: formData.partnerType === 'car' ? finalFileUrl : '',
             };
 
