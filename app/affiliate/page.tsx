@@ -180,7 +180,7 @@ export default function AffiliatePage() {
             const price = typeof b.totalPrice === 'string'
                 ? parseInt(b.totalPrice.replace(/[^0-9]/g, ''))
                 : Number(b.totalPrice) || 0;
-            const rate = b.itemType === 'hotel' ? 0.10 : 0.05;
+            const rate = 0.05;
             const commission = Math.round(price * rate);
             
             if (b.status === 'Paid' || b.status === 'Paid Out' || b.status === 'Approved for Disbursement') {
@@ -246,7 +246,7 @@ export default function AffiliatePage() {
                                 <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl">💰</div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">High Commission</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">
-                                    Earn up to 10% commission on every validated hotel booking and 5% on executive car fleet checkouts.
+                                    Earn up to 5% commission on every validated hotel booking and 5% on executive car fleet checkouts.
                                 </p>
                             </div>
 
@@ -532,7 +532,7 @@ export default function AffiliatePage() {
                                                 const price = typeof b.totalPrice === 'string'
                                                     ? parseInt(b.totalPrice.replace(/[^0-9]/g, ''))
                                                     : Number(b.totalPrice) || 0;
-                                                const rate = b.itemType === 'hotel' ? 0.10 : 0.05;
+                                                const rate = 0.05;
                                                 const commission = Math.round(price * rate);
 
                                                 return (

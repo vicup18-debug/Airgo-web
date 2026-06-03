@@ -1068,7 +1068,7 @@ export default function SuperadminDashboard() {
                                                                                             <tbody>
                                                                                                 {referred.map(b => {
                                                                                                     const price = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : Number(b.totalPrice) || 0;
-                                                                                                    const rate = b.itemType === 'hotel' ? 0.10 : 0.05;
+                                                                                                    const rate = 0.05;
                                                                                                     const commission = Math.round(price * rate);
                                                                                                     return (
                                                                                                         <tr key={b._id} className="border-t border-gray-100 hover:bg-gray-50">
