@@ -222,7 +222,7 @@ export default function ClientDashboard() {
                             <h3 className="text-xl font-bold text-gray-800">No Active Bookings</h3>
                             <p className="text-gray-500 mb-6">Ready for your next luxury stay or executive trip?</p>
                             <div className="flex flex-wrap justify-center gap-4">
-                                <Link href="/hotels">
+                                <Link href="/">
                                     <button className="bg-[#000080] text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-blue-900 transition">
                                         Browse Hotels
                                     </button>
