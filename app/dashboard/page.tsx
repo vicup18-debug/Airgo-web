@@ -36,6 +36,13 @@ export default function ClientDashboard() {
                     'Authorization': `Bearer ${token}`
                 }
             });
+            if (res.status === 401) {
+                localStorage.removeItem('airgo_token');
+                localStorage.removeItem('airgo_user');
+                router.push('/login');
+                toast.error("Session expired. Please sign in again.");
+                return;
+            }
             if (res.ok) {
                 const allBookings = await res.json();
 
