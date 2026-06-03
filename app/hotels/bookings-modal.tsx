@@ -116,16 +116,6 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             return;
         }
 
-        // Validate check-in time strictly between 12:00 AM (midnight) and 12:00 PM (noon)
-        if (checkIn && checkIn.includes('T')) {
-            const timePart = checkIn.split('T')[1];
-            const hour = parseInt(timePart.split(':')[0], 10);
-            if (hour < 0 || hour > 12) {
-                toast.error("Hotel check-in time must be between 12:00 AM (midnight) and 12:00 PM (noon).");
-                return;
-            }
-        }
-
         setIsSubmitting(true);
 
         try {
@@ -147,8 +137,8 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                     itemName: `${hotel.name} - ${selectedRoom.name}`,
                     itemType: 'hotel',
                     partnerId: hotel.partnerId || 'airgo_direct',
-                    checkIn,
-                    checkOut,
+                    checkIn: checkIn ? `${checkIn.split('T')[0]}T12:00` : '',
+                    checkOut: checkOut ? `${checkOut.split('T')[0]}T12:00` : '',
                     guests,
                     totalPrice: calculateTotal(),
                     status: 'Pending Escrow',
