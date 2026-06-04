@@ -22,8 +22,30 @@ const AMENITIES_LIST = [
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // BOOKINGS TAB SEARCH & FILTERS
+    const [bookingSearchQuery, setBookingSearchQuery] = useState('');
+    const [bookingStatusFilter, setBookingStatusFilter] = useState<'All' | 'Pending Escrow' | 'Paid' | 'Approved for Disbursement' | 'Paid Out'>('All');
+
+    // CONCIERGE BOOKING CREATION STATE
+    const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
+    const [newBookingData, setNewBookingData] = useState({
+        clientName: '',
+        clientEmail: '',
+        clientPhone: '',
+        itemType: 'hotel' as 'hotel' | 'car',
+        itemId: '',
+        itemName: '',
+        partnerId: '',
+        checkIn: '',
+        checkOut: '',
+        guests: 1,
+        deliveryAddress: '',
+        totalPrice: '',
+        status: 'Pending Escrow'
+    });
 
     // ALL SYSTEM DATA STATES
     const [allBookings, setAllBookings] = useState<any[]>([]);
@@ -323,6 +345,94 @@ export default function SuperadminDashboard() {
         }
     };
 
+    const handleItemSelection = (itemId: string, type: 'hotel' | 'car') => {
+        if (type === 'hotel') {
+            const room = rooms.find(r => r._id === itemId);
+            if (room) {
+                setNewBookingData(prev => ({
+                    ...prev,
+                    itemId: room._id,
+                    itemName: `${room.hotelName} - ${room.name}`,
+                    partnerId: room.partnerId || 'airgo_direct',
+                    deliveryAddress: room.hotelAddress || ''
+                }));
+            }
+        } else {
+            const car = cars.find(c => c._id === itemId);
+            if (car) {
+                setNewBookingData(prev => ({
+                    ...prev,
+                    itemId: car._id,
+                    itemName: car.name,
+                    partnerId: car.partnerId || 'airgo_direct',
+                    deliveryAddress: car.location || ''
+                }));
+            }
+        }
+    };
+
+    const handleCreateBooking = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newBookingData.clientEmail || !newBookingData.itemId) {
+            toast.error("Please fill in all required fields.");
+            return;
+        }
+        setIsUploading(true);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    clientName: newBookingData.clientName,
+                    clientEmail: newBookingData.clientEmail,
+                    clientPhone: newBookingData.clientPhone,
+                    itemType: newBookingData.itemType,
+                    itemId: newBookingData.itemId,
+                    itemName: newBookingData.itemName,
+                    partnerId: newBookingData.partnerId,
+                    checkIn: newBookingData.checkIn,
+                    checkOut: newBookingData.checkOut,
+                    guests: Number(newBookingData.guests),
+                    deliveryAddress: newBookingData.deliveryAddress,
+                    totalPrice: newBookingData.totalPrice || '0',
+                    status: newBookingData.status
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Booking created successfully!");
+                setIsNewBookingModalOpen(false);
+                setNewBookingData({
+                    clientName: '',
+                    clientEmail: '',
+                    clientPhone: '',
+                    itemType: 'hotel',
+                    itemId: '',
+                    itemName: '',
+                    partnerId: '',
+                    checkIn: '',
+                    checkOut: '',
+                    guests: 1,
+                    deliveryAddress: '',
+                    totalPrice: '',
+                    status: 'Pending Escrow'
+                });
+                fetchAllSystemData();
+            } else {
+                toast.error(data.message || "Failed to create booking.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
     const handleUpdateAffiliateStatus = async (id: string, status: 'Approved' | 'Rejected') => {
         if (!window.confirm(`Are you sure you want to update this affiliate's status to ${status}?`)) return;
         try {
@@ -568,6 +678,7 @@ export default function SuperadminDashboard() {
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'overview' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>📊 Global Overview</button>
+                    <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'bookings' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>📅 Bookings Manager</button>
                     <button onClick={() => { setActiveTab('escrow'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'escrow' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>💰 Escrow Ledger</button>
                     <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'approvals' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🛡️ Partner Approvals</button>
                     <div className="my-2 border-b border-gray-800"></div>
@@ -583,7 +694,13 @@ export default function SuperadminDashboard() {
             {/* MAIN CONTENT */}
             <main className="flex-1 flex flex-col h-screen overflow-y-auto relative w-full bg-gray-100">
                 <header className="bg-white px-6 md:px-8 py-5 flex justify-between items-center border-b border-gray-200 sticky top-0 z-10 hidden md:flex">
-                    <h1 className="text-2xl font-black text-gray-900 capitalize">{activeTab === 'rooms' ? 'Room Matrix' : activeTab === 'affiliates' ? 'Affiliates Hub' : activeTab}</h1>
+                    <h1 className="text-2xl font-black text-gray-900 capitalize">
+                        {activeTab === 'rooms' ? 'Room Matrix' 
+                            : activeTab === 'affiliates' ? 'Affiliates Hub' 
+                            : activeTab === 'bookings' ? 'Bookings Manager' 
+                            : activeTab === 'escrow' ? 'Escrow Ledger' 
+                            : activeTab}
+                    </h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Superadmin</span>
                         <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-black shadow-inner">{user.name.charAt(0)}</div>
@@ -617,6 +734,186 @@ export default function SuperadminDashboard() {
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Active Hotels</p>
                                         <p className="text-4xl font-black text-[#000080]">{activeHotelsCount}</p>
                                         <p className="text-xs text-gray-400 mt-2 font-bold">Unique properties in grid</p>
+                                    </div>
+                                </div>
+                                            )}
+
+                            {/* BOOKINGS TAB */}
+                            {activeTab === 'bookings' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                                        <div>
+                                            <h2 className="text-lg font-black text-gray-900">All System Bookings</h2>
+                                            <p className="text-xs text-gray-500 mt-1">Manage and audit all reservations across the Airgo system</p>
+                                        </div>
+                                        <button 
+                                            onClick={() => setIsNewBookingModalOpen(true)}
+                                            className="bg-[#000080] hover:bg-blue-900 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-md transition-all hover:scale-105"
+                                        >
+                                            ➕ Create Concierge Booking
+                                        </button>
+                                    </div>
+
+                                    {/* 🔍 SEARCH AND FILTERS */}
+                                    <div className="p-4 border-b border-gray-100 bg-white flex flex-col md:flex-row gap-4 items-center justify-between">
+                                        <div className="relative w-full md:max-w-md">
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search bookings by client name, email, phone, asset..." 
+                                                className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 outline-none focus:border-[#000080] focus:bg-white transition-all"
+                                                value={bookingSearchQuery}
+                                                onChange={(e) => setBookingSearchQuery(e.target.value)}
+                                            />
+                                            <span className="absolute left-3.5 top-3 text-gray-400 text-sm">🔍</span>
+                                        </div>
+                                        <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                                            {(['All', 'Pending Escrow', 'Paid', 'Approved for Disbursement', 'Paid Out'] as const).map((filter) => (
+                                                <button
+                                                    key={filter}
+                                                    onClick={() => setBookingStatusFilter(filter)}
+                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${bookingStatusFilter === filter ? 'bg-[#000080] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                                                >
+                                                    {filter}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-left border-collapse">
+                                            <thead>
+                                                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wider">
+                                                    <th className="p-4 font-bold border-b">Booking Ref / Asset</th>
+                                                    <th className="p-4 font-bold border-b">Client Info</th>
+                                                    <th className="p-4 font-bold border-b">Timeframe</th>
+                                                    <th className="p-4 font-bold border-b">Status</th>
+                                                    <th className="p-4 font-bold border-b text-right">Price</th>
+                                                    <th className="p-4 font-bold border-b text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100">
+                                                {allBookings
+                                                    .filter(b => {
+                                                        if (bookingStatusFilter === 'All') return true;
+                                                        return b.status === bookingStatusFilter;
+                                                    })
+                                                    .filter(b => {
+                                                        if (!bookingSearchQuery) return true;
+                                                        const q = bookingSearchQuery.toLowerCase();
+                                                        return (
+                                                             (b.clientName && b.clientName.toLowerCase().includes(q)) ||
+                                                             (b.clientEmail && b.clientEmail.toLowerCase().includes(q)) ||
+                                                             (b.clientPhone && b.clientPhone.toLowerCase().includes(q)) ||
+                                                             (b.itemName && b.itemName.toLowerCase().includes(q)) ||
+                                                             (b._id && b._id.toLowerCase().includes(q))
+                                                        );
+                                                    }).length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan={6} className="p-12 text-center text-gray-500 bg-white">
+                                                            <div className="text-4xl mb-2">📅</div>
+                                                            <p className="font-bold">No bookings found matching filter criteria.</p>
+                                                        </td>
+                                                    </tr>
+                                                ) : allBookings
+                                                    .filter(b => {
+                                                        if (bookingStatusFilter === 'All') return true;
+                                                        return b.status === bookingStatusFilter;
+                                                    })
+                                                    .filter(b => {
+                                                        if (!bookingSearchQuery) return true;
+                                                        const q = bookingSearchQuery.toLowerCase();
+                                                        return (
+                                                             (b.clientName && b.clientName.toLowerCase().includes(q)) ||
+                                                             (b.clientEmail && b.clientEmail.toLowerCase().includes(q)) ||
+                                                             (b.clientPhone && b.clientPhone.toLowerCase().includes(q)) ||
+                                                             (b.itemName && b.itemName.toLowerCase().includes(q)) ||
+                                                             (b._id && b._id.toLowerCase().includes(q))
+                                                        );
+                                                    }).map((booking) => (
+                                                    <React.Fragment key={booking._id}>
+                                                        <tr onClick={() => toggleEscrowExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
+                                                            <td className="p-4">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="text-sm font-black text-gray-900 pr-1">{booking.itemName}</span>
+                                                                    <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${booking.itemType === 'hotel' ? 'bg-amber-100 text-amber-800' : 'bg-purple-100 text-purple-800'}`}>{booking.itemType}</span>
+                                                                </div>
+                                                                <p className="text-[10px] text-gray-400 mt-1 font-bold">Ref: {booking._id.substring(0, 10).toUpperCase()}</p>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <p className="text-sm font-bold text-gray-900">{booking.clientName || 'Guest'}</p>
+                                                                <p className="text-xs text-gray-500">{booking.clientEmail || 'No email'}</p>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <p className="text-xs text-green-700 font-bold">Check-in: {new Date(booking.checkIn).toLocaleString()}</p>
+                                                                <p className="text-xs text-red-700 mt-0.5 font-bold">Check-out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                                                    booking.status === 'Pending Escrow' 
+                                                                        ? 'bg-yellow-100 text-yellow-800' 
+                                                                        : booking.status === 'Approved for Disbursement'
+                                                                            ? 'bg-blue-100 text-blue-800'
+                                                                            : booking.status === 'Paid'
+                                                                                ? 'bg-green-100 text-green-800'
+                                                                                : 'bg-emerald-100 text-emerald-800'
+                                                                }`}>
+                                                                    {booking.status}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
+                                                            <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                                                                <div className="flex items-center justify-center gap-2">
+                                                                    <button onClick={() => handleEditBookingClick(booking)} className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-600 hover:text-white transition">Correct Details</button>
+                                                                    <button onClick={() => handleDeleteBooking(booking._id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition">Delete</button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {expandedEscrowId === booking._id && (
+                                                            <tr className="bg-gray-50 border-b border-gray-200">
+                                                                <td colSpan={6} className="p-6">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Detailed Client Info</p>
+                                                                            <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email provided'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Delivery Address</p>
+                                                                            <p className="text-xs font-bold text-gray-700 leading-relaxed pr-4">
+                                                                                {booking.deliveryAddress || 'No address provided'}
+                                                                            </p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Details & Partners</p>
+                                                                            <p className="text-xs font-black text-gray-900 mb-1">Asset ID: {booking.itemId || 'N/A'}</p>
+                                                                            <p className="text-[10px] font-bold text-gray-500 uppercase">Partner ID: {booking.partnerId || 'N/A'}</p>
+                                                                            {booking.itemType === 'car' && booking.vehicleNumber && (
+                                                                                <p className="text-[10px] font-bold text-green-700 uppercase">Plate: {booking.vehicleNumber}</p>
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex flex-col gap-2 justify-center">
+                                                                            {booking.status === 'Pending Escrow' ? (
+                                                                                <span className="text-xs text-center font-bold text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg p-2">Pending Escrow Receipt Locked</span>
+                                                                            ) : (
+                                                                                <a 
+                                                                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
+                                                                                    target="_blank" 
+                                                                                    rel="noreferrer"
+                                                                                    className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 text-center transition"
+                                                                                >
+                                                                                    📄 Get Invoice Receipt PDF
+                                                                                </a>
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
+                                                ))}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             )}
@@ -1380,6 +1677,118 @@ export default function SuperadminDashboard() {
                                 <button type="button" onClick={() => { setIsEditBookingModalOpen(false); setSelectedBookingForEdit(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
                                 <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#000080] hover:bg-blue-900 transition">
                                     {isUploading ? 'Saving...' : 'Apply Modifications'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* CONCIERGE BOOKING CREATION MODAL */}
+            {isNewBookingModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col animate-fade-in">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#000080]">Create New Concierge Booking</h2>
+                            <button onClick={() => setIsNewBookingModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+                        </div>
+                        <form onSubmit={handleCreateBooking} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Name</label>
+                                    <input required type="text" placeholder="e.g. John Doe" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientName} onChange={e => setNewBookingData({ ...newBookingData, clientName: e.target.value })} />
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Email (Used to assign account)</label>
+                                    <input required type="email" placeholder="e.g. john@example.com" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientEmail} onChange={e => setNewBookingData({ ...newBookingData, clientEmail: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Phone</label>
+                                    <input required type="text" placeholder="e.g. +2348012345678" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientPhone} onChange={e => setNewBookingData({ ...newBookingData, clientPhone: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
+                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.guests} onChange={e => setNewBookingData({ ...newBookingData, guests: Math.max(1, Number(e.target.value) || 1) })} />
+                                </div>
+                                
+                                <div className="col-span-2 border-t border-gray-100 pt-4"></div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Asset Category</label>
+                                    <select 
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                        value={newBookingData.itemType}
+                                        onChange={e => {
+                                            const type = e.target.value as 'hotel' | 'car';
+                                            setNewBookingData({ 
+                                                ...newBookingData, 
+                                                itemType: type,
+                                                itemId: '',
+                                                itemName: '',
+                                                partnerId: '',
+                                                deliveryAddress: ''
+                                            });
+                                        }}
+                                    >
+                                        <option value="hotel">🏨 Hotel Stay</option>
+                                        <option value="car">🚘 Car Rental</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Select Asset *</label>
+                                    <select 
+                                        required
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                        value={newBookingData.itemId}
+                                        onChange={e => handleItemSelection(e.target.value, newBookingData.itemType)}
+                                    >
+                                        <option value="">-- Choose Asset --</option>
+                                        {newBookingData.itemType === 'hotel' ? (
+                                            rooms.map(room => (
+                                                <option key={room._id} value={room._id}>{room.hotelName} - {room.name} (₦{(room.pricePerNight || 0).toLocaleString()})</option>
+                                            ))
+                                        ) : (
+                                            cars.map(car => (
+                                                <option key={car._id} value={car._id}>{car.name} (₦{(car.price || 0).toLocaleString()})</option>
+                                            ))
+                                        )}
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Start Date / Check-In</label>
+                                    <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.checkIn} onChange={e => setNewBookingData({ ...newBookingData, checkIn: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">End Date / Check-Out</label>
+                                    <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.checkOut} onChange={e => setNewBookingData({ ...newBookingData, checkOut: e.target.value })} />
+                                </div>
+
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Delivery / Hotel Location Address</label>
+                                    <input required type="text" placeholder="Hotel address or delivery location" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.deliveryAddress} onChange={e => setNewBookingData({ ...newBookingData, deliveryAddress: e.target.value })} />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Price (₦) [Optional Override]</label>
+                                    <input type="text" placeholder="e.g. 150000 (leaves blank to use default rate)" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.totalPrice} onChange={e => setNewBookingData({ ...newBookingData, totalPrice: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Initial Booking Status</label>
+                                    <select 
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                        value={newBookingData.status}
+                                        onChange={e => setNewBookingData({ ...newBookingData, status: e.target.value })}
+                                    >
+                                        <option value="Pending Escrow">Pending Escrow</option>
+                                        <option value="Paid">Paid (Secured in Escrow)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
+                                <button type="button" onClick={() => setIsNewBookingModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
+                                <button disabled={isUploading} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#000080] hover:bg-blue-900 transition">
+                                    {isUploading ? 'Creating...' : 'Confirm Concierge Booking'}
                                 </button>
                             </div>
                         </form>
