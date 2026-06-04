@@ -50,6 +50,8 @@ export default function LoginPage() {
                 id: data.userId,
                 name: data.name,
                 email: data.email,
+                phone: data.phone || data.phoneNumber || '',
+                phoneNumber: data.phoneNumber || data.phone || '',
                 role: data.role,
                 isApproved: data.isApproved, // Needed for partner dashboard routing
                 partnerType: data.partnerType
@@ -89,6 +91,8 @@ export default function LoginPage() {
                 id: data.userId,
                 name: data.name,
                 email: data.email,
+                phone: data.phone || data.phoneNumber || '',
+                phoneNumber: data.phoneNumber || data.phone || '',
                 role: data.role,
                 isApproved: data.isApproved
             }));

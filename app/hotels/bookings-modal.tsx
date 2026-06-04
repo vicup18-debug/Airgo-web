@@ -28,8 +28,10 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     const [clientEmail, setClientEmail] = useState('');
     const [clientPhone, setClientPhone] = useState('');
     const [deliveryAddress, setDeliveryAddress] = useState('');
+    const [contactPhone, setContactPhone] = useState('');
 
     const router = useRouter();
+    const isAdmin = user?.role === 'admin';
 
     // 🟢 SECURITY: Check if user is logged in
     useEffect(() => {
@@ -46,6 +48,10 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             setClientEmail('');
             setClientPhone('');
             setDeliveryAddress('');
+            if (userData) {
+                const parsedUser = JSON.parse(userData);
+                setContactPhone(parsedUser.phoneNumber || parsedUser.phone || '');
+            }
         } else {
             setSelectedRoom(null);
             setRooms([]);
@@ -56,6 +62,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             setClientEmail('');
             setClientPhone('');
             setDeliveryAddress('');
+            setContactPhone('');
         }
     }, [isOpen, hotel, initialCheckIn, initialCheckOut]);
 
@@ -122,7 +129,6 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const referredBy = localStorage.getItem('airgo_ref') || '';
-            const isAdmin = user.role === 'admin';
 
             // Send the booking to your live backend
             const res = await fetch(`${apiUrl}/api/bookings`, {
@@ -144,7 +150,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                     status: 'Pending Escrow',
                     clientName: isAdmin ? clientName : user.name,
                     clientEmail: isAdmin ? clientEmail : user.email,
-                    clientPhone: isAdmin ? clientPhone : user.phoneNumber || user.phone,
+                    clientPhone: isAdmin ? clientPhone : contactPhone || user.phoneNumber || user.phone || '',
                     deliveryAddress: isAdmin ? deliveryAddress : '',
                     referredBy
                 }),
@@ -322,6 +328,13 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stay / Location Address</label>
                                         <input required type="text" className="w-full px-4 py-3 border rounded-xl text-gray-900 bg-white outline-none focus:border-[#000080] transition" placeholder="Stay destination/delivery address" value={deliveryAddress} onChange={e => setDeliveryAddress(e.target.value)} />
                                     </div>
+                                </div>
+                            )}
+                            
+                            {!isAdmin && (
+                                <div className="mb-4">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Phone Number</label>
+                                    <input required type="tel" className="w-full px-4 py-3 border rounded-xl text-gray-900 bg-white outline-none focus:border-[#000080] transition" placeholder="e.g. +234..." value={contactPhone} onChange={e => setContactPhone(e.target.value)} />
                                 </div>
                             )}
 
