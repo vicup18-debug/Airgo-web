@@ -277,14 +277,24 @@ export default function ClientDashboard() {
                                         </span>
                                         
                                         <div className="flex flex-wrap gap-2 mt-2">
-                                            <a
-                                                href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-xs font-bold text-[#004A99] hover:underline flex items-center gap-1 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"
-                                            >
-                                                📄 Receipt/Invoice
-                                            </a>
+                                            {booking.status === 'Pending Escrow' ? (
+                                                <button
+                                                    disabled
+                                                    title="Available after payment confirmation"
+                                                    className="text-xs font-bold text-gray-400 flex items-center gap-1 bg-gray-100 px-2.5 py-1.5 rounded-lg border border-gray-200 cursor-not-allowed opacity-60"
+                                                >
+                                                    📄 Receipt/Invoice (Locked)
+                                                </button>
+                                            ) : (
+                                                <a
+                                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="text-xs font-bold text-[#004A99] hover:underline flex items-center gap-1 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"
+                                                >
+                                                    📄 Receipt/Invoice
+                                                </a>
+                                            )}
                                             {booking.itemType === 'car' && (
                                                 <button
                                                     onClick={() => handleShareBooking(booking)}

@@ -498,7 +498,7 @@ export default function SuperadminDashboard() {
     };
 
     const calculateTotalEscrow = () => {
-        return allBookings.filter(b => b.status === 'Pending Escrow').reduce((sum, b) => {
+        return allBookings.filter(b => ['Paid', 'Approved for Disbursement'].includes(b.status)).reduce((sum, b) => {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
             return sum + (num || 0);
         }, 0).toLocaleString();
@@ -658,7 +658,7 @@ export default function SuperadminDashboard() {
                                                             </td>
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
-                                                                {booking.status === 'Pending Escrow' && (
+                                                                {booking.status === 'Paid' && (
                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
                                                                 )}
                                                                 {booking.status === 'Approved for Disbursement' && (
@@ -704,15 +704,25 @@ export default function SuperadminDashboard() {
                                                                             >
                                                                                 ✏️ Correct Details
                                                                             </button>
-                                                                            <a 
-                                                                                href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
-                                                                                target="_blank" 
-                                                                                rel="noreferrer"
-                                                                                onClick={(e) => e.stopPropagation()}
-                                                                                className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center animate-fade-in"
-                                                                            >
-                                                                                📄 Get Receipt PDF
-                                                                            </a>
+                                                                            {booking.status === 'Pending Escrow' ? (
+                                                                                <button 
+                                                                                    disabled
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                    className="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 cursor-not-allowed opacity-60 text-center w-full"
+                                                                                >
+                                                                                    📄 Receipt (Locked)
+                                                                                </button>
+                                                                            ) : (
+                                                                                <a 
+                                                                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
+                                                                                    target="_blank" 
+                                                                                    rel="noreferrer"
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                                    className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center animate-fade-in"
+                                                                                >
+                                                                                    📄 Get Receipt PDF
+                                                                                </a>
+                                                                            )}
                                                                             <button 
                                                                                 onClick={(e) => { e.stopPropagation(); handleDeleteBooking(booking._id); }} 
                                                                                 className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition"
