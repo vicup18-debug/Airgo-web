@@ -122,6 +122,14 @@ export default function SuperadminDashboard() {
                 fetch(`${apiUrl}/api/affiliates`)
             ]);
 
+            if (bookingsRes.status === 401) {
+                toast.error("Your login session has expired. Please log in again.");
+                localStorage.removeItem('airgo_token');
+                localStorage.removeItem('airgo_user');
+                router.push('/login');
+                return;
+            }
+
             if (bookingsRes.ok) setAllBookings(await bookingsRes.json());
             if (partnersRes.ok) setPartners(await partnersRes.json());
             if (carsRes.ok) setCars(await carsRes.json());
