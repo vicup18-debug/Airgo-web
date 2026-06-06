@@ -296,7 +296,7 @@ export default function SupportPage() {
                                             <input 
                                                 required 
                                                 type="text" 
-                                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white" 
+                                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white text-gray-900" 
                                                 placeholder="e.g. John Doe"
                                                 value={formData.name}
                                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
@@ -307,7 +307,7 @@ export default function SupportPage() {
                                             <input 
                                                 required 
                                                 type="email" 
-                                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white" 
+                                                className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white text-gray-900" 
                                                 placeholder="e.g. john@example.com"
                                                 value={formData.email}
                                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
@@ -318,7 +318,7 @@ export default function SupportPage() {
                                     <div>
                                         <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Subject</label>
                                         <select 
-                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white"
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white text-gray-900"
                                             value={formData.subject}
                                             onChange={e => setFormData({ ...formData, subject: e.target.value })}
                                         >
@@ -334,7 +334,7 @@ export default function SupportPage() {
                                         <textarea 
                                             required 
                                             rows={4}
-                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white resize-none" 
+                                            className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white text-gray-900 resize-none" 
                                             placeholder="Include booking reference numbers or specific details..."
                                             value={formData.message}
                                             onChange={e => setFormData({ ...formData, message: e.target.value })}
