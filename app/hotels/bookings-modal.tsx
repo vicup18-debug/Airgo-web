@@ -5,6 +5,66 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+function RoomImageCarousel({ images, primaryImage, className }: { images?: string[], primaryImage: string, className?: string }) {
+    const allImages = Array.from(new Set([primaryImage, ...(images || [])].filter(Boolean)));
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    if (allImages.length <= 1) {
+        return <img src={allImages[0] || primaryImage} alt="Room" className={`${className} object-cover`} />;
+    }
+
+    const nextSlide = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev + 1) % allImages.length);
+    };
+
+    const prevSlide = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        setCurrentIndex((prev) => (prev - 1 + allImages.length) % allImages.length);
+    };
+
+    return (
+        <div className={`relative overflow-hidden group ${className}`}>
+            <img 
+                src={allImages[currentIndex]} 
+                alt={`Room View ${currentIndex + 1}`} 
+                className="w-full h-full object-cover transition-all duration-300"
+            />
+            
+            {/* Arrows */}
+            <button 
+                type="button"
+                onClick={prevSlide} 
+                className="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/45 hover:bg-black/70 text-white flex items-center justify-center text-[10px] backdrop-blur-sm transition opacity-0 group-hover:opacity-100 z-10 select-none cursor-pointer font-bold"
+            >
+                ◀
+            </button>
+            <button 
+                type="button"
+                onClick={nextSlide} 
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/45 hover:bg-black/70 text-white flex items-center justify-center text-[10px] backdrop-blur-sm transition opacity-0 group-hover:opacity-100 z-10 select-none cursor-pointer font-bold"
+            >
+                ▶
+            </button>
+
+            {/* Dots */}
+            <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1 z-10 bg-black/20 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                {allImages.map((_, idx) => (
+                    <button
+                        key={idx}
+                        type="button"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setCurrentIndex(idx);
+                        }}
+                        className={`w-1 h-1 rounded-full transition-all ${idx === currentIndex ? 'bg-white scale-125' : 'bg-white/50'}`}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
 interface BookingModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -239,7 +299,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
 
                                         return (
                                             <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in ${isSoldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[#000080] hover:shadow-md'}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
-                                                <img src={room.image} className="w-full h-36 sm:w-24 sm:h-24 rounded-lg object-cover shadow-sm shrink-0" />
+                                                <RoomImageCarousel images={room.images} primaryImage={room.image} className="w-full h-36 sm:w-24 sm:h-24 rounded-lg shadow-sm shrink-0" />
                                                 <div className="flex-1 flex flex-col justify-between">
                                                     <div>
                                                         <div className="flex justify-between items-start gap-2">
@@ -256,6 +316,9 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                             </div>
                                                         </div>
                                                         <p className="text-xs text-gray-500 my-1">{room.amenities}</p>
+                                                        {room.description && (
+                                                            <p className="text-xs text-gray-600 mt-1.5 leading-relaxed italic bg-white p-2 rounded-lg border border-gray-100">{room.description}</p>
+                                                        )}
                                                     </div>
                                                     <div className="flex flex-wrap gap-2 justify-between items-end mt-2">
                                                         <div>
@@ -288,22 +351,29 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                 <button type="button" onClick={() => setSelectedRoom(null)} className="text-[#000080] font-bold text-sm hover:underline">← Back to rooms</button>
                             </div>
                             
-                            <div className="p-4 bg-blue-50 rounded-xl mb-6 border border-blue-100 flex gap-4">
-                                <img src={selectedRoom.image} className="w-16 h-16 rounded-lg object-cover shadow-sm" />
-                                <div className="flex-grow">
-                                    <h4 className="font-bold text-lg text-[#000080]">{selectedRoom.name}</h4>
-                                    <p className="font-black text-gray-900 flex flex-wrap items-baseline gap-1">
-                                        {selectedRoom.discountPercentage > 0 && (
-                                            <span className="text-xs text-gray-400 line-through font-bold">
-                                                ₦{(typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight)?.toLocaleString()}
-                                            </span>
+                            <div className="p-4 bg-blue-50 rounded-xl mb-6 border border-blue-100 flex flex-col sm:flex-row gap-4">
+                                <RoomImageCarousel images={selectedRoom.images} primaryImage={selectedRoom.image} className="w-full h-36 sm:w-20 sm:h-20 rounded-lg shadow-sm shrink-0" />
+                                <div className="flex-grow flex flex-col justify-between">
+                                    <div>
+                                        <h4 className="font-bold text-lg text-[#000080]">{selectedRoom.name}</h4>
+                                        {selectedRoom.description && (
+                                            <p className="text-xs text-gray-600 mt-1 leading-relaxed italic">{selectedRoom.description}</p>
                                         )}
-                                        <span>₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()}</span>
-                                        <span className="text-[10px] text-gray-400 font-medium">/ night</span>
-                                    </p>
-                                    {selectedRoom.discountPercentage > 0 && (
-                                        <p className="text-[10px] text-red-600 font-black uppercase mt-0.5 animate-pulse">🔥 {selectedRoom.discountPercentage}% Discount Applied</p>
-                                    )}
+                                    </div>
+                                    <div className="mt-2">
+                                        <p className="font-black text-gray-900 flex flex-wrap items-baseline gap-1">
+                                            {selectedRoom.discountPercentage > 0 && (
+                                                <span className="text-xs text-gray-400 line-through font-bold">
+                                                    ₦{(typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight)?.toLocaleString()}
+                                                </span>
+                                            )}
+                                            <span>₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()}</span>
+                                            <span className="text-[10px] text-gray-400 font-medium">/ night</span>
+                                        </p>
+                                        {selectedRoom.discountPercentage > 0 && (
+                                            <p className="text-[10px] text-red-600 font-black uppercase mt-0.5 animate-pulse">🔥 {selectedRoom.discountPercentage}% Discount Applied</p>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 

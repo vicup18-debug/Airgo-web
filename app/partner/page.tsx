@@ -22,8 +22,51 @@ const AMENITIES_LIST = [
 
 export default function PartnerDashboard() {
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings' | 'profile'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // PROFILE STATES
+    const [profileData, setProfileData] = useState({
+        name: '',
+        email: '',
+        phoneNumber: '',
+        businessName: '',
+        businessAddress: '',
+        cacNumber: ''
+    });
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingProfile(true);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const secureId = user.id || user.userId || user._id;
+
+            const res = await fetch(`${apiUrl}/api/auth/profile/${secureId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(profileData)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Profile settings updated!");
+                const updatedUser = { ...user, ...data.user };
+                setUser(updatedUser);
+                localStorage.setItem('airgo_user', JSON.stringify(updatedUser));
+            } else {
+                toast.error(data.message || "Failed to save profile details.");
+            }
+        } catch (error) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
 
     // DATA STATES
     const [myInventory, setMyInventory] = useState<any[]>([]);
@@ -38,14 +81,14 @@ export default function PartnerDashboard() {
     const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
 
     const [newItem, setNewItem] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
     });
 
     // EDIT INVENTORY MODAL STATE
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
+        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
     });
 
 
@@ -178,7 +221,7 @@ export default function PartnerDashboard() {
             const payload = isCar ? {
                 name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl, partnerId: secureId, vehicleNumber: newItem.vehicleNumber, location: newItem.location, state: newItem.state
             } : {
-                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
+                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -192,7 +235,7 @@ export default function PartnerDashboard() {
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
-                setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '' });
+                setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -218,7 +261,8 @@ export default function PartnerDashboard() {
             previewImage: item.previewImage || '',
             vehicleNumber: item.vehicleNumber || '',
             location: item.location || '',
-            state: item.state || ''
+            state: item.state || '',
+            description: item.description || ''
         });
         setIsEditInventoryModalOpen(true);
     };
@@ -251,6 +295,7 @@ export default function PartnerDashboard() {
                 pricePerNight: Number(editItemData.price),
                 totalAllocated: Number(editItemData.totalAllocated),
                 amenities: editItemData.amenities,
+                description: editItemData.description,
                 image: editItemData.image,
                 images: editItemData.images,
                 previewImage: editItemData.previewImage
@@ -407,6 +452,18 @@ export default function PartnerDashboard() {
                         {isCarPartner ? '🚘 My Fleet' : isApartmentPartner ? '🏨 My Apartments' : '🏨 Room Categories'}
                     </button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
+                    <button onClick={() => { 
+                        setActiveTab('profile'); 
+                        setIsMobileMenuOpen(false);
+                        setProfileData({
+                            name: user.name || '',
+                            email: user.email || '',
+                            phoneNumber: user.phoneNumber || user.phone || '',
+                            businessName: user.businessName || '',
+                            businessAddress: user.businessAddress || '',
+                            cacNumber: user.cacNumber || ''
+                        });
+                    }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'profile' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>👤 My Profile</button>
                 </nav>
                 <div className="p-4 border-t border-blue-800">
                     <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold transition shadow-md">Sign Out</button>
@@ -419,7 +476,11 @@ export default function PartnerDashboard() {
                     <h1 className="text-2xl font-black text-gray-900 capitalize">
                         {activeTab === 'overview' 
                             ? (isCarPartner ? '🚘 Fleet Control Panel' : isApartmentPartner ? '🏨 Apartment Host Panel' : '🏨 Property Management Panel') 
-                            : activeTab === 'inventory' ? (isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') : activeTab}
+                            : activeTab === 'inventory' 
+                                ? (isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
+                                : activeTab === 'profile' 
+                                    ? 'My Profile Settings' 
+                                    : activeTab}
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>
@@ -660,6 +721,62 @@ export default function PartnerDashboard() {
                                     </div>
                                 </div>
                             )}
+                            {/* PROFILE TAB */}
+                            {activeTab === 'profile' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 max-w-2xl mx-auto overflow-hidden animate-fade-in w-full">
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                        <div>
+                                            <h2 className="text-lg font-black text-gray-900">Partner Profile Settings</h2>
+                                            <p className="text-xs text-gray-500 mt-1">Update your personal and business specifications</p>
+                                        </div>
+                                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified {user.partnerType} Partner</span>
+                                    </div>
+                                    <form onSubmit={handleSaveProfile} className="p-6 space-y-5">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Name</label>
+                                                <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.name} onChange={e => setProfileData({ ...profileData, name: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Contact Phone</label>
+                                                <input required type="tel" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.phoneNumber} onChange={e => setProfileData({ ...profileData, phoneNumber: e.target.value })} />
+                                            </div>
+                                        </div>
+                                        
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address (Read-only)</label>
+                                            <input disabled type="email" className="w-full px-4 py-2 border rounded-xl text-gray-400 bg-gray-50 cursor-not-allowed" value={profileData.email} />
+                                        </div>
+
+                                        <div className="border-t border-gray-100 pt-4 mt-4 space-y-4">
+                                            <h3 className="text-xs font-black text-[#004A99] uppercase tracking-wider">Business Verification Details</h3>
+                                            
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Name</label>
+                                                <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.businessName} onChange={e => setProfileData({ ...profileData, businessName: e.target.value })} />
+                                            </div>
+
+                                            {(!user.partnerType?.toLowerCase().includes('car')) && (
+                                                <div>
+                                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Corporate Number</label>
+                                                    <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.cacNumber} onChange={e => setProfileData({ ...profileData, cacNumber: e.target.value })} />
+                                                </div>
+                                            )}
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Physical Address</label>
+                                                <textarea required rows={3} className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white resize-none" value={profileData.businessAddress} onChange={e => setProfileData({ ...profileData, businessAddress: e.target.value })} />
+                                            </div>
+                                        </div>
+
+                                        <div className="pt-4 flex justify-end">
+                                            <button disabled={isSavingProfile} type="submit" className="px-6 py-2.5 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition shadow-md cursor-pointer">
+                                                {isSavingProfile ? 'Saving...' : 'Save Profile Changes'}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            )}
                         </>
                     )}
                 </div>
@@ -693,6 +810,10 @@ export default function PartnerDashboard() {
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Listing Description (Rooms, Parlour, Kitchen details) *</label>
+                                        <textarea required placeholder="Describe layout details e.g., how many rooms, parlour, kitchen, etc." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white h-24 resize-none" value={newItem.description || ''} onChange={e => setNewItem({ ...newItem, description: e.target.value })} />
+                                    </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
                                         <input 
@@ -765,11 +886,16 @@ export default function PartnerDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate / Vehicle Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.vehicleNumber} onChange={e => setEditItemData({ ...editItemData, vehicleNumber: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.location} onChange={e => setEditItemData({ ...editItemData, location: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.state} onChange={e => setEditItemData({ ...editItemData, state: e.target.value })} /></div>
+                                    <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Description</label><textarea className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.description || ''} onChange={e => setEditItemData({ ...editItemData, description: e.target.value })} /></div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Listing Description (Rooms, Parlour, Kitchen details) *</label>
+                                        <textarea required placeholder="Describe layout details e.g., how many rooms, parlour, kitchen, etc." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white h-24 resize-none" value={editItemData.description || ''} onChange={e => setEditItemData({ ...editItemData, description: e.target.value })} />
+                                    </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
                                         <input 

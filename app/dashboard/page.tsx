@@ -27,6 +27,50 @@ export default function ClientDashboard() {
         checkOut: '',
         guests: 1
     });
+
+    // Profile edit state
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [profileData, setProfileData] = useState({
+        name: '',
+        email: '',
+        phoneNumber: ''
+    });
+
+    const handleSaveProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSavingProfile(true);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const userId = user.id || user.userId || user._id;
+
+            const res = await fetch(`${apiUrl}/api/auth/profile/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(profileData)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Profile updated successfully!");
+                setIsProfileModalOpen(false);
+                
+                // Update local storage and state
+                const updatedUser = { ...user, ...data.user };
+                setUser(updatedUser);
+                localStorage.setItem('airgo_user', JSON.stringify(updatedUser));
+            } else {
+                toast.error(data.message || "Failed to update profile.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsSavingProfile(false);
+        }
+    };
     const fetchMyBookings = async (parsedUser: any) => {
         try {
             const token = localStorage.getItem('airgo_token');
@@ -351,10 +395,24 @@ export default function ClientDashboard() {
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                         <div className="w-16 h-16 bg-blue-50 text-[#004A99] rounded-full flex items-center justify-center text-2xl font-black mb-4">
-                            {user.name.charAt(0).toUpperCase()}
+                            {user.name?.charAt(0).toUpperCase()}
                         </div>
                         <h3 className="text-xl font-black text-gray-900">{user.name}</h3>
-                        <p className="text-sm text-gray-500 mb-6">{user.email}</p>
+                        <p className="text-sm text-gray-500 mb-1">{user.email}</p>
+                        <p className="text-sm text-gray-500 mb-4">📞 {user.phoneNumber || user.phone || 'No phone number'}</p>
+                        <button 
+                            onClick={() => {
+                                setProfileData({
+                                    name: user.name || '',
+                                    email: user.email || '',
+                                    phoneNumber: user.phoneNumber || user.phone || ''
+                                });
+                                setIsProfileModalOpen(true);
+                            }}
+                            className="w-full mb-4 bg-gray-100 hover:bg-gray-200 text-[#000080] py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+                        >
+                            ✏️ Edit Profile Settings
+                        </button>
                         <div className="border-t border-gray-100 pt-4">
                             <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                                 Verified Client
@@ -437,6 +495,37 @@ export default function ClientDashboard() {
                                 <button type="button" onClick={() => { setIsEditModalOpen(false); setSelectedBooking(null); }} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
                                 <button disabled={isSavingEdit} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#000080] hover:bg-blue-900 transition flex items-center gap-2">
                                     {isSavingEdit ? 'Applying corrections...' : 'Apply Corrections'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* EDIT PROFILE MODAL */}
+            {isProfileModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
+                            <h2 className="text-xl font-black text-[#000080]">Edit Profile Settings</h2>
+                            <button onClick={() => setIsProfileModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
+                        </div>
+                        <form onSubmit={handleSaveProfile} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+                                <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.name} onChange={e => setProfileData({ ...profileData, name: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
+                                <input required type="email" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.email} onChange={e => setProfileData({ ...profileData, email: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                                <input required type="tel" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.phoneNumber} onChange={e => setProfileData({ ...profileData, phoneNumber: e.target.value })} />
+                            </div>
+                            <div className="pt-4 flex justify-end gap-3 shrink-0">
+                                <button type="button" onClick={() => setIsProfileModalOpen(false)} className="px-5 py-2 rounded-xl font-bold text-gray-600 hover:bg-gray-100 transition">Cancel</button>
+                                <button disabled={isSavingProfile} type="submit" className="px-6 py-2 rounded-xl font-bold text-white bg-[#000080] hover:bg-blue-900 transition flex items-center gap-2">
+                                    {isSavingProfile ? 'Saving...' : 'Save Settings'}
                                 </button>
                             </div>
                         </form>

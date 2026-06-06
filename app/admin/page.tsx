@@ -27,7 +27,7 @@ export default function SuperadminDashboard() {
 
     // BOOKINGS TAB SEARCH & FILTERS
     const [bookingSearchQuery, setBookingSearchQuery] = useState('');
-    const [bookingStatusFilter, setBookingStatusFilter] = useState<'All' | 'Pending Escrow' | 'Paid' | 'Approved for Disbursement' | 'Paid Out'>('All');
+    const [bookingStatusFilter, setBookingStatusFilter] = useState<'All' | 'Pending Escrow' | 'Paid' | 'Approved for Disbursement' | 'Paid Out' | 'Archived'>('All');
 
     // CONCIERGE BOOKING CREATION STATE
     const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
@@ -184,6 +184,29 @@ export default function SuperadminDashboard() {
             } catch (error) {
                 toast.error("❌ Error connecting to server.");
             }
+        }
+    };
+
+    const handleConfirmDirectDeposit = async (bookingId: string) => {
+        const ref = window.prompt("Enter Bank Transfer Reference (optional):");
+        if (ref === null) return; // User cancelled prompt
+
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: 'Paid', paymentReference: ref || 'Direct Bank Deposit' })
+            });
+
+            if (res.ok) {
+                toast.success("Deposit Confirmed! Booking is now Paid.");
+                setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: 'Paid', paymentReference: ref || 'Direct Bank Deposit' } : b));
+            } else {
+                toast.error("Failed to confirm deposit.");
+            }
+        } catch (error) {
+            toast.error("Error connecting to server.");
         }
     };
 
@@ -767,7 +790,7 @@ export default function SuperadminDashboard() {
                                             <span className="absolute left-3.5 top-3 text-gray-400 text-sm">🔍</span>
                                         </div>
                                         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                                            {(['All', 'Pending Escrow', 'Paid', 'Approved for Disbursement', 'Paid Out'] as const).map((filter) => (
+                                            {(['All', 'Pending Escrow', 'Paid', 'Approved for Disbursement', 'Paid Out', 'Archived'] as const).map((filter) => (
                                                 <button
                                                     key={filter}
                                                     onClick={() => setBookingStatusFilter(filter)}
@@ -778,7 +801,7 @@ export default function SuperadminDashboard() {
                                             ))}
                                         </div>
                                     </div>
-
+ 
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left border-collapse">
                                             <thead>
@@ -794,7 +817,7 @@ export default function SuperadminDashboard() {
                                             <tbody className="divide-y divide-gray-100">
                                                 {allBookings
                                                     .filter(b => {
-                                                        if (bookingStatusFilter === 'All') return true;
+                                                        if (bookingStatusFilter === 'All') return b.status !== 'Archived';
                                                         return b.status === bookingStatusFilter;
                                                     })
                                                     .filter(b => {
@@ -862,11 +885,16 @@ export default function SuperadminDashboard() {
                                                             </td>
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
-                                                                <div className="flex items-center justify-center gap-2">
-                                                                    <button onClick={() => handleEditBookingClick(booking)} className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-600 hover:text-white transition">Correct Details</button>
-                                                                    <button onClick={() => handleDeleteBooking(booking._id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition">Delete</button>
-                                                                </div>
-                                                            </td>
+                                                                 <div className="flex items-center justify-center gap-2">
+                                                                     {booking.status === 'Pending Escrow' && (
+                                                                         <button onClick={() => handleConfirmDirectDeposit(booking._id)} className="bg-green-50 text-green-700 border border-green-100 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-600 hover:text-white transition">Confirm Deposit</button>
+                                                                     )}
+                                                                     <button onClick={() => handleEditBookingClick(booking)} className="bg-blue-50 text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-600 hover:text-white transition">Correct Details</button>
+                                                                     {booking.status !== 'Archived' && (
+                                                                         <button onClick={() => handleDeleteBooking(booking._id)} className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition">Delete</button>
+                                                                     )}
+                                                                 </div>
+                                                             </td>
                                                         </tr>
                                                         {expandedEscrowId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200">
@@ -893,19 +921,27 @@ export default function SuperadminDashboard() {
                                                                             )}
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
-                                                                            {booking.status === 'Pending Escrow' ? (
-                                                                                <span className="text-xs text-center font-bold text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg p-2">Pending Escrow Receipt Locked</span>
-                                                                            ) : (
-                                                                                <a 
-                                                                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
-                                                                                    target="_blank" 
-                                                                                    rel="noreferrer"
-                                                                                    className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 text-center transition"
-                                                                                >
-                                                                                    📄 Get Invoice Receipt PDF
-                                                                                </a>
-                                                                            )}
-                                                                        </div>
+                                                                             {booking.status === 'Pending Escrow' && (
+                                                                                 <button 
+                                                                                     onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
+                                                                                     className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-green-700 text-center transition"
+                                                                                 >
+                                                                                     💵 Confirm Deposit
+                                                                                 </button>
+                                                                             )}
+                                                                             {booking.status === 'Pending Escrow' ? (
+                                                                                 <span className="text-xs text-center font-bold text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg p-2">Pending Escrow Receipt Locked</span>
+                                                                             ) : (
+                                                                                 <a 
+                                                                                     href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
+                                                                                     target="_blank" 
+                                                                                     rel="noreferrer"
+                                                                                     className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 text-center transition"
+                                                                                 >
+                                                                                     📄 Get Invoice Receipt PDF
+                                                                                 </a>
+                                                                             )}
+                                                                         </div>
                                                                     </div>
                                                                 </td>
                                                             </tr>
@@ -963,12 +999,15 @@ export default function SuperadminDashboard() {
                                                             </td>
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
-                                                                {booking.status === 'Paid' && (
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
-                                                                )}
-                                                                {booking.status === 'Approved for Disbursement' && (
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
-                                                                )}
+                                                                 {booking.status === 'Pending Escrow' && (
+                                                                     <button onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Confirm Deposit</button>
+                                                                 )}
+                                                                 {booking.status === 'Paid' && (
+                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
+                                                                 )}
+                                                                 {booking.status === 'Approved for Disbursement' && (
+                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
+                                                                 )}
                                                             </td>
                                                         </tr>
                                                         {expandedEscrowId === booking._id && (
@@ -1003,6 +1042,14 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
+                                                                             {booking.status === 'Pending Escrow' && (
+                                                                                 <button 
+                                                                                     onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
+                                                                                     className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-750 transition"
+                                                                                 >
+                                                                                     💵 Confirm Deposit
+                                                                                 </button>
+                                                                             )}
                                                                             <button 
                                                                                 onClick={(e) => { e.stopPropagation(); handleEditBookingClick(booking); }} 
                                                                                 className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-700 transition"
@@ -1028,12 +1075,14 @@ export default function SuperadminDashboard() {
                                                                                     📄 Get Receipt PDF
                                                                                 </a>
                                                                             )}
-                                                                            <button 
-                                                                                onClick={(e) => { e.stopPropagation(); handleDeleteBooking(booking._id); }} 
-                                                                                className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition"
-                                                                            >
-                                                                                ✕ Delete Booking
-                                                                            </button>
+                                                                            {booking.status !== 'Archived' && (
+                                                                                <button 
+                                                                                    onClick={(e) => { e.stopPropagation(); handleDeleteBooking(booking._id); }} 
+                                                                                    className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-red-600 hover:text-white transition"
+                                                                                >
+                                                                                    ✕ Delete Booking
+                                                                                </button>
+                                                                            )}
                                                                         </div>
                                                                     </div>
                                                                 </td>
@@ -1453,7 +1502,9 @@ export default function SuperadminDashboard() {
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
                                                         <p className="font-bold text-[#000080]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">/ night</span></p>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs bg-blue-50 text-[#000080] font-bold px-2 py-1 rounded">Pool: {room.totalAllocated}</span>
+                                                            <span className="text-xs bg-blue-50 text-[#000080] font-bold px-2 py-1 rounded">
+                                                                Pool: {Math.max(0, (room.totalAllocated || 0) - (room.bookedDates?.find((b: any) => b.date === new Date().toISOString().split('T')[0])?.count || 0))} / {room.totalAllocated}
+                                                            </span>
                                                             <button onClick={() => handleEditListingClick(room, 'room')} className="text-blue-600 hover:text-blue-800 text-xs font-bold bg-blue-50 px-2 py-1 rounded">Edit</button>
                                                             <button onClick={() => handleDelete('rooms', room._id)} className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded">Delete</button>
                                                         </div>
@@ -1693,96 +1744,107 @@ export default function SuperadminDashboard() {
                             <button onClick={() => setIsNewBookingModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
                         </div>
                         <form onSubmit={handleCreateBooking} className="p-6 space-y-4 overflow-y-auto flex-1">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Name</label>
-                                    <input required type="text" placeholder="e.g. John Doe" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientName} onChange={e => setNewBookingData({ ...newBookingData, clientName: e.target.value })} />
-                                </div>
-                                <div className="col-span-2 md:col-span-1">
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Email (Used to assign account)</label>
-                                    <input required type="email" placeholder="e.g. john@example.com" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientEmail} onChange={e => setNewBookingData({ ...newBookingData, clientEmail: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Phone</label>
-                                    <input required type="text" placeholder="e.g. +2348012345678" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientPhone} onChange={e => setNewBookingData({ ...newBookingData, clientPhone: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
-                                    <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.guests} onChange={e => setNewBookingData({ ...newBookingData, guests: Math.max(1, Number(e.target.value) || 1) })} />
-                                </div>
-                                
-                                <div className="col-span-2 border-t border-gray-100 pt-4"></div>
-
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Asset Category</label>
-                                    <select 
-                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
-                                        value={newBookingData.itemType}
-                                        onChange={e => {
-                                            const type = e.target.value as 'hotel' | 'car';
-                                            setNewBookingData({ 
-                                                ...newBookingData, 
-                                                itemType: type,
-                                                itemId: '',
-                                                itemName: '',
-                                                partnerId: '',
-                                                deliveryAddress: ''
-                                            });
-                                        }}
-                                    >
-                                        <option value="hotel">🏨 Hotel Stay</option>
-                                        <option value="car">🚘 Car Rental</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Select Asset *</label>
-                                    <select 
-                                        required
-                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
-                                        value={newBookingData.itemId}
-                                        onChange={e => handleItemSelection(e.target.value, newBookingData.itemType)}
-                                    >
-                                        <option value="">-- Choose Asset --</option>
-                                        {newBookingData.itemType === 'hotel' ? (
-                                            rooms.map(room => (
-                                                <option key={room._id} value={room._id}>{room.hotelName} - {room.name} (₦{(room.pricePerNight || 0).toLocaleString()})</option>
-                                            ))
-                                        ) : (
-                                            cars.map(car => (
-                                                <option key={car._id} value={car._id}>{car.name} (₦{(car.price || 0).toLocaleString()})</option>
-                                            ))
-                                        )}
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Start Date / Check-In</label>
-                                    <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.checkIn} onChange={e => setNewBookingData({ ...newBookingData, checkIn: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">End Date / Check-Out</label>
-                                    <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.checkOut} onChange={e => setNewBookingData({ ...newBookingData, checkOut: e.target.value })} />
+                            <div className="flex flex-col gap-4">
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Name</label>
+                                        <input required type="text" placeholder="e.g. John Doe" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientName} onChange={e => setNewBookingData({ ...newBookingData, clientName: e.target.value })} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Email (Used to assign account)</label>
+                                        <input required type="email" placeholder="e.g. john@example.com" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientEmail} onChange={e => setNewBookingData({ ...newBookingData, clientEmail: e.target.value })} />
+                                    </div>
                                 </div>
 
-                                <div className="col-span-2">
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guest Phone</label>
+                                        <input required type="text" placeholder="e.g. +2348012345678" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.clientPhone} onChange={e => setNewBookingData({ ...newBookingData, clientPhone: e.target.value })} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Guests Count</label>
+                                        <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.guests} onChange={e => setNewBookingData({ ...newBookingData, guests: Math.max(1, Number(e.target.value) || 1) })} />
+                                    </div>
+                                </div>
+                                
+                                <div className="border-t border-gray-100 pt-2"></div>
+
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Asset Category</label>
+                                        <select 
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                            value={newBookingData.itemType}
+                                            onChange={e => {
+                                                const type = e.target.value as 'hotel' | 'car';
+                                                setNewBookingData({ 
+                                                    ...newBookingData, 
+                                                    itemType: type,
+                                                    itemId: '',
+                                                    itemName: '',
+                                                    partnerId: '',
+                                                    deliveryAddress: ''
+                                                });
+                                            }}
+                                        >
+                                            <option value="hotel">🏨 Hotel Stay</option>
+                                            <option value="car">🚘 Car Rental</option>
+                                        </select>
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Select Asset *</label>
+                                        <select 
+                                            required
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                            value={newBookingData.itemId}
+                                            onChange={e => handleItemSelection(e.target.value, newBookingData.itemType)}
+                                        >
+                                            <option value="">-- Choose Asset --</option>
+                                            {newBookingData.itemType === 'hotel' ? (
+                                                rooms.map(room => (
+                                                    <option key={room._id} value={room._id}>{room.hotelName} - {room.name} (₦{(room.pricePerNight || 0).toLocaleString()})</option>
+                                                ))
+                                            ) : (
+                                                cars.map(car => (
+                                                    <option key={car._id} value={car._id}>{car.name} (₦{(car.price || 0).toLocaleString()})</option>
+                                                ))
+                                            )}
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Start Date / Check-In</label>
+                                        <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.checkIn} onChange={e => setNewBookingData({ ...newBookingData, checkIn: e.target.value })} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">End Date / Check-Out</label>
+                                        <input required type="datetime-local" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.checkOut} onChange={e => setNewBookingData({ ...newBookingData, checkOut: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div className="w-full">
                                     <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Delivery / Hotel Location Address</label>
                                     <input required type="text" placeholder="Hotel address or delivery location" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.deliveryAddress} onChange={e => setNewBookingData({ ...newBookingData, deliveryAddress: e.target.value })} />
                                 </div>
 
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Price (₦) [Optional Override]</label>
-                                    <input type="text" placeholder="e.g. 150000 (leaves blank to use default rate)" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.totalPrice} onChange={e => setNewBookingData({ ...newBookingData, totalPrice: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Initial Booking Status</label>
-                                    <select 
-                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
-                                        value={newBookingData.status}
-                                        onChange={e => setNewBookingData({ ...newBookingData, status: e.target.value })}
-                                    >
-                                        <option value="Pending Escrow">Pending Escrow</option>
-                                        <option value="Paid">Paid (Secured in Escrow)</option>
-                                    </select>
+                                <div className="flex flex-col md:flex-row gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Price (₦) [Optional Override]</label>
+                                        <input type="text" placeholder="e.g. 150000 (leaves blank to use default rate)" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newBookingData.totalPrice} onChange={e => setNewBookingData({ ...newBookingData, totalPrice: e.target.value })} />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Initial Booking Status</label>
+                                        <select 
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                            value={newBookingData.status}
+                                            onChange={e => setNewBookingData({ ...newBookingData, status: e.target.value })}
+                                        >
+                                            <option value="Pending Escrow">Pending Escrow</option>
+                                            <option value="Paid">Paid (Secured in Escrow)</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div className="pt-4 flex justify-end gap-3 shrink-0">

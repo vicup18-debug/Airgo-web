@@ -98,14 +98,31 @@ export default function SupportPage() {
         }, 800);
     };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
+    const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formData.name || !formData.email || !formData.message) {
             toast.error("Please fill out all required fields.");
             return;
         }
-        toast.success("Message dispatch verified! A concierge ticket has been generated.");
-        setFormData({ name: '', email: '', subject: 'Inquiry', message: '' });
+        const loadingToast = toast.loading("Sending your message...");
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/support`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (res.ok) {
+                toast.success("Message dispatched! A ticket has been generated and sent to our support team.", { id: loadingToast });
+                setFormData({ name: '', email: '', subject: 'Inquiry', message: '' });
+            } else {
+                const errData = await res.json();
+                toast.error(errData.message || "Failed to dispatch message.", { id: loadingToast });
+            }
+        } catch (error) {
+            toast.error("Network error. Please try again.", { id: loadingToast });
+        }
     };
 
     const filteredFaqs = FAQS.filter(faq => {
