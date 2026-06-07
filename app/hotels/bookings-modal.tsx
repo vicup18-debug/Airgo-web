@@ -257,6 +257,13 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                         </div>
                     )}
 
+                    {hotel.description && (
+                        <div className="bg-gray-50 border border-gray-100 p-4 rounded-2xl mb-6 text-xs text-gray-600 leading-relaxed italic">
+                            <span className="font-black text-[#000080] block mb-1 uppercase tracking-wide text-[9px] not-italic">About this Stay</span>
+                            {hotel.description}
+                        </div>
+                    )}
+
                     {!selectedRoom ? (
                         <div>
                             <h3 className="text-xl font-bold mb-4">Select Room Category</h3>
