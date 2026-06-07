@@ -698,8 +698,6 @@ export default function PartnerDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Guest Details</p>
                                                                             <p className="text-xs font-black text-gray-900">Name: {booking.clientName || 'N/A'}</p>
-                                                                            <p className="text-xs text-gray-700 font-bold mt-1">Email: {booking.clientEmail || 'N/A'}</p>
-                                                                            <p className="text-xs text-gray-700 font-bold mt-1">Phone: {booking.clientPhone || 'N/A'}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>

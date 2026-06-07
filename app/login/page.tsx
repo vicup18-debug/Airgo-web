@@ -15,8 +15,37 @@ export default function LoginPage() {
 
     // 🟢 ADDED: Show/Hide Password State
     const [showPassword, setShowPassword] = useState(false);
+    
+    // 🟢 ADDED: Resend Verification State
+    const [isResending, setIsResending] = useState(false);
 
     const router = useRouter();
+
+    const handleResendVerification = async () => {
+        if (!email) {
+            toast.error("Please enter your email address first.");
+            return;
+        }
+        setIsResending(true);
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/resend-verification`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email }),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || "Verification email sent!");
+            } else {
+                toast.error(data.message || "Failed to resend verification email.");
+            }
+        } catch (err: any) {
+            toast.error("Connection error. Please try again.");
+        } finally {
+            setIsResending(false);
+        }
+    };
 
     React.useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -135,12 +164,30 @@ export default function LoginPage() {
                                 <p className="text-xs text-blue-700 mt-1 leading-relaxed">
                                     We have sent a verification link to your email. Please check your inbox (and spam/junk folder) and click the link to activate your account before logging in.
                                 </p>
+                                <button 
+                                    type="button" 
+                                    onClick={handleResendVerification}
+                                    className="mt-2 text-xs font-bold text-[#000080] hover:underline self-start"
+                                    disabled={isResending}
+                                >
+                                    {isResending ? 'Resending...' : "Didn't receive it? Resend link"}
+                                </button>
                             </div>
                         )}
 
                         {error && (
-                            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
-                                ⚠️ {error}
+                            <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100 flex flex-col gap-2">
+                                <span>⚠️ {error}</span>
+                                {error.includes('verify your email') && (
+                                    <button 
+                                        type="button" 
+                                        onClick={handleResendVerification}
+                                        className="text-xs font-black text-[#000080] hover:underline self-start"
+                                        disabled={isResending}
+                                    >
+                                        {isResending ? 'Resending...' : 'Click here to resend verification link'}
+                                    </button>
+                                )}
                             </div>
                         )}
 
