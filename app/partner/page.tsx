@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 const AMENITIES_LIST = [
   "High-speed WiFi",
+  "24hrs Electricity",
   "Swimming Pool",
   "Gym / Fitness Center",
   "Spa & Wellness",
