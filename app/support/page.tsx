@@ -132,23 +132,23 @@ export default function SupportPage() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
-            <main className="flex-grow max-w-6xl mx-auto py-12 px-6 w-full">
+            <main className="flex-grow max-w-6xl mx-auto py-6 md:py-12 px-4 md:px-6 w-full">
                 
                 {/* 🌟 HEADER HEADER ACCENT */}
-                <div className="text-center max-w-3xl mx-auto mb-12">
+                <div className="text-center max-w-3xl mx-auto mb-6 md:mb-12">
                     <span className="bg-[#EBF5FF] text-[#004A99] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm">
                         Concierge Assistance
                     </span>
-                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 mt-4 tracking-tight">
+                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 mt-4 tracking-tight">
                         How can we help you today?
                     </h1>
-                    <p className="text-gray-500 mt-3 text-base">
+                    <p className="text-gray-500 mt-3 text-sm md:text-base">
                         Get prompt assistance for your stays, fleet rentals, escrow transactions, and affiliate earnings.
                     </p>
                 </div>
 
                 {/* 🌟 SPLIT VIEW GRID */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
                     
                     {/* 📞 LEFT PANEL: CONTACT CHANNELS */}
                     <div className="lg:col-span-4 space-y-6">
@@ -183,41 +183,41 @@ export default function SupportPage() {
                     </div>
 
                     {/* ⚙️ RIGHT PANEL: SMART CUSTOMER TABS */}
-                    <div className="lg:col-span-8 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[500px]">
+                    <div className="lg:col-span-8 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px] md:min-h-[500px]">
                         
                         {/* 🌟 TAB SELECTOR */}
-                        <div className="flex border-b border-gray-100 bg-gray-50/80 shrink-0">
+                        <div className="flex overflow-x-auto sm:overflow-x-visible border-b border-gray-100 bg-gray-50/80 shrink-0 scrollbar-none">
                             <button 
                                 onClick={() => setActiveTab('chat')} 
-                                className={`flex-1 py-4 text-xs font-black uppercase tracking-wider transition ${activeTab === 'chat' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 min-w-[100px] py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${activeTab === 'chat' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
                             >
-                                💬 Smart AI Support
+                                💬 AI Support
                             </button>
                             <button 
                                 onClick={() => setActiveTab('faqs')} 
-                                className={`flex-1 py-4 text-xs font-black uppercase tracking-wider transition ${activeTab === 'faqs' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 min-w-[80px] py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${activeTab === 'faqs' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
                             >
-                                ❓ Categorized FAQs
+                                ❓ FAQs
                             </button>
                             <button 
                                 onClick={() => setActiveTab('message')} 
-                                className={`flex-1 py-4 text-xs font-black uppercase tracking-wider transition ${activeTab === 'message' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
+                                className={`flex-1 min-w-[100px] py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${activeTab === 'message' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
                             >
-                                ✉️ Contact Form
+                                ✉️ Contact
                             </button>
                         </div>
-
+ 
                         {/* 🌟 TAB CONTENT AREAS */}
-                        <div className="p-6 md:p-8 flex-1 flex flex-col justify-between">
+                        <div className="p-4 md:p-8 flex-1 flex flex-col justify-between">
                             
                             {/* 💬 TAB 1: AI CONCIERGE CHATBOT */}
                             {activeTab === 'chat' && (
-                                <div className="flex flex-col flex-1 h-[420px]">
-                                    <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 max-h-[350px]">
+                                <div className="flex flex-col flex-1 h-[380px] md:h-[420px]">
+                                    <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 max-h-[310px] md:max-h-[350px]">
                                         {chatMessages.map((msg, i) => (
                                             <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
                                                 <div className={`max-w-[80%] p-4 rounded-2xl text-sm shadow-sm ${msg.sender === 'user' ? 'bg-[#004A99] text-white rounded-tr-none' : 'bg-gray-100 text-gray-800 rounded-tl-none'}`}>
-                                                    <p className="leading-relaxed font-medium">{msg.text}</p>
+                                                    <p className="leading-relaxed font-medium break-words">{msg.text}</p>
                                                     <span className={`block text-[9px] mt-1 text-right ${msg.sender === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>{msg.time}</span>
                                                 </div>
                                             </div>
@@ -235,12 +235,12 @@ export default function SupportPage() {
                                     <form onSubmit={handleSendMessage} className="flex gap-2 bg-gray-50 p-2 rounded-2xl border border-gray-200 shrink-0">
                                         <input 
                                             type="text" 
-                                            placeholder="Ask about refunds, escrow ledger, or listing updates..." 
-                                            className="flex-1 bg-transparent px-4 py-2 text-sm text-gray-700 outline-none"
+                                            placeholder="Ask support..." 
+                                            className="flex-1 min-w-0 bg-transparent px-3 py-2 text-sm text-gray-700 outline-none"
                                             value={chatInput}
                                             onChange={(e) => setChatInput(e.target.value)}
                                         />
-                                        <button type="submit" className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-sm transition">
+                                        <button type="submit" className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-4 sm:px-5 py-2.5 rounded-xl shadow-sm transition">
                                             Send
                                         </button>
                                     </form>
