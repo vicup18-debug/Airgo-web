@@ -8,10 +8,155 @@ import dynamic from 'next/dynamic';
 
 const PaystackPaymentButton = dynamic(() => import('./paystack-button'), { ssr: false });
 
+// Simulated Live GPS tracking component for active car rentals
+function LiveCarTracker({ booking }: { booking: any }) {
+    const [progress, setProgress] = React.useState(0);
+    const [speed, setSpeed] = React.useState(60);
+    const [fuel, setFuel] = React.useState(82);
+    const [eta, setEta] = React.useState(15);
+    const [statusText, setStatusText] = React.useState('En Route to Delivery Address');
+
+    React.useEffect(() => {
+        // Animate the progress along the path (0 to 100)
+        const progressInterval = setInterval(() => {
+            setProgress((prev) => {
+                if (prev >= 100) {
+                    clearInterval(progressInterval);
+                    setStatusText('Delivered to Destination');
+                    setSpeed(0);
+                    setEta(0);
+                    return 100;
+                }
+                const next = prev + 1.5;
+                // Update ETA proportionally
+                setEta(Math.max(1, Math.ceil(15 * (1 - next / 100))));
+                return next;
+            });
+        }, 3000);
+
+        // Fluctuate speed and slowly decrease fuel
+        const telemetryInterval = setInterval(() => {
+            setSpeed((prev) => {
+                if (progress >= 100) return 0;
+                const change = Math.floor(Math.random() * 15) - 7;
+                return Math.min(85, Math.max(40, prev + change));
+            });
+            setFuel((prev) => Math.max(15, prev - (Math.random() > 0.7 ? 1 : 0)));
+        }, 1500);
+
+        return () => {
+            clearInterval(progressInterval);
+            clearInterval(telemetryInterval);
+        };
+    }, [progress]);
+
+    // Calculate position of car along a simulated S-curve path on a 300x120 SVG grid
+    const getCarCoordinates = (p: number) => {
+        const t = p / 100;
+        const x = (1-t)**3 * 20 + 3 * (1-t)**2 * t * 100 + 3 * (1-t) * t**2 * 200 + t**3 * 280;
+        const y = (1-t)**3 * 90 + 3 * (1-t)**2 * t * 10 + 3 * (1-t) * t**2 * 110 + t**3 * 40;
+        return { x, y };
+    };
+
+    const carPos = getCarCoordinates(progress);
+
+    return (
+        <div className="w-full mt-4 bg-gray-900 text-white p-5 rounded-2xl border border-gray-800 shadow-inner flex flex-col gap-4 animate-fade-in text-left">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-3 gap-2">
+                <div>
+                    <h4 className="text-sm font-black text-green-400 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
+                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                        Live GPS Tracking Active
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-0.5">Status: <span className="text-gray-200 font-bold">{statusText}</span></p>
+                </div>
+                <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500 font-bold">Estimated Arrival</p>
+                    <p className="text-lg font-black text-[#FFB81C]">{eta > 0 ? `${eta} mins` : 'Arrived'}</p>
+                </div>
+            </div>
+
+            <div className="relative w-full h-36 bg-gray-950 rounded-xl overflow-hidden border border-gray-800/80">
+                <svg className="w-full h-full" viewBox="0 0 300 120" preserveAspectRatio="none">
+                    <defs>
+                        <pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse">
+                            <path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid)" />
+
+                    <text x="15" y="110" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase">Airgo Depot</text>
+                    <text x="110" y="25" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase">Wuse II Toll</text>
+                    <text x="225" y="110" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase">Maitama Ring</text>
+                    <text x="215" y="25" className="fill-gray-400 font-bold text-[8px] tracking-wider uppercase font-black">Your Location</text>
+
+                    <path 
+                        d="M 20 90 C 100 10, 200 110, 280 40" 
+                        fill="none" 
+                        stroke="#1f2937" 
+                        strokeWidth="4" 
+                        strokeLinecap="round"
+                    />
+                    <path 
+                        d="M 20 90 C 100 10, 200 110, 280 40" 
+                        fill="none" 
+                        stroke="#004A99" 
+                        strokeWidth="2.5" 
+                        strokeDasharray="4 2"
+                        strokeLinecap="round"
+                    />
+
+                    <circle cx="20" cy="90" r="5" className="fill-blue-500 stroke-white stroke-2" />
+                    <circle cx="280" cy="40" r="5" className="fill-green-500 stroke-white stroke-2 animate-ping" />
+                    <circle cx="280" cy="40" r="5" className="fill-green-500 stroke-white stroke-2" />
+
+                    <g transform={`translate(${carPos.x - 6}, ${carPos.y - 6})`}>
+                        <circle cx="6" cy="6" r="8" className="fill-green-500/20 stroke-green-500/40 stroke-1 animate-pulse" />
+                        <circle cx="6" cy="6" r="4" className="fill-green-400 stroke-white stroke-1" />
+                    </g>
+                </svg>
+                
+                <div className="absolute bottom-2 left-2 flex gap-1.5 flex-wrap">
+                    <span className="bg-[#000080]/85 text-blue-200 border border-blue-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.rentalType || 'Chauffeur Driven'}</span>
+                    <span className="bg-[#FFB81C]/25 text-yellow-200 border border-yellow-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.fuelPlan || 'Self Fueling'}</span>
+                    <span className="bg-green-900/80 text-green-200 border border-green-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.travelScope || 'Intra-City'}</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-950 p-4 rounded-xl border border-gray-800/80">
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Current Speed</span>
+                    <span className="text-sm font-black text-gray-200">{speed} km/h</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Fuel Level</span>
+                    <span className="text-sm font-black text-gray-200">{fuel}%</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Assigned Driver</span>
+                    <span className="text-sm font-black text-[#FFB81C]">Chinedu Okafor</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Driver Rating</span>
+                    <span className="text-sm font-black text-gray-200">4.9⭐ (VIP Class)</span>
+                </div>
+            </div>
+
+            <div className="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-800/50">
+                <span className="text-xs text-gray-400 font-medium">Contact dispatch driver for any changes:</span>
+                <a href="tel:+2347078344409" className="bg-[#FFB81C] hover:bg-yellow-400 text-[#000080] font-black text-xs px-3.5 py-1.5 rounded-lg shadow transition">
+                    📞 Call Dispatcher
+                </a>
+            </div>
+        </div>
+    );
+}
+
 export default function ClientDashboard() {
     const [user, setUser] = useState<any>(null);
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [trackingBookingId, setTrackingBookingId] = useState<string | null>(null);
     const router = useRouter();
 
     // Booking edit state
@@ -71,8 +216,9 @@ export default function ClientDashboard() {
             setIsSavingProfile(false);
         }
     };
-    const fetchMyBookings = async (parsedUser: any) => {
+    const fetchMyBookings = async (parsedUser: any, silent = false) => {
         try {
+            if (!silent) setIsLoading(true);
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const res = await fetch(`${apiUrl}/api/bookings`, {
@@ -119,6 +265,12 @@ export default function ClientDashboard() {
 
         setUser(parsedUser);
         fetchMyBookings(parsedUser);
+
+        // 30s background silent auto-refresh
+        const interval = setInterval(() => {
+            fetchMyBookings(parsedUser, true);
+        }, 30000);
+        return () => clearInterval(interval);
     }, [router]);
 
     const handlePaymentSuccess = async (bookingId: string, reference: string) => {
@@ -287,106 +439,129 @@ export default function ClientDashboard() {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {myBookings.map((booking) => (
-                                <div key={booking._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between md:items-center gap-4 hover:shadow-md transition">
-                                    <div>
-                                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{booking.itemType}</p>
-                                        <h3 className="text-xl font-black text-[#004A99]">{booking.itemName}</h3>
-                                        {booking.itemType === 'car' && booking.vehicleNumber && (
-                                            <p className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1.5 rounded-xl border border-green-100 inline-block mt-2">
-                                                🚘 Plate No: {booking.vehicleNumber}
-                                            </p>
-                                        )}
-                                        <p className="text-sm text-gray-600 font-medium mt-2">
-                                            <span className="font-bold">From:</span> {booking.checkIn ? new Date(booking.checkIn).toLocaleString() : 'N/A'}
-                                        </p>
-                                        <p className="text-sm text-gray-600 font-medium">
-                                            <span className="font-bold">To:</span> {booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A'}
-                                        </p>
-                                        <p className="text-xs text-gray-400 font-medium mt-2">
-                                            Reserved at: {booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
-                                        </p>
-                                    </div>
-                                    <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end gap-2">
-                                        <p className="text-sm text-gray-500 font-bold mb-0">Total Escrow</p>
-                                        <p className="text-2xl font-black text-gray-900">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</p>
-                                        <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                            booking.status === 'Pending Escrow' 
-                                                ? 'bg-yellow-100 text-yellow-800' 
-                                                : booking.status === 'Approved for Disbursement'
-                                                    ? 'bg-blue-100 text-blue-800'
-                                                    : 'bg-green-100 text-green-800'
-                                        }`}>
-                                            {booking.status}
-                                        </span>
-                                        
-                                        <div className="flex flex-wrap gap-2 mt-2">
-                                            {booking.status === 'Pending Escrow' ? (
-                                                <button
-                                                    disabled
-                                                    title="Available after payment confirmation"
-                                                    className="text-xs font-bold text-gray-400 flex items-center gap-1 bg-gray-100 px-2.5 py-1.5 rounded-lg border border-gray-200 cursor-not-allowed opacity-60"
-                                                >
-                                                    📄 Receipt/Invoice (Locked)
-                                                </button>
-                                            ) : (
-                                                <a
-                                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`}
-                                                    target="_blank"
-                                                    rel="noreferrer"
-                                                    className="text-xs font-bold text-[#004A99] hover:underline flex items-center gap-1 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"
-                                                >
-                                                    📄 Receipt/Invoice
-                                                </a>
-                                            )}
-                                            {booking.itemType === 'car' && (
-                                                <button
-                                                    onClick={() => handleShareBooking(booking)}
-                                                    className="text-xs font-bold text-green-700 hover:text-green-800 flex items-center gap-1 bg-green-50 border border-green-100 px-2.5 py-1.5 rounded-lg hover:bg-green-100 transition"
-                                                >
-                                                    🔗 Share Booking
-                                                </button>
-                                            )}
-                                            {booking.status === 'Pending Escrow' && (
-                                                <>
-                                                    <button 
-                                                        onClick={() => { 
-                                                            setSelectedBooking(booking); 
-                                                            setEditData({ 
-                                                                clientName: booking.clientName || '', 
-                                                                clientEmail: booking.clientEmail || '', 
-                                                                clientPhone: booking.clientPhone || '', 
-                                                                deliveryAddress: booking.deliveryAddress || '', 
-                                                                checkIn: booking.checkIn || '', 
-                                                                checkOut: booking.checkOut || '', 
-                                                                guests: booking.guests || 1 
-                                                            }); 
-                                                            setIsEditModalOpen(true); 
-                                                        }}
-                                                        className="text-xs font-bold text-gray-600 hover:text-[#000080] flex items-center gap-1 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-white"
-                                                    >
-                                                        ✏️ Correct Details
-                                                    </button>
-                                                    <button 
-                                                        onClick={() => handleCancelBooking(booking._id)}
-                                                        className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 border border-red-100 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition"
-                                                    >
-                                                        ✕ Cancel Booking
-                                                    </button>
-                                                </>
-                                            )}
-                                        </div>
+                            {myBookings.map((booking) => {
+                                const allowedInvoiceStatuses = ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'];
+                                const canDownloadInvoice = allowedInvoiceStatuses.includes(booking.status);
+                                const isPaidCar = booking.itemType === 'car' && ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed'].includes(booking.status);
 
-                                        {booking.status === 'Pending Escrow' && (
-                                            <PaystackPaymentButton 
-                                                booking={booking} 
-                                                user={user} 
-                                                onSuccess={handlePaymentSuccess} 
-                                            />
+                                return (
+                                    <div key={booking._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-4 hover:shadow-md transition">
+                                        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+                                            <div>
+                                                <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{booking.itemType}</p>
+                                                <h3 className="text-xl font-black text-[#004A99]">{booking.itemName}</h3>
+                                                {booking.itemType === 'car' && booking.vehicleNumber && (
+                                                    <p className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1.5 rounded-xl border border-green-100 inline-block mt-2">
+                                                        🚘 Plate No: {booking.vehicleNumber}
+                                                    </p>
+                                                )}
+                                                <p className="text-sm text-gray-600 font-medium mt-2">
+                                                    <span className="font-bold">From:</span> {booking.checkIn ? new Date(booking.checkIn).toLocaleString() : 'N/A'}
+                                                </p>
+                                                <p className="text-sm text-gray-600 font-medium">
+                                                    <span className="font-bold">To:</span> {booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A'}
+                                                </p>
+                                                <p className="text-xs text-gray-400 font-medium mt-2">
+                                                    Reserved at: {booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
+                                                </p>
+                                            </div>
+                                            <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end gap-2">
+                                                <p className="text-sm text-gray-500 font-bold mb-0">Total Escrow</p>
+                                                <p className="text-2xl font-black text-gray-900">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</p>
+                                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                                                    booking.status === 'Pending Escrow' 
+                                                        ? 'bg-yellow-100 text-yellow-800' 
+                                                        : booking.status === 'Approved for Disbursement'
+                                                            ? 'bg-blue-100 text-blue-800'
+                                                            : booking.status === 'Cancelled'
+                                                                ? 'bg-red-100 text-red-800'
+                                                                : 'bg-green-100 text-green-800'
+                                                }`}>
+                                                    {booking.status}
+                                                </span>
+                                                
+                                                <div className="flex flex-wrap gap-2 mt-2">
+                                                    {!canDownloadInvoice ? (
+                                                        <button
+                                                            disabled
+                                                            title="Available after payment confirmation"
+                                                            className="text-xs font-bold text-gray-400 flex items-center gap-1 bg-gray-100 px-2.5 py-1.5 rounded-lg border border-gray-200 cursor-not-allowed opacity-60"
+                                                        >
+                                                            📄 Receipt/Invoice (Locked)
+                                                        </button>
+                                                    ) : (
+                                                        <a
+                                                            href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`}
+                                                            target="_blank"
+                                                            rel="noreferrer"
+                                                            className="text-xs font-bold text-[#004A99] hover:underline flex items-center gap-1 bg-blue-50 px-2.5 py-1.5 rounded-lg border border-blue-100"
+                                                        >
+                                                            📄 Receipt/Invoice
+                                                        </a>
+                                                    )}
+                                                    {isPaidCar && (
+                                                        <button
+                                                            onClick={() => setTrackingBookingId(trackingBookingId === booking._id ? null : booking._id)}
+                                                            className="text-xs font-bold text-blue-700 hover:text-blue-800 flex items-center gap-1 bg-blue-50 border border-blue-100 px-2.5 py-1.5 rounded-lg hover:bg-blue-100 transition"
+                                                        >
+                                                            🗺️ {trackingBookingId === booking._id ? 'Hide Live Map' : 'Track Live Location'}
+                                                        </button>
+                                                    )}
+                                                    {booking.itemType === 'car' && (
+                                                        <button
+                                                            onClick={() => handleShareBooking(booking)}
+                                                            className="text-xs font-bold text-green-700 hover:text-green-800 flex items-center gap-1 bg-green-50 border border-green-100 px-2.5 py-1.5 rounded-lg hover:bg-green-100 transition"
+                                                        >
+                                                            🔗 Share Booking
+                                                        </button>
+                                                    )}
+                                                    {booking.status === 'Pending Escrow' && (
+                                                        <>
+                                                            <button 
+                                                                onClick={() => { 
+                                                                    setSelectedBooking(booking); 
+                                                                    setEditData({ 
+                                                                        clientName: booking.clientName || '', 
+                                                                        clientEmail: booking.clientEmail || '', 
+                                                                        clientPhone: booking.clientPhone || '', 
+                                                                        deliveryAddress: booking.deliveryAddress || '', 
+                                                                        checkIn: booking.checkIn || '', 
+                                                                        checkOut: booking.checkOut || '', 
+                                                                        guests: booking.guests || 1 
+                                                                    }); 
+                                                                    setIsEditModalOpen(true); 
+                                                                }}
+                                                                className="text-xs font-bold text-gray-600 hover:text-[#000080] flex items-center gap-1 bg-gray-50 border border-gray-200 px-2.5 py-1.5 rounded-lg hover:bg-white"
+                                                            >
+                                                                ✏️ Correct Details
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleCancelBooking(booking._id)}
+                                                                className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 border border-red-100 px-2.5 py-1.5 rounded-lg hover:bg-red-100 transition"
+                                                            >
+                                                                ✕ Cancel Booking
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+ 
+                                                {booking.status === 'Pending Escrow' && (
+                                                    <PaystackPaymentButton 
+                                                        booking={booking} 
+                                                        user={user} 
+                                                        onSuccess={handlePaymentSuccess} 
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                        
+                                        {/* Nested Simulated Map tracker inside paid car rentals */}
+                                        {isPaidCar && trackingBookingId === booking._id && (
+                                            <LiveCarTracker booking={booking} />
                                         )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
                 </div>

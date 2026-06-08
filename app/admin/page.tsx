@@ -7,6 +7,7 @@ import Link from 'next/link';
 
 const AMENITIES_LIST = [
   "High-speed WiFi",
+  "24hrs Electricity",
   "Swimming Pool",
   "Gym / Fitness Center",
   "Spa & Wellness",
@@ -128,10 +129,16 @@ export default function SuperadminDashboard() {
 
         setUser(parsedUser);
         fetchAllSystemData();
+
+        // 30s background silent auto-refresh
+        const interval = setInterval(() => {
+            fetchAllSystemData(true);
+        }, 30000);
+        return () => clearInterval(interval);
     }, [router]);
 
-    const fetchAllSystemData = async () => {
-        setIsLoading(true);
+    const fetchAllSystemData = async (silent = false) => {
+        if (!silent) setIsLoading(true);
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -929,18 +936,18 @@ export default function SuperadminDashboard() {
                                                                                      💵 Confirm Deposit
                                                                                  </button>
                                                                              )}
-                                                                             {booking.status === 'Pending Escrow' ? (
-                                                                                 <span className="text-xs text-center font-bold text-yellow-700 bg-yellow-50 border border-yellow-100 rounded-lg p-2">Pending Escrow Receipt Locked</span>
-                                                                             ) : (
-                                                                                 <a 
-                                                                                     href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
-                                                                                     target="_blank" 
-                                                                                     rel="noreferrer"
-                                                                                     className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 text-center transition"
-                                                                                 >
-                                                                                     📄 Get Invoice Receipt PDF
-                                                                                 </a>
-                                                                             )}
+                                                                             {!['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'].includes(booking.status) ? (
+                                                 <span className="text-xs text-center font-bold text-gray-500 bg-gray-50 border border-gray-100 rounded-lg p-2">Receipt Locked ({booking.status})</span>
+                                             ) : (
+                                                 <a 
+                                                     href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
+                                                     target="_blank" 
+                                                     rel="noreferrer"
+                                                     className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 text-center transition"
+                                                 >
+                                                     📄 Get Invoice Receipt PDF
+                                                 </a>
+                                             )}
                                                                          </div>
                                                                     </div>
                                                                 </td>
@@ -1056,25 +1063,25 @@ export default function SuperadminDashboard() {
                                                                             >
                                                                                 ✏️ Correct Details
                                                                             </button>
-                                                                            {booking.status === 'Pending Escrow' ? (
-                                                                                <button 
-                                                                                    disabled
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                    className="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 cursor-not-allowed opacity-60 text-center w-full"
-                                                                                >
-                                                                                    📄 Receipt (Locked)
-                                                                                </button>
-                                                                            ) : (
-                                                                                <a 
-                                                                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
-                                                                                    target="_blank" 
-                                                                                    rel="noreferrer"
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                                    className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center animate-fade-in"
-                                                                                >
-                                                                                    📄 Get Receipt PDF
-                                                                                </a>
-                                                                            )}
+                                                                            {!['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'].includes(booking.status) ? (
+                                                 <button 
+                                                     disabled
+                                                     onClick={(e) => e.stopPropagation()}
+                                                     className="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 cursor-not-allowed opacity-60 text-center w-full"
+                                                 >
+                                                     📄 Receipt (Locked)
+                                                 </button>
+                                             ) : (
+                                                 <a 
+                                                     href={`${process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com'}/api/bookings/${booking._id}/invoice`} 
+                                                     target="_blank" 
+                                                     rel="noreferrer"
+                                                     onClick={(e) => e.stopPropagation()}
+                                                     className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center animate-fade-in"
+                                                 >
+                                                     📄 Get Receipt PDF
+                                                 </a>
+                                             )}
                                                                             {booking.status !== 'Archived' && (
                                                                                 <button 
                                                                                     onClick={(e) => { e.stopPropagation(); handleDeleteBooking(booking._id); }} 

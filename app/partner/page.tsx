@@ -123,10 +123,16 @@ export default function PartnerDashboard() {
 
         setUser(parsedUser);
         fetchPartnerData(parsedUser);
+
+        // 30s background silent auto-refresh
+        const interval = setInterval(() => {
+            fetchPartnerData(parsedUser, true);
+        }, 30000);
+        return () => clearInterval(interval);
     }, [router]);
 
-    const fetchPartnerData = async (partnerData: any) => {
-        setIsLoading(true);
+    const fetchPartnerData = async (partnerData: any, silent = false) => {
+        if (!silent) setIsLoading(true);
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const secureId = partnerData.id || partnerData.userId || partnerData._id;

@@ -26,6 +26,10 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         checkOut: ''
     });
 
+    const [rentalType, setRentalType] = useState<'Chauffeur Driven' | 'Self Drive'>('Chauffeur Driven');
+    const [fuelPlan, setFuelPlan] = useState<'Self Fueling' | 'Fuel Inclusive'>('Self Fueling');
+    const [travelScope, setTravelScope] = useState<'Intra-City' | 'Inter-State'>('Intra-City');
+
     useEffect(() => {
         if (isOpen) {
             const storedUser = localStorage.getItem('airgo_user');
@@ -57,6 +61,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkIn: formattedCheckIn,
                 checkOut: formattedCheckOut
             });
+            setRentalType('Chauffeur Driven');
+            setFuelPlan('Self Fueling');
+            setTravelScope('Intra-City');
             setStep(1); // Reset to first step
         }
     }, [isOpen, initialCheckIn, initialCheckOut]);
@@ -72,12 +79,20 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const calculateTotal = () => {
         const discount = car.discountPercentage || 0;
         const discountedRate = Math.round(numericPrice * (1 - discount / 100));
-        if (!bookingDetails.checkIn || !bookingDetails.checkOut) return discountedRate;
+        
+        let dailyExtra = 0;
+        if (rentalType === 'Chauffeur Driven') dailyExtra += 15000;
+        if (fuelPlan === 'Fuel Inclusive') dailyExtra += 25000;
+        if (travelScope === 'Inter-State') dailyExtra += 35000;
+        
+        const totalDailyRate = discountedRate + dailyExtra;
+
+        if (!bookingDetails.checkIn || !bookingDetails.checkOut) return totalDailyRate;
         const start = new Date(bookingDetails.checkIn);
         const end = new Date(bookingDetails.checkOut);
         const hours = Math.max((end.getTime() - start.getTime()) / (1000 * 3600), 1);
         const days = Math.ceil(hours / 24);
-        return discountedRate * days;
+        return totalDailyRate * days;
     };
 
     const finalPrice = calculateTotal();
@@ -92,6 +107,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             checkIn: '',
             checkOut: ''
         });
+        setRentalType('Chauffeur Driven');
+        setFuelPlan('Self Fueling');
+        setTravelScope('Intra-City');
         onClose();
     };
 
@@ -135,7 +153,10 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 clientEmail: bookingDetails.email,
                 clientPhone: bookingDetails.phone,
                 deliveryAddress: bookingDetails.address,
-                referredBy
+                referredBy,
+                rentalType,
+                fuelPlan,
+                travelScope
             };
 
             const response = await fetch(`${apiUrl}/api/bookings`, {
@@ -277,12 +298,64 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" placeholder="Where should we bring the car?" value={bookingDetails.address} onChange={e => setBookingDetails({ ...bookingDetails, address: e.target.value })} />
                             </div>
 
+                            {/* SERVICE CONFIGURATION */}
+                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-150 space-y-3">
+                                <h4 className="text-xs font-black text-[#000080] uppercase tracking-wider">Service Configuration</h4>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                    {/* Chauffeur Service */}
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Chauffeur Service</label>
+                                        <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
+                                            <button type="button" onClick={() => setRentalType('Chauffeur Driven')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${rentalType === 'Chauffeur Driven' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+                                                Chauffeur
+                                            </button>
+                                            <button type="button" onClick={() => setRentalType('Self Drive')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${rentalType === 'Self Drive' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+                                                Self Drive
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Fuel Plan */}
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Fueling Plan</label>
+                                        <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
+                                            <button type="button" onClick={() => setFuelPlan('Self Fueling')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${fuelPlan === 'Self Fueling' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+                                                Self Fuel
+                                            </button>
+                                            <button type="button" onClick={() => setFuelPlan('Fuel Inclusive')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${fuelPlan === 'Fuel Inclusive' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+                                                Inclusive
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Travel Scope */}
+                                    <div className="flex flex-col">
+                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Travel Scope</label>
+                                        <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
+                                            <button type="button" onClick={() => setTravelScope('Intra-City')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${travelScope === 'Intra-City' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+                                                Intra-City
+                                            </button>
+                                            <button type="button" onClick={() => setTravelScope('Inter-State')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${travelScope === 'Inter-State' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
+                                                Inter-State
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="text-[9px] text-gray-400 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-gray-100 flex flex-col gap-0.5">
+                                    <p>💡 Chauffeur: <strong>+₦15,000/day</strong> (includes professional driver allowance)</p>
+                                    <p>💡 Fuel Inclusive: <strong>+₦25,000/day</strong> (vehicle delivered with full tank)</p>
+                                    <p>💡 Inter-State: <strong>+₦35,000/day</strong> (includes state transit permits)</p>
+                                </div>
+                            </div>
+
                             <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-100">
                                 <span className="text-gray-400 font-bold uppercase tracking-wider text-xs">TOTAL ESCROW</span>
                                 <div className="flex flex-col items-end">
                                     {car.discountPercentage > 0 && (
                                         <span className="text-xs text-gray-400 line-through font-bold">
-                                            ₦{((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1 * numericPrice).toLocaleString()}
+                                            ₦{(((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1) * (numericPrice + (rentalType === 'Chauffeur Driven' ? 15000 : 0) + (fuelPlan === 'Fuel Inclusive' ? 25000 : 0) + (travelScope === 'Inter-State' ? 35000 : 0))).toLocaleString()}
                                         </span>
                                     )}
                                     <span className="text-3xl font-black text-[#000080]">₦{finalPrice.toLocaleString()}</span>
