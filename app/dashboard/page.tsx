@@ -8,6 +8,38 @@ import dynamic from 'next/dynamic';
 
 const PaystackPaymentButton = dynamic(() => import('./paystack-button'), { ssr: false });
 
+const formatDisplayDate = (dateStr: string, itemType: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+        const parts = dateStr.split('T');
+        const datePart = parts[0];
+        
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const [year, month, day] = datePart.split('-').map(Number);
+        
+        if (!year || !month || !day) return dateStr;
+        
+        const formattedDate = `${months[month - 1]} ${day}, ${year}`;
+        
+        if (itemType === 'hotel') {
+            return `${formattedDate} at 12:00 PM`;
+        } else {
+            if (parts[1]) {
+                const [hourStr, minStr] = parts[1].split(':');
+                let hour = parseInt(hourStr, 10);
+                const min = minStr ? minStr.substring(0, 2) : '00';
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12;
+                hour = hour ? hour : 12;
+                return `${formattedDate} at ${hour}:${min} ${ampm}`;
+            }
+            return formattedDate;
+        }
+    } catch (e) {
+        return dateStr;
+    }
+};
+
 // Simulated Live GPS tracking component for active car rentals
 function LiveCarTracker({ booking }: { booking: any }) {
     const [progress, setProgress] = React.useState(0);
@@ -360,8 +392,8 @@ export default function ClientDashboard() {
     };
 
     const handleShareBooking = async (booking: any) => {
-        const checkInDate = booking.checkIn ? new Date(booking.checkIn).toLocaleString() : 'N/A';
-        const checkOutDate = booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A';
+        const checkInDate = booking.checkIn ? formatDisplayDate(booking.checkIn, booking.itemType) : 'N/A';
+        const checkOutDate = booking.checkOut ? formatDisplayDate(booking.checkOut, booking.itemType) : 'N/A';
         const priceNum = Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0);
         
         const shareText = `Airgo Car Rental Booking Details:\n---------------------------------\nVehicle: ${booking.itemName}\nPlate Number: ${booking.vehicleNumber || 'N/A'}\nClient Name: ${booking.clientName || 'N/A'}\nPickup: ${checkInDate}\nReturn: ${checkOutDate}\nStatus: ${booking.status}\nTotal Price: ₦${priceNum.toLocaleString()}\n---------------------------------\nBook securely via Airgo Escrow.`;
@@ -456,13 +488,13 @@ export default function ClientDashboard() {
                                                     </p>
                                                 )}
                                                 <p className="text-sm text-gray-600 font-medium mt-2">
-                                                    <span className="font-bold">From:</span> {booking.checkIn ? new Date(booking.checkIn).toLocaleString() : 'N/A'}
+                                                    <span className="font-bold">From:</span> {booking.checkIn ? formatDisplayDate(booking.checkIn, booking.itemType) : 'N/A'}
                                                 </p>
                                                 <p className="text-sm text-gray-600 font-medium">
-                                                    <span className="font-bold">To:</span> {booking.checkOut ? new Date(booking.checkOut).toLocaleString() : 'N/A'}
+                                                    <span className="font-bold">To:</span> {booking.checkOut ? formatDisplayDate(booking.checkOut, booking.itemType) : 'N/A'}
                                                 </p>
                                                 <p className="text-xs text-gray-400 font-medium mt-2">
-                                                    Reserved at: {booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
+                                                    Reserved at: {booking.createdAt ? formatDisplayDate(booking.createdAt, 'other') : 'N/A'}
                                                 </p>
                                             </div>
                                             <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end gap-2">

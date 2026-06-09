@@ -21,6 +21,38 @@ const AMENITIES_LIST = [
   "Mini Bar"
 ];
 
+const formatDisplayDate = (dateStr: string, itemType: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+        const parts = dateStr.split('T');
+        const datePart = parts[0];
+        
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const [year, month, day] = datePart.split('-').map(Number);
+        
+        if (!year || !month || !day) return dateStr;
+        
+        const formattedDate = `${months[month - 1]} ${day}, ${year}`;
+        
+        if (itemType === 'hotel') {
+            return `${formattedDate} at 12:00 PM`;
+        } else {
+            if (parts[1]) {
+                const [hourStr, minStr] = parts[1].split(':');
+                let hour = parseInt(hourStr, 10);
+                const min = minStr ? minStr.substring(0, 2) : '00';
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12;
+                hour = hour ? hour : 12;
+                return `${formattedDate} at ${hour}:${min} ${ampm}`;
+            }
+            return formattedDate;
+        }
+    } catch (e) {
+        return dateStr;
+    }
+};
+
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates'>('overview');
@@ -874,8 +906,8 @@ export default function SuperadminDashboard() {
                                                                 <p className="text-xs text-gray-500">{booking.clientEmail || 'No email'}</p>
                                                             </td>
                                                             <td className="p-4">
-                                                                <p className="text-xs text-green-700 font-bold">Check-in: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                <p className="text-xs text-red-700 mt-0.5 font-bold">Check-out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                <p className="text-xs text-green-700 font-bold">Check-in: {formatDisplayDate(booking.checkIn, booking.itemType)}</p>
+                                                                <p className="text-xs text-red-700 mt-0.5 font-bold">Check-out: {formatDisplayDate(booking.checkOut, booking.itemType)}</p>
                                                             </td>
                                                             <td className="p-4">
                                                                 <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -1043,10 +1075,10 @@ export default function SuperadminDashboard() {
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            <p className="text-xs font-bold text-green-700">In: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-green-700">In: {formatDisplayDate(booking.checkIn, booking.itemType)}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out: {formatDisplayDate(booking.checkOut, booking.itemType)}</p>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
-                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? formatDisplayDate(booking.createdAt, 'other') : 'N/A'}</p>
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
                                                                              {booking.status === 'Pending Escrow' && (

@@ -21,6 +21,38 @@ const AMENITIES_LIST = [
   "Mini Bar"
 ];
 
+const formatDisplayDate = (dateStr: string, itemType: string) => {
+    if (!dateStr) return 'N/A';
+    try {
+        const parts = dateStr.split('T');
+        const datePart = parts[0];
+        
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const [year, month, day] = datePart.split('-').map(Number);
+        
+        if (!year || !month || !day) return dateStr;
+        
+        const formattedDate = `${months[month - 1]} ${day}, ${year}`;
+        
+        if (itemType === 'hotel') {
+            return `${formattedDate} at 12:00 PM`;
+        } else {
+            if (parts[1]) {
+                const [hourStr, minStr] = parts[1].split(':');
+                let hour = parseInt(hourStr, 10);
+                const min = minStr ? minStr.substring(0, 2) : '00';
+                const ampm = hour >= 12 ? 'PM' : 'AM';
+                hour = hour % 12;
+                hour = hour ? hour : 12;
+                return `${formattedDate} at ${hour}:${min} ${ampm}`;
+            }
+            return formattedDate;
+        }
+    } catch (e) {
+        return dateStr;
+    }
+};
+
 export default function PartnerDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings' | 'profile'>('overview');
@@ -672,9 +704,9 @@ export default function PartnerDashboard() {
                                                             </td>
                                                             <td className="p-4 text-sm text-gray-600 font-medium">
                                                                 {isCarPartner ? (
-                                                                    <p>Out: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                    <p>Out: {formatDisplayDate(booking.checkIn, 'car')}</p>
                                                                 ) : (
-                                                                    <p>In: {new Date(booking.checkIn).toLocaleDateString()}</p>
+                                                                    <p>In: {formatDisplayDate(booking.checkIn, 'hotel')}</p>
                                                                 )}
                                                             </td>
                                                             <td className="p-4 text-right font-black text-[#004A99]">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</td>
@@ -708,12 +740,12 @@ export default function PartnerDashboard() {
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
-                                                                            <p className="text-xs font-bold text-green-700">In / Out: {new Date(booking.checkIn).toLocaleString()}</p>
-                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out / Return: {new Date(booking.checkOut).toLocaleString()}</p>
+                                                                            <p className="text-xs font-bold text-green-700">In / Out: {formatDisplayDate(booking.checkIn, booking.itemType)}</p>
+                                                                            <p className="text-xs font-bold text-red-700 mt-1">Out / Return: {formatDisplayDate(booking.checkOut, booking.itemType)}</p>
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Reserved At</p>
-                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString() : 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? formatDisplayDate(booking.createdAt, 'other') : 'N/A'}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
