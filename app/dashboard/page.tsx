@@ -494,7 +494,7 @@ export default function ClientDashboard() {
                                                     <span className="font-bold">To:</span> {booking.checkOut ? formatDisplayDate(booking.checkOut, booking.itemType) : 'N/A'}
                                                 </p>
                                                 <p className="text-xs text-gray-400 font-medium mt-2">
-                                                    Reserved at: {booking.createdAt ? formatDisplayDate(booking.createdAt, 'other') : 'N/A'}
+                                                    Reserved at: {booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}
                                                 </p>
                                             </div>
                                             <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end gap-2">

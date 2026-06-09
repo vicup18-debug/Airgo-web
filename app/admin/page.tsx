@@ -784,7 +784,7 @@ export default function SuperadminDashboard() {
                                     </div>
                                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
                                         <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Total Bookings</p>
-                                        <p className="text-4xl font-black text-gray-900">{allBookings.length}</p>
+                                        <p className="text-4xl font-black text-gray-900">{allBookings.filter(b => b.status !== 'Cancelled' && b.status !== 'Archived').length}</p>
                                         <p className="text-xs text-gray-400 mt-2 font-bold">Escrow transactions ledger</p>
                                     </div>
                                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200">
@@ -1078,7 +1078,7 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-xs font-bold text-green-700">In: {formatDisplayDate(booking.checkIn, booking.itemType)}</p>
                                                                             <p className="text-xs font-bold text-red-700 mt-1">Out: {formatDisplayDate(booking.checkOut, booking.itemType)}</p>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
-                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? formatDisplayDate(booking.createdAt, 'other') : 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
                                                                              {booking.status === 'Pending Escrow' && (

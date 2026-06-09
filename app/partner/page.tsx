@@ -411,7 +411,7 @@ export default function PartnerDashboard() {
     };
 
     const calculateTotalRevenue = () => {
-        return myBookings.reduce((sum, b) => {
+        return myBookings.filter(b => b.status !== 'Cancelled' && b.status !== 'Archived').reduce((sum, b) => {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
             return sum + (num || 0);
         }, 0).toLocaleString();
@@ -433,7 +433,7 @@ export default function PartnerDashboard() {
             return sum + Math.max(0, (item.totalAllocated || 0) - bookedCount);
           }, 0)
         : 0;
-    const totalRentalDays = isCarPartner ? myBookings.reduce((sum, b) => {
+    const totalRentalDays = isCarPartner ? myBookings.filter(b => b.status !== 'Cancelled' && b.status !== 'Archived').reduce((sum, b) => {
         if (!b.checkIn || !b.checkOut) return sum;
         const start = new Date(b.checkIn);
         const end = new Date(b.checkOut);
@@ -745,7 +745,7 @@ export default function PartnerDashboard() {
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Reserved At</p>
-                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? formatDisplayDate(booking.createdAt, 'other') : 'N/A'}</p>
+                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                                                         </div>
                                                                     </div>
                                                                 </td>
