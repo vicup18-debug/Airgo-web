@@ -128,6 +128,7 @@ export default function SuperadminDashboard() {
     });
 
     const [isUploading, setIsUploading] = useState(false);
+    const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
     const router = useRouter();
 
     const toggleRoomAmenity = (amenity: string, isEdit: boolean = false) => {
@@ -207,10 +208,14 @@ export default function SuperadminDashboard() {
     const handleUpdateEscrowStatus = async (bookingId: string, nextStatus: string, actionLabel: string) => {
         if (window.confirm(`${actionLabel} for this reservation?`)) {
             try {
+                const token = localStorage.getItem('airgo_token');
                 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
                 const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify({ status: nextStatus })
                 });
 
@@ -231,10 +236,14 @@ export default function SuperadminDashboard() {
         if (ref === null) return; // User cancelled prompt
 
         try {
+            const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/status`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ status: 'Paid', paymentReference: ref || 'Direct Bank Deposit' })
             });
 
@@ -246,6 +255,30 @@ export default function SuperadminDashboard() {
             }
         } catch (error) {
             toast.error("Error connecting to server.");
+        }
+    };
+
+    const handleResendEmail = async (bookingId: string) => {
+        setIsResendingEmail(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/resend-email`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || "Emails resent successfully!");
+            } else {
+                toast.error(data.message || "Failed to resend email.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsResendingEmail(null);
         }
     };
 
@@ -1082,19 +1115,26 @@ export default function SuperadminDashboard() {
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
                                                                              {booking.status === 'Pending Escrow' && (
-                                                                                 <button 
-                                                                                     onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
-                                                                                     className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-750 transition"
-                                                                                 >
-                                                                                     💵 Confirm Deposit
-                                                                                 </button>
-                                                                             )}
-                                                                            <button 
-                                                                                onClick={(e) => { e.stopPropagation(); handleEditBookingClick(booking); }} 
-                                                                                className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-700 transition"
-                                                                            >
-                                                                                ✏️ Correct Details
-                                                                            </button>
+                                                                                  <button 
+                                                                                      onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
+                                                                                      className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-750 transition"
+                                                                                  >
+                                                                                      💵 Confirm Deposit
+                                                                                  </button>
+                                                                              )}
+                                                                             <button 
+                                                                                 onClick={(e) => { e.stopPropagation(); handleEditBookingClick(booking); }} 
+                                                                                 className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-700 transition"
+                                                                             >
+                                                                                 ✏️ Correct Details
+                                                                             </button>
+                                                                             <button 
+                                                                                 onClick={(e) => { e.stopPropagation(); handleResendEmail(booking._id); }} 
+                                                                                 disabled={isResendingEmail === booking._id}
+                                                                                 className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-900 transition disabled:opacity-50"
+                                                                             >
+                                                                                 ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
+                                                                             </button>
                                                                             {!['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'].includes(booking.status) ? (
                                                  <button 
                                                      disabled

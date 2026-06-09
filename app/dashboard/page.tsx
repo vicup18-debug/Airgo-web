@@ -189,6 +189,7 @@ export default function ClientDashboard() {
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [trackingBookingId, setTrackingBookingId] = useState<string | null>(null);
+    const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
     const router = useRouter();
 
     // Booking edit state
@@ -248,6 +249,31 @@ export default function ClientDashboard() {
             setIsSavingProfile(false);
         }
     };
+
+    const handleResendEmail = async (bookingId: string) => {
+        setIsResendingEmail(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/resend-email`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || "Emails resent successfully!");
+            } else {
+                toast.error(data.message || "Failed to resend email.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsResendingEmail(null);
+        }
+    };
+
     const fetchMyBookings = async (parsedUser: any, silent = false) => {
         try {
             if (!silent) setIsLoading(true);
@@ -531,6 +557,13 @@ export default function ClientDashboard() {
                                                             📄 Receipt/Invoice
                                                         </a>
                                                     )}
+                                                    <button
+                                                        onClick={() => handleResendEmail(booking._id)}
+                                                        disabled={isResendingEmail === booking._id}
+                                                        className="text-xs font-bold text-gray-700 hover:text-gray-900 flex items-center gap-1 bg-gray-50 px-2.5 py-1.5 rounded-lg border border-gray-200 transition-all hover:bg-gray-100 disabled:opacity-50"
+                                                    >
+                                                        ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
+                                                    </button>
                                                     {isPaidCar && (
                                                         <button
                                                             onClick={() => setTrackingBookingId(trackingBookingId === booking._id ? null : booking._id)}

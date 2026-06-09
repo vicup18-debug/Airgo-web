@@ -106,6 +106,7 @@ export default function PartnerDashboard() {
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
+    const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
 
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -421,6 +422,30 @@ export default function PartnerDashboard() {
         setExpandedBookingId(expandedBookingId === id ? null : id);
     };
 
+    const handleResendEmail = async (bookingId: string) => {
+        setIsResendingEmail(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/resend-email`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || "Emails resent successfully!");
+            } else {
+                toast.error(data.message || "Failed to resend email.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsResendingEmail(null);
+        }
+    };
+
     const isCarPartner = user?.partnerType?.toLowerCase().includes('car');
     const isApartmentPartner = user?.partnerType === 'apartment';
 
@@ -725,7 +750,7 @@ export default function PartnerDashboard() {
                                                         {expandedBookingId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200 shadow-inner">
                                                                 <td colSpan={4} className="p-6">
-                                                                    <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                                                                    <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Booking Ref & Info</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking._id.substring(0, 12).toUpperCase()}</p>
@@ -746,6 +771,16 @@ export default function PartnerDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Reserved At</p>
                                                                             <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Actions</p>
+                                                                            <button
+                                                                                onClick={() => handleResendEmail(booking._id)}
+                                                                                disabled={isResendingEmail === booking._id}
+                                                                                className="text-[10px] font-black bg-blue-50 text-[#000080] px-3 py-2 rounded-lg border border-blue-100 hover:bg-blue-100 transition disabled:opacity-50 mt-1 flex items-center gap-1"
+                                                                            >
+                                                                                ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
+                                                                            </button>
                                                                         </div>
                                                                     </div>
                                                                 </td>
