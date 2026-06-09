@@ -99,19 +99,19 @@ export default function SuperadminDashboard() {
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
-    const [newCar, setNewCar] = useState({ name: '', type: '', price: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
+    const [newCar, setNewCar] = useState({ name: '', type: '', netPrice: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
     const [carImageFile, setCarImageFile] = useState<File | null>(null);
 
     // ROOM MATRIX FORM STATES 
     const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
-    const [newRoom, setNewRoom] = useState({ hotelName: '', hotelAddress: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
+    const [newRoom, setNewRoom] = useState({ hotelName: '', hotelAddress: '', name: '', netPrice: '', totalAllocated: '', amenities: '' });
     const [roomImageFile, setRoomImageFile] = useState<File | null>(null);
 
     // EDIT INVENTORY MODAL STATE
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
+        name: '', netPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
     });
 
     // EDIT BOOKING MODAL STATE
@@ -333,7 +333,7 @@ export default function SuperadminDashboard() {
         setSelectedInventoryForEdit({ ...item, listingType: type });
         setEditItemData({
             name: item.name || '',
-            price: String(item.price || item.pricePerNight || ''),
+            netPrice: String(item.netPrice || item.price || item.pricePerNight || ''),
             totalAllocated: String(item.totalAllocated || '1'),
             amenities: item.amenities || '',
             type: item.type || '',
@@ -359,7 +359,7 @@ export default function SuperadminDashboard() {
             const payload = isCar ? {
                 name: editItemData.name,
                 type: editItemData.type,
-                price: Number(editItemData.price),
+                netPrice: Number(editItemData.netPrice),
                 capacity: editItemData.capacity,
                 features: editItemData.features,
                 totalAllocated: Number(editItemData.totalAllocated),
@@ -369,7 +369,7 @@ export default function SuperadminDashboard() {
             } : {
                 hotelAddress: editItemData.hotelAddress,
                 name: editItemData.name,
-                pricePerNight: Number(editItemData.price),
+                netPrice: Number(editItemData.netPrice),
                 totalAllocated: Number(editItemData.totalAllocated),
                 amenities: editItemData.amenities
             };
@@ -625,13 +625,13 @@ export default function SuperadminDashboard() {
             const response = await fetch(`${apiUrl}/api/cars`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newCar, image: finalImageUrl, price: Number(newCar.price), partnerId: 'airgo_direct' })
+                body: JSON.stringify({ ...newCar, image: finalImageUrl, netPrice: Number(newCar.netPrice), partnerId: 'airgo_direct' })
             });
 
             if (response.ok) {
                 toast.success("Vehicle deployed successfully!");
                 setIsCarModalOpen(false);
-                setNewCar({ name: '', type: '', price: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
+                setNewCar({ name: '', type: '', netPrice: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
                 setCarImageFile(null);
                 fetchAllSystemData();
             }
@@ -653,17 +653,19 @@ export default function SuperadminDashboard() {
                     hotelName: newRoom.hotelName,
                     hotelAddress: newRoom.hotelAddress,
                     name: newRoom.name,
-                    pricePerNight: Number(newRoom.pricePerNight),
+                    netPrice: Number(newRoom.netPrice),
                     totalAllocated: Number(newRoom.totalAllocated),
                     amenities: newRoom.amenities,
-                    image: finalImageUrl
+                    image: finalImageUrl,
+                    images: [finalImageUrl],
+                    previewImage: finalImageUrl
                 })
             });
 
             if (response.ok) {
-                toast.success("Room Category published to live matrix pool!");
+                toast.success("Room category published successfully!");
                 setIsRoomModalOpen(false);
-                setNewRoom({ hotelName: '', hotelAddress: '', name: '', pricePerNight: '', totalAllocated: '', amenities: '' });
+                setNewRoom({ hotelName: '', hotelAddress: '', name: '', netPrice: '', totalAllocated: '', amenities: '' });
                 setRoomImageFile(null);
                 fetchAllSystemData();
             }
@@ -1611,8 +1613,12 @@ export default function SuperadminDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.price} onChange={e => setNewCar({ ...newCar, price: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price (Your Take-Home ₦)</label>
+                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.netPrice} onChange={e => setNewCar({ ...newCar, netPrice: e.target.value })} />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                </div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label> <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.vehicleNumber} onChange={e => setNewCar({ ...newCar, vehicleNumber: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.location} onChange={e => setNewCar({ ...newCar, location: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.state} onChange={e => setNewCar({ ...newCar, state: e.target.value })} /></div>
@@ -1647,7 +1653,11 @@ export default function SuperadminDashboard() {
                                 <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Room Tier Name</label><input required type="text" placeholder="e.g. Presidential Suite" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.name} onChange={e => setNewRoom({ ...newRoom, name: e.target.value })} /></div>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price Per Night (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.pricePerNight} onChange={e => setNewRoom({ ...newRoom, pricePerNight: e.target.value })} /></div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price Per Night (Your Take-Home ₦)</label>
+                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.netPrice} onChange={e => setNewRoom({ ...newRoom, netPrice: e.target.value })} />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                </div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
                             </div>
                             <div>
@@ -1703,7 +1713,11 @@ export default function SuperadminDashboard() {
                         <form onSubmit={handleSaveEditListing} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.price} onChange={e => setEditItemData({ ...editItemData, price: e.target.value })} /></div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price (Your Take-Home ₦)</label>
+                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.netPrice} onChange={e => setEditItemData({ ...editItemData, netPrice: e.target.value })} />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                </div>
                             </div>
 
                             {selectedInventoryForEdit.listingType === 'car' ? (

@@ -115,14 +115,14 @@ export default function PartnerDashboard() {
     const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
 
     const [newItem, setNewItem] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
+        name: '', netPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
     });
 
     // EDIT INVENTORY MODAL STATE
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
+        name: '', netPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
     });
 
 
@@ -259,9 +259,9 @@ export default function PartnerDashboard() {
             const endpoint = isCar ? '/api/cars' : '/api/rooms';
 
             const payload = isCar ? {
-                name: newItem.name, type: newItem.type, price: Number(newItem.price), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl, partnerId: secureId, vehicleNumber: newItem.vehicleNumber, location: newItem.location, state: newItem.state
+                name: newItem.name, type: newItem.type, netPrice: Number(newItem.netPrice), capacity: newItem.capacity, features: newItem.features, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl, partnerId: secureId, vehicleNumber: newItem.vehicleNumber, location: newItem.location, state: newItem.state
             } : {
-                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, pricePerNight: Number(newItem.price), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
+                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -275,7 +275,7 @@ export default function PartnerDashboard() {
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
-                setNewItem({ name: '', price: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '' });
+                setNewItem({ name: '', netPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -289,7 +289,7 @@ export default function PartnerDashboard() {
         setSelectedInventoryForEdit(item);
         setEditItemData({
             name: item.name || '',
-            price: String(item.price || item.pricePerNight || ''),
+            netPrice: String(item.netPrice || item.price || item.pricePerNight || ''),
             totalAllocated: String(item.totalAllocated || '1'),
             amenities: item.amenities || '',
             type: item.type || '',
@@ -319,7 +319,7 @@ export default function PartnerDashboard() {
             const payload = isCar ? {
                 name: editItemData.name,
                 type: editItemData.type,
-                price: Number(editItemData.price),
+                netPrice: Number(editItemData.netPrice),
                 capacity: editItemData.capacity,
                 features: editItemData.features,
                 totalAllocated: Number(editItemData.totalAllocated),
@@ -332,7 +332,7 @@ export default function PartnerDashboard() {
             } : {
                 hotelAddress: editItemData.hotelAddress,
                 name: editItemData.name,
-                pricePerNight: Number(editItemData.price),
+                netPrice: Number(editItemData.netPrice),
                 totalAllocated: Number(editItemData.totalAllocated),
                 amenities: editItemData.amenities,
                 description: editItemData.description,
@@ -865,7 +865,11 @@ export default function PartnerDashboard() {
                         <form onSubmit={handleAddItem} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per {isCarPartner ? 'day' : 'night'} (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.price} onChange={e => setNewItem({ ...newItem, price: e.target.value })} /></div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price per {isCarPartner ? 'day' : 'night'} (Your Take-Home ₦)</label>
+                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.netPrice} onChange={e => setNewItem({ ...newItem, netPrice: e.target.value })} />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                </div>
                             </div>
 
                             {isCarPartner ? (
@@ -946,7 +950,11 @@ export default function PartnerDashboard() {
                         <form onSubmit={handleSaveEditListing} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Price per {isCarPartner ? 'day' : 'night'} (₦)</label><input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.price} onChange={e => setEditItemData({ ...editItemData, price: e.target.value })} /></div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price per {isCarPartner ? 'day' : 'night'} (Your Take-Home ₦)</label>
+                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.netPrice} onChange={e => setEditItemData({ ...editItemData, netPrice: e.target.value })} />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                </div>
                             </div>
 
                             {isCarPartner ? (
