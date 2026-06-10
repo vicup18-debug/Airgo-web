@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Chatroom from '../../components/Chatroom';
 
 const AMENITIES_LIST = [
   "High-speed WiFi",
@@ -108,6 +109,11 @@ export default function PartnerDashboard() {
     const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
     const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
 
+    // Chatroom states
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatBookingId, setChatBookingId] = useState('');
+    const [chatBookingName, setChatBookingName] = useState('');
+
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -204,7 +210,7 @@ export default function PartnerDashboard() {
 
             // Fetch Inventory with unified secure ID maps
             const currentPartnerType = partnerData.partnerType || '';
-            if (currentPartnerType.toLowerCase().includes('car')) {
+            if (currentPartnerType.toLowerCase().includes('car') || currentPartnerType === 'shuttle' || currentPartnerType === 'airport-shuttle') {
                 const carsRes = await fetch(`${apiUrl}/api/cars`);
                 if (carsRes.ok) {
                     const allCars = await carsRes.json();
@@ -239,7 +245,7 @@ export default function PartnerDashboard() {
         try {
             let finalImageUrl = "";
             let finalImageUrls: string[] = [];
-            const isCar = user.partnerType?.toLowerCase().includes('car');
+            const isCar = user.partnerType?.toLowerCase().includes('car') || user.partnerType === 'shuttle' || user.partnerType === 'airport-shuttle';
 
             if (carImageFiles.length > 0) {
                 for (const file of carImageFiles) {
@@ -271,7 +277,7 @@ export default function PartnerDashboard() {
             });
 
             if (response.ok) {
-                toast.success(`${user.partnerType?.toLowerCase().includes('car') ? 'Vehicle' : 'Tier'} listed successfully!`);
+                toast.success(`${(user.partnerType?.toLowerCase().includes('car') || user.partnerType === 'shuttle' || user.partnerType === 'airport-shuttle') ? 'Vehicle/Trip' : 'Tier'} listed successfully!`);
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
@@ -312,7 +318,7 @@ export default function PartnerDashboard() {
         if (!selectedInventoryForEdit) return;
         setIsUploading(true);
         try {
-            const isCar = user.partnerType?.toLowerCase().includes('car');
+            const isCar = user.partnerType?.toLowerCase().includes('car') || user.partnerType === 'shuttle' || user.partnerType === 'airport-shuttle';
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const endpoint = isCar ? `/api/cars/${selectedInventoryForEdit._id}` : `/api/rooms/${selectedInventoryForEdit._id}`;
 
@@ -366,7 +372,7 @@ export default function PartnerDashboard() {
         if (!window.confirm("Are you sure you want to remove this listing?")) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const isCar = user.partnerType?.toLowerCase().includes('car');
+            const isCar = user.partnerType?.toLowerCase().includes('car') || user.partnerType === 'shuttle' || user.partnerType === 'airport-shuttle';
             const endpoint = isCar ? `/api/cars/${id}` : `/api/rooms/${id}`;
             const res = await fetch(`${apiUrl}${endpoint}`, { method: 'DELETE' });
             if (res.ok) {
@@ -385,7 +391,7 @@ export default function PartnerDashboard() {
     const handleUpdateInventory = async (id: string, updates: any) => {
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const isCar = user.partnerType?.toLowerCase().includes('car');
+            const isCar = user.partnerType?.toLowerCase().includes('car') || user.partnerType === 'shuttle' || user.partnerType === 'airport-shuttle';
             const endpoint = isCar ? `/api/cars/${id}` : `/api/rooms/${id}`;
             
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -446,7 +452,8 @@ export default function PartnerDashboard() {
         }
     };
 
-    const isCarPartner = user?.partnerType?.toLowerCase().includes('car');
+    const isCarPartner = user?.partnerType?.toLowerCase().includes('car') || user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
+    const isShuttlePartner = user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isApartmentPartner = user?.partnerType === 'apartment';
 
     const totalAllocatedRooms = (!isCarPartner) ? myInventory.reduce((sum, item) => sum + (item.totalAllocated || 0), 0) : 0;
@@ -505,7 +512,7 @@ export default function PartnerDashboard() {
                     <Link href="/" className="hover:opacity-80 transition block text-left">
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
-                            {isApartmentPartner ? 'Apartment Host' : isCarPartner ? 'Fleet Manager' : 'Hotelier'}
+                            {isApartmentPartner ? 'Apartment Host' : isShuttlePartner ? 'Shuttle Operator' : isCarPartner ? 'Fleet Manager' : 'Hotelier'}
                         </p>
                     </Link>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
@@ -513,7 +520,7 @@ export default function PartnerDashboard() {
                 <nav className="flex-1 p-4 space-y-2">
                     <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
                     <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>
-                        {isCarPartner ? '🚘 My Fleet' : isApartmentPartner ? '🏨 My Apartments' : '🏨 Room Categories'}
+                        {isShuttlePartner ? '🚘 My Shuttle Trips' : isCarPartner ? '🚘 My Fleet' : isApartmentPartner ? '🏨 My Apartments' : '🏨 Room Categories'}
                     </button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
                     <button onClick={() => { 
@@ -539,9 +546,9 @@ export default function PartnerDashboard() {
                 <header className="bg-white px-8 py-5 border-b border-gray-200 hidden md:flex items-center justify-between sticky top-0 z-10">
                     <h1 className="text-2xl font-black text-gray-900 capitalize">
                         {activeTab === 'overview' 
-                            ? (isCarPartner ? '🚘 Fleet Control Panel' : isApartmentPartner ? '🏨 Apartment Host Panel' : '🏨 Property Management Panel') 
+                            ? (isShuttlePartner ? '🚘 Airport Shuttle Panel' : isCarPartner ? '🚘 Fleet Control Panel' : isApartmentPartner ? '🏨 Apartment Host Panel' : '🏨 Property Management Panel') 
                             : activeTab === 'inventory' 
-                                ? (isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
+                                ? (isShuttlePartner ? 'Airport Shuttle Routes' : isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
                                 : activeTab === 'profile' 
                                     ? 'My Profile Settings' 
                                     : activeTab}
@@ -606,7 +613,7 @@ export default function PartnerDashboard() {
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                                         <h2 className="text-lg font-bold text-gray-800">{isCarPartner ? 'My Fleet' : isApartmentPartner ? 'My Apartments' : 'Room Categories'}</h2>
                                         <button onClick={() => setIsModalOpen(true)} className="bg-[#004A99] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-800 transition">
-                                            + Configure {isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment Unit' : 'Room Tier'}
+                                            + Configure {isShuttlePartner ? 'Shuttle Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment Unit' : 'Room Tier'}
                                         </button>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -773,15 +780,27 @@ export default function PartnerDashboard() {
                                                                             <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                                                         </div>
                                                                         <div>
-                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Actions</p>
-                                                                            <button
-                                                                                onClick={() => handleResendEmail(booking._id)}
-                                                                                disabled={isResendingEmail === booking._id}
-                                                                                className="text-[10px] font-black bg-blue-50 text-[#000080] px-3 py-2 rounded-lg border border-blue-100 hover:bg-blue-100 transition disabled:opacity-50 mt-1 flex items-center gap-1"
-                                                                            >
-                                                                                ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
-                                                                            </button>
-                                                                        </div>
+                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Actions</p>
+                                                                             <button
+                                                                                 onClick={() => handleResendEmail(booking._id)}
+                                                                                 disabled={isResendingEmail === booking._id}
+                                                                                 className="text-[10px] font-black bg-blue-50 text-[#000080] px-3 py-2 rounded-lg border border-blue-100 hover:bg-blue-100 transition disabled:opacity-50 mt-1 flex items-center gap-1 w-full justify-center"
+                                                                             >
+                                                                                 ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
+                                                                             </button>
+                                                                             {booking.status !== 'Cancelled' && booking.status !== 'Archived' && (
+                                                                                 <button
+                                                                                     onClick={() => {
+                                                                                         setChatBookingId(booking._id);
+                                                                                         setChatBookingName(booking.itemName);
+                                                                                         setIsChatOpen(true);
+                                                                                     }}
+                                                                                     className="text-[10px] font-black bg-yellow-50 text-[#000080] px-3 py-2 rounded-lg border border-yellow-100 hover:bg-yellow-100 transition mt-1.5 flex items-center gap-1 cursor-pointer w-full justify-center"
+                                                                                 >
+                                                                                     💬 Chatroom
+                                                                                 </button>
+                                                                             )}
+                                                                         </div>
                                                                     </div>
                                                                 </td>
                                                             </tr>
@@ -828,7 +847,7 @@ export default function PartnerDashboard() {
                                                 <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.businessName} onChange={e => setProfileData({ ...profileData, businessName: e.target.value })} />
                                             </div>
 
-                                            {(!user.partnerType?.toLowerCase().includes('car')) && (
+                                            {(!user.partnerType?.toLowerCase().includes('car') && user.partnerType !== 'shuttle' && user.partnerType !== 'airport-shuttle') && (
                                                 <div>
                                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">CAC Corporate Number</label>
                                                     <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={profileData.cacNumber} onChange={e => setProfileData({ ...profileData, cacNumber: e.target.value })} />
@@ -859,16 +878,24 @@ export default function PartnerDashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
-                            <h2 className="text-xl font-black text-[#004A99]">List New {isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment' : 'Room Tier'}</h2>
+                            <h2 className="text-xl font-black text-[#004A99]">List New {isShuttlePartner ? 'Shuttle Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment' : 'Room Tier'}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
                         </div>
                         <form onSubmit={handleAddItem} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price per {isCarPartner ? 'day' : 'night'} (Your Take-Home ₦)</label>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                                        {isShuttlePartner ? 'Trip Price (Retail ₦)' : isCarPartner ? 'Net Price per day (Your Take-Home ₦)' : 'Retail Price per night (₦)'}
+                                    </label>
                                     <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.netPrice} onChange={e => setNewItem({ ...newItem, netPrice: e.target.value })} />
-                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">
+                                        {isShuttlePartner 
+                                            ? 'Airgo will deduct a 10% commission. Your take-home payout is 90% of this amount.' 
+                                            : isCarPartner 
+                                                ? 'Airgo will automatically apply a standard platform markup to determine the final retail price for clients.' 
+                                                : '0% commission. Your take-home payout is 100% of this amount.'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -951,9 +978,17 @@ export default function PartnerDashboard() {
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price per {isCarPartner ? 'day' : 'night'} (Your Take-Home ₦)</label>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                                        {isShuttlePartner ? 'Trip Price (Retail ₦)' : isCarPartner ? 'Net Price per day (Your Take-Home ₦)' : 'Retail Price per night (₦)'}
+                                    </label>
                                     <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.netPrice} onChange={e => setEditItemData({ ...editItemData, netPrice: e.target.value })} />
-                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">
+                                        {isShuttlePartner 
+                                            ? 'Airgo will deduct a 10% commission. Your take-home payout is 90% of this amount.' 
+                                            : isCarPartner 
+                                                ? 'Airgo will automatically apply a standard platform markup to determine the final retail price for clients.' 
+                                                : '0% commission. Your take-home payout is 100% of this amount.'}
+                                    </span>
                                 </div>
                             </div>
 
@@ -1105,6 +1140,21 @@ export default function PartnerDashboard() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* CHATROOM MODAL */}
+            {isChatOpen && chatBookingId && (
+                <Chatroom
+                    isOpen={isChatOpen}
+                    onClose={() => {
+                        setIsChatOpen(false);
+                        setChatBookingId('');
+                        setChatBookingName('');
+                    }}
+                    bookingId={chatBookingId}
+                    bookingName={chatBookingName}
+                    currentUser={user}
+                />
             )}
         </div>
     );

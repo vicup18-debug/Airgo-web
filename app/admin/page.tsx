@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { io } from 'socket.io-client';
 
 const AMENITIES_LIST = [
   "High-speed WiFi",
@@ -55,8 +56,18 @@ const formatDisplayDate = (dateStr: string, itemType: string) => {
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates' | 'chats'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // CHAT MONITOR STATE
+    const [activeChatrooms, setActiveChatrooms] = useState<any[]>([]);
+    const [selectedChatroom, setSelectedChatroom] = useState<any>(null);
+    const [chatroomMessages, setChatroomMessages] = useState<any[]>([]);
+    const [chatInputText, setChatInputText] = useState('');
+    const [isChatLoading, setIsChatLoading] = useState(false);
+    const [isChatConnected, setIsChatConnected] = useState(false);
+    const socketRef = useRef<any>(null);
+    const chatMessagesEndRef = useRef<HTMLDivElement | null>(null);
 
     // BOOKINGS TAB SEARCH & FILTERS
     const [bookingSearchQuery, setBookingSearchQuery] = useState('');
@@ -176,12 +187,13 @@ export default function SuperadminDashboard() {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-            const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes] = await Promise.all([
+            const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes, activeChatsRes] = await Promise.all([
                 fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/auth/partners`),
                 fetch(`${apiUrl}/api/cars`),
                 fetch(`${apiUrl}/api/rooms`),
-                fetch(`${apiUrl}/api/affiliates`)
+                fetch(`${apiUrl}/api/affiliates`),
+                fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             if (bookingsRes.status === 401) {
@@ -197,6 +209,7 @@ export default function SuperadminDashboard() {
             if (carsRes.ok) setCars(await carsRes.json());
             if (roomsRes.ok) setRooms(await roomsRes.json());
             if (affiliatesRes.ok) setAffiliates(await affiliatesRes.json());
+            if (activeChatsRes && activeChatsRes.ok) setActiveChatrooms(await activeChatsRes.json());
         } catch (error) {
             console.error("Error fetching system data:", error);
         } finally {
@@ -712,6 +725,143 @@ export default function SuperadminDashboard() {
         window.location.href = '/login';
     };
 
+    useEffect(() => {
+        if (chatroomMessages.length > 0) {
+            chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [chatroomMessages]);
+
+    useEffect(() => {
+        if (activeTab !== 'chats' || !selectedChatroom?.booking?._id) {
+            if (socketRef.current) {
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setIsChatConnected(false);
+            return;
+        }
+
+        const bookingId = selectedChatroom.booking._id;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+        
+        setIsChatLoading(true);
+        setChatroomMessages([]);
+
+        // 1. Fetch chat history
+        const fetchChatHistory = async () => {
+            try {
+                const token = localStorage.getItem('airgo_token');
+                const res = await fetch(`${apiUrl}/api/chats/booking/${bookingId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setChatroomMessages(data);
+                } else {
+                    toast.error("Failed to load chat history.");
+                }
+            } catch (e) {
+                console.error("Chat history fetch error:", e);
+                toast.error("Error connecting to chat server.");
+            } finally {
+                setIsChatLoading(false);
+            }
+        };
+
+        fetchChatHistory();
+
+        // 2. Establish Socket connection
+        const socket = io(apiUrl, {
+            transports: ['websocket', 'polling']
+        });
+        socketRef.current = socket;
+
+        socket.on('connect', () => {
+            setIsChatConnected(true);
+            socket.emit('join_booking_chat', { bookingId });
+            console.log("⚡ Admin Connected to Airgo Socket Server");
+        });
+
+        socket.on('disconnect', () => {
+            setIsChatConnected(false);
+            console.log("❌ Admin Disconnected from Airgo Socket Server");
+        });
+
+        socket.on('receive_chat_message', (msg: any) => {
+            setChatroomMessages((prev) => {
+                const exists = prev.some(m => m._id === msg._id || (m.createdAt === msg.createdAt && m.senderId === msg.senderId && m.text === msg.text));
+                if (exists) return prev;
+                return [...prev, msg];
+            });
+        });
+
+        return () => {
+            if (socketRef.current) {
+                socketRef.current.emit('leave_booking_chat', { bookingId });
+                socketRef.current.disconnect();
+                socketRef.current = null;
+            }
+            setIsChatConnected(false);
+        };
+    }, [activeTab, selectedChatroom?.booking?._id]);
+
+    const handleSendAdminMessage = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const trimmed = chatInputText.trim();
+        if (!trimmed || !selectedChatroom?.booking?._id) return;
+
+        // 🚨 PHONE NUMBER PROTECTION: Block numbers with more than 9 digits
+        const phoneRegex = /(?:\d[\s\-\.\(\)\+]*){10,}/;
+        if (phoneRegex.test(trimmed)) {
+            toast.error("🔒 Phone number exchange is prohibited to prevent off-platform transactions.");
+            return;
+        }
+
+        const bookingId = selectedChatroom.booking._id;
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const res = await fetch(`${apiUrl}/api/chats/message`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    bookingId,
+                    text: trimmed
+                })
+            });
+
+            if (res.ok) {
+                const savedMsg = await res.json();
+                
+                // Broadcast via Socket.io
+                if (socketRef.current && isChatConnected) {
+                    socketRef.current.emit('new_chat_message', savedMsg);
+                }
+
+                setChatroomMessages(prev => [...prev, savedMsg]);
+                setChatInputText('');
+                
+                // Update activeChatrooms list to show this new lastMessage
+                setActiveChatrooms(prev => prev.map(c => 
+                    c.booking._id === bookingId 
+                        ? { ...c, lastMessage: savedMsg } 
+                        : c
+                ));
+            } else {
+                const data = await res.json();
+                toast.error(data.message || "Failed to deliver message.");
+            }
+        } catch (error) {
+            toast.error("Network error sending message.");
+        }
+    };
+
     const calculateTotalEscrow = () => {
         return allBookings.filter(b => ['Paid', 'Approved for Disbursement'].includes(b.status)).reduce((sum, b) => {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
@@ -782,6 +932,7 @@ export default function SuperadminDashboard() {
                     <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🚘 Manage Fleet</button>
                     <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🏨 Manage Room Matrix</button>
                     <button onClick={() => { setActiveTab('affiliates'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'affiliates' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🤝 Affiliates Hub</button>
+                    <button onClick={() => { setActiveTab('chats'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'chats' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>💬 Chat Monitor</button>
                 </nav>
                 <div className="p-4 border-t border-gray-800">
                     <button onClick={handleLogout} className="w-full bg-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900 hover:text-white transition">Sign Out</button>
@@ -796,6 +947,7 @@ export default function SuperadminDashboard() {
                             : activeTab === 'affiliates' ? 'Affiliates Hub' 
                             : activeTab === 'bookings' ? 'Bookings Manager' 
                             : activeTab === 'escrow' ? 'Escrow Ledger' 
+                            : activeTab === 'chats' ? 'Chat Monitor'
                             : activeTab}
                     </h1>
                     <div className="flex items-center gap-4">
@@ -1593,6 +1745,157 @@ export default function SuperadminDashboard() {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* CHAT MONITOR TAB */}
+                            {activeTab === 'chats' && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden flex flex-col lg:flex-row h-[75vh]">
+                                    {/* Left Pane: Chatrooms List */}
+                                    <div className="w-full lg:w-80 border-r border-gray-150 flex flex-col h-full bg-gray-50/50 shrink-0">
+                                        <div className="p-4 border-b border-gray-200 shrink-0">
+                                            <h3 className="font-black text-gray-900 text-base">Active Chatrooms</h3>
+                                            <p className="text-[10px] text-gray-400 font-bold uppercase mt-1">Select booking to monitor</p>
+                                        </div>
+                                        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+                                            {activeChatrooms.length === 0 ? (
+                                                <div className="p-8 text-center text-gray-400">
+                                                    <span className="text-3xl block mb-2">💬</span>
+                                                    <p className="text-xs font-bold">No active conversations found.</p>
+                                                </div>
+                                            ) : (
+                                                activeChatrooms.map((chatroom) => {
+                                                    const isSelected = selectedChatroom?.booking?._id === chatroom.booking._id;
+                                                    const lastMsgText = chatroom.lastMessage ? chatroom.lastMessage.text : 'No messages yet';
+                                                    const lastMsgTime = chatroom.lastMessage ? new Date(chatroom.lastMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+                                                    
+                                                    return (
+                                                        <div 
+                                                            key={chatroom.booking._id}
+                                                            onClick={() => setSelectedChatroom(chatroom)}
+                                                            className={`p-4 cursor-pointer transition flex flex-col gap-1.5 ${
+                                                                isSelected 
+                                                                    ? 'bg-blue-50/80 border-l-4 border-[#000080]' 
+                                                                    : 'hover:bg-gray-100/70'
+                                                            }`}
+                                                        >
+                                                            <div className="flex justify-between items-start gap-2">
+                                                                <h4 className="font-black text-xs text-gray-900 truncate flex-1">{chatroom.booking.itemName}</h4>
+                                                                <span className={`text-[8px] font-black uppercase px-1.5 py-0.5 rounded shrink-0 ${
+                                                                    chatroom.booking.itemType === 'hotel' 
+                                                                        ? 'bg-amber-100 text-amber-800' 
+                                                                        : 'bg-purple-100 text-purple-800'
+                                                                }`}>{chatroom.booking.itemType}</span>
+                                                            </div>
+                                                            <div className="flex justify-between items-center text-[10px]">
+                                                                <span className="text-gray-500 font-bold">Client: {chatroom.booking.clientName}</span>
+                                                                <span className="text-gray-400 font-medium shrink-0">{lastMsgTime}</span>
+                                                            </div>
+                                                            <p className="text-[11px] text-gray-600 line-clamp-1 italic font-medium">
+                                                                {chatroom.lastMessage?.senderRole === 'admin' ? '🛡️ Admin: ' : chatroom.lastMessage?.senderRole === 'partner' ? '🚘 Partner: ' : ''}
+                                                                {lastMsgText}
+                                                            </p>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Right Pane: Chat History / Inspector */}
+                                    <div className="flex-1 flex flex-col h-full bg-white relative">
+                                        {!selectedChatroom ? (
+                                            <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400 gap-2 bg-gray-50/30">
+                                                <div className="w-16 h-16 bg-[#000080]/5 text-[#000080] rounded-full flex items-center justify-center text-3xl font-black shadow-inner mb-2 animate-bounce">
+                                                    💬
+                                                </div>
+                                                <h4 className="font-black text-gray-700 mt-2 text-lg">Select a Conversation</h4>
+                                                <p className="text-xs max-w-sm leading-relaxed font-medium">
+                                                    Click on any active chatroom in the left pane to monitor conversations, verify compliance, or interject directly as Superadmin.
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {/* Chatroom Header */}
+                                                <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center shrink-0">
+                                                    <div>
+                                                        <h3 className="font-black text-sm text-gray-900">{selectedChatroom.booking.itemName}</h3>
+                                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px]">
+                                                            <span className="text-gray-500 font-bold">Client: {selectedChatroom.booking.clientName} ({selectedChatroom.booking.clientPhone || 'N/A'})</span>
+                                                            <span className="text-gray-300">|</span>
+                                                            <span className="text-gray-500 font-bold">Ref: {selectedChatroom.booking._id.substring(0, 10).toUpperCase()}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`w-2 h-2 rounded-full ${isChatConnected ? 'bg-green-500' : 'bg-red-500 animate-pulse'}`}></span>
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">{isChatConnected ? 'Live Connection' : 'Syncing...'}</span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Messages Area */}
+                                                <div className="flex-1 p-4 overflow-y-auto bg-gray-50 flex flex-col gap-3">
+                                                    {isChatLoading ? (
+                                                        <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#000080]"></div>
+                                                            <span className="text-xs font-bold">Loading conversation logs...</span>
+                                                        </div>
+                                                    ) : chatroomMessages.length === 0 ? (
+                                                        <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-2">
+                                                            <span className="text-2xl">💤</span>
+                                                            <span className="text-xs font-bold">No messages in this chat.</span>
+                                                        </div>
+                                                    ) : (
+                                                        chatroomMessages.map((msg, index) => {
+                                                            const isMe = msg.senderRole === 'admin';
+                                                            return (
+                                                                <div key={msg._id || index} className={`flex flex-col max-w-[75%] ${isMe ? 'self-end items-end' : 'self-start items-start'}`}>
+                                                                    <div className="text-[9px] font-bold text-gray-400 mb-0.5 uppercase tracking-wide px-1">
+                                                                        {msg.senderName} ({msg.senderRole})
+                                                                    </div>
+                                                                    <div className={`p-3 rounded-2xl shadow-sm text-sm font-medium ${
+                                                                        isMe 
+                                                                            ? 'bg-[#000080] text-white rounded-tr-none' 
+                                                                            : msg.senderRole === 'admin'
+                                                                                ? 'bg-[#FFB81C] text-[#000080] rounded-tl-none font-bold'
+                                                                                : 'bg-white text-gray-800 border border-gray-150 rounded-tl-none'
+                                                                    }`}>
+                                                                        <p className="whitespace-pre-wrap break-words leading-relaxed">{msg.text}</p>
+                                                                        <p className={`text-[8px] text-right mt-1.5 font-bold ${isMe ? 'text-blue-200' : 'text-gray-400'}`}>
+                                                                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })
+                                                    )}
+                                                    <div ref={chatMessagesEndRef} />
+                                                </div>
+
+                                                {/* Chat Input / Interject Panel */}
+                                                <form onSubmit={handleSendAdminMessage} className="p-4 bg-white border-t border-gray-100 flex gap-2 shrink-0">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Interject as Superadmin... (phone numbers blocked)"
+                                                        value={chatInputText}
+                                                        onChange={(e) => setChatInputText(e.target.value)}
+                                                        className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 focus:bg-white text-sm outline-none focus:border-[#000080] transition text-gray-900 font-medium"
+                                                        maxLength={500}
+                                                    />
+                                                    <button
+                                                        type="submit"
+                                                        disabled={!chatInputText.trim()}
+                                                        className={`px-5 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition ${
+                                                            chatInputText.trim() 
+                                                                ? 'bg-[#000080] text-white hover:bg-blue-900 shadow-md cursor-pointer' 
+                                                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                                        }`}
+                                                    >
+                                                        Send
+                                                    </button>
+                                                </form>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             )}

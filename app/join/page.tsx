@@ -138,6 +138,7 @@ export default function JoinPartnerPage() {
                                     }}
                                 >
                                     <option value="car">Car Rental</option>
+                                    <option value="shuttle">Airport Shuttle</option>
                                     <option value="hotel">Hotel</option>
                                     <option value="apartment">Apartment / Host</option>
                                 </select>

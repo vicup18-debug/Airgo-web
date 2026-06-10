@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
+import Chatroom from '../../components/Chatroom';
 
 const PaystackPaymentButton = dynamic(() => import('./paystack-button'), { ssr: false });
 
@@ -191,6 +192,11 @@ export default function ClientDashboard() {
     const [trackingBookingId, setTrackingBookingId] = useState<string | null>(null);
     const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
     const router = useRouter();
+
+    // Chatroom states
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatBookingId, setChatBookingId] = useState('');
+    const [chatBookingName, setChatBookingName] = useState('');
 
     // Booking edit state
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
@@ -580,6 +586,18 @@ export default function ClientDashboard() {
                                                             🔗 Share Booking
                                                         </button>
                                                     )}
+                                                    {booking.status !== 'Cancelled' && booking.status !== 'Archived' && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setChatBookingId(booking._id);
+                                                                setChatBookingName(booking.itemName);
+                                                                setIsChatOpen(true);
+                                                            }}
+                                                            className="text-xs font-bold text-[#000080] hover:text-blue-900 flex items-center gap-1 bg-[#FFFBEB] hover:bg-[#FEF3C7] border border-[#FDE68A] px-2.5 py-1.5 rounded-lg transition"
+                                                        >
+                                                            💬 Chatroom
+                                                        </button>
+                                                    )}
                                                     {booking.status === 'Pending Escrow' && (
                                                         <>
                                                             <button 
@@ -771,6 +789,21 @@ export default function ClientDashboard() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* CHATROOM MODAL */}
+            {isChatOpen && chatBookingId && (
+                <Chatroom
+                    isOpen={isChatOpen}
+                    onClose={() => {
+                        setIsChatOpen(false);
+                        setChatBookingId('');
+                        setChatBookingName('');
+                    }}
+                    bookingId={chatBookingId}
+                    bookingName={chatBookingName}
+                    currentUser={user}
+                />
             )}
         </div>
     );
