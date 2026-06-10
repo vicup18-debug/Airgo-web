@@ -280,6 +280,33 @@ export default function ClientDashboard() {
         }
     };
 
+    const handleVerifyPlateStatus = async (bookingId: string, status: 'Verified' | 'Rejected') => {
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ vehiclePlateStatus: status })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(`Vehicle plate marked as ${status}!`);
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to update plate verification.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
     const fetchMyBookings = async (parsedUser: any, silent = false) => {
         try {
             if (!silent) setIsLoading(true);
@@ -515,9 +542,50 @@ export default function ClientDashboard() {
                                                 <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">{booking.itemType}</p>
                                                 <h3 className="text-xl font-black text-[#004A99]">{booking.itemName}</h3>
                                                 {booking.itemType === 'car' && booking.vehicleNumber && (
-                                                    <p className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1.5 rounded-xl border border-green-100 inline-block mt-2">
-                                                        🚘 Plate No: {booking.vehicleNumber}
-                                                    </p>
+                                                    <div className="flex flex-col gap-2 mt-2 items-start">
+                                                        <div className="flex flex-wrap items-center gap-2">
+                                                            <span className="text-xs font-black text-green-700 bg-green-50 px-2.5 py-1.5 rounded-xl border border-green-100 inline-block">
+                                                                🚘 Plate No: {booking.vehicleNumber}
+                                                            </span>
+                                                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black uppercase ${
+                                                                booking.vehiclePlateStatus === 'Verified' ? 'bg-green-100 text-green-800' :
+                                                                booking.vehiclePlateStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                booking.vehiclePlateUrl ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {booking.vehiclePlateStatus === 'Verified' ? '✓ Verified by Airgo' :
+                                                                 booking.vehiclePlateStatus === 'Rejected' ? '✗ Plate Rejected' :
+                                                                 booking.vehiclePlateUrl ? '⟳ Verification Pending' : 'No Verification Photo'}
+                                                            </span>
+                                                        </div>
+                                                        {booking.vehiclePlateUrl && (
+                                                            <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                                <a
+                                                                    href={booking.vehiclePlateUrl}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className="text-[10px] font-black text-[#000080] hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg border border-blue-100 transition flex items-center gap-1"
+                                                                >
+                                                                    📷 View Plate Photo
+                                                                </a>
+                                                                {booking.vehiclePlateStatus !== 'Verified' && (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => handleVerifyPlateStatus(booking._id, 'Verified')}
+                                                                            className="text-[10px] font-black bg-green-50 hover:bg-green-600 text-green-700 hover:text-white px-3 py-1.5 rounded-lg border border-green-100 transition shadow-sm"
+                                                                        >
+                                                                            ✓ Verify Plate
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleVerifyPlateStatus(booking._id, 'Rejected')}
+                                                                            className="text-[10px] font-black bg-red-50 hover:bg-red-600 text-red-700 hover:text-white px-3 py-1.5 rounded-lg border border-red-100 transition shadow-sm"
+                                                                        >
+                                                                            ✗ Reject Plate
+                                                                        </button>
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                                 <p className="text-sm text-gray-600 font-medium mt-2">
                                                     <span className="font-bold">From:</span> {booking.checkIn ? formatDisplayDate(booking.checkIn, booking.itemType) : 'N/A'}

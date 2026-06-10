@@ -244,6 +244,32 @@ export default function SuperadminDashboard() {
         }
     };
 
+    const handleVerifyPlateAdmin = async (bookingId: string, status: 'Verified' | 'Rejected') => {
+        if (window.confirm(`Are you sure you want to mark this plate status as ${status}?`)) {
+            try {
+                const token = localStorage.getItem('airgo_token');
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                    method: 'PUT',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ vehiclePlateStatus: status })
+                });
+
+                if (res.ok) {
+                    toast.success(`Plate marked as ${status}!`);
+                    setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, vehiclePlateStatus: status } : b));
+                } else {
+                    toast.error(`❌ Failed to update plate status.`);
+                }
+            } catch (error) {
+                toast.error("❌ Error connecting to server.");
+            }
+        }
+    };
+
     const handleConfirmDirectDeposit = async (bookingId: string) => {
         const ref = window.prompt("Enter Bank Transfer Reference (optional):");
         if (ref === null) return; // User cancelled prompt
@@ -1142,9 +1168,41 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Details & Partners</p>
                                                                             <p className="text-xs font-black text-gray-900 mb-1">Asset ID: {booking.itemId || 'N/A'}</p>
                                                                             <p className="text-[10px] font-bold text-gray-500 uppercase">Partner ID: {booking.partnerId || 'N/A'}</p>
-                                                                            {booking.itemType === 'car' && booking.vehicleNumber && (
-                                                                                <p className="text-[10px] font-bold text-green-700 uppercase">Plate: {booking.vehicleNumber}</p>
-                                                                            )}
+                                                                             {booking.itemType === 'car' && booking.vehicleNumber && (
+                                                                                 <div className="mt-2 space-y-1">
+                                                                                     <p className="text-[10px] font-bold text-green-700 uppercase">Plate: {booking.vehicleNumber}</p>
+                                                                                     <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                         <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                                                                                             booking.vehiclePlateStatus === 'Verified' ? 'bg-green-100 text-green-800' :
+                                                                                             booking.vehiclePlateStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                                             booking.vehiclePlateUrl ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                                                                         }`}>
+                                                                                             Plate: {booking.vehiclePlateStatus || 'Pending'}
+                                                                                         </span>
+                                                                                         {booking.vehiclePlateUrl && (
+                                                                                             <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#000080] hover:underline">
+                                                                                                 📷 View Photo
+                                                                                             </a>
+                                                                                         )}
+                                                                                     </div>
+                                                                                     {booking.vehiclePlateUrl && booking.vehiclePlateStatus !== 'Verified' && (
+                                                                                         <div className="flex gap-1.5 mt-1.5">
+                                                                                             <button
+                                                                                                 onClick={(e) => { e.stopPropagation(); handleVerifyPlateAdmin(booking._id, 'Verified'); }}
+                                                                                                 className="bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded text-[8px] font-bold shadow-sm hover:bg-green-600 hover:text-white transition"
+                                                                                             >
+                                                                                                 ✓ Verify
+                                                                                             </button>
+                                                                                             <button
+                                                                                                 onClick={(e) => { e.stopPropagation(); handleVerifyPlateAdmin(booking._id, 'Rejected'); }}
+                                                                                                 className="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[8px] font-bold shadow-sm hover:bg-red-600 hover:text-white transition"
+                                                                                             >
+                                                                                                 ✗ Reject
+                                                                                             </button>
+                                                                                         </div>
+                                                                                     )}
+                                                                                 </div>
+                                                                             )}
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
                                                                              {booking.status === 'Pending Escrow' && (
@@ -1257,7 +1315,39 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-xs font-black text-gray-900 mb-1">{booking._id.substring(0, 12).toUpperCase()}</p>
                                                                             <p className="text-[10px] font-bold text-gray-500 uppercase mb-1">Partner: {booking.partnerId ? booking.partnerId.substring(0, 8) : 'N/A'}</p>
                                                                             {booking.itemType === 'car' && booking.vehicleNumber && (
-                                                                                <p className="text-[10px] font-bold text-green-700 uppercase">Plate: {booking.vehicleNumber}</p>
+                                                                                <div className="mt-2 space-y-1">
+                                                                                    <p className="text-[10px] font-bold text-green-700 uppercase">Plate: {booking.vehicleNumber}</p>
+                                                                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                                                                        <span className={`px-2 py-0.5 rounded text-[8px] font-bold uppercase ${
+                                                                                            booking.vehiclePlateStatus === 'Verified' ? 'bg-green-100 text-green-800' :
+                                                                                            booking.vehiclePlateStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                                            booking.vehiclePlateUrl ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                                                                        }`}>
+                                                                                            Plate: {booking.vehiclePlateStatus || 'Pending'}
+                                                                                        </span>
+                                                                                        {booking.vehiclePlateUrl && (
+                                                                                            <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#000080] hover:underline">
+                                                                                                📷 View Photo
+                                                                                            </a>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    {booking.vehiclePlateUrl && booking.vehiclePlateStatus !== 'Verified' && (
+                                                                                        <div className="flex gap-1.5 mt-1.5">
+                                                                                            <button
+                                                                                                onClick={(e) => { e.stopPropagation(); handleVerifyPlateAdmin(booking._id, 'Verified'); }}
+                                                                                                className="bg-green-50 text-green-700 border border-green-200 px-2 py-0.5 rounded text-[8px] font-bold shadow-sm hover:bg-green-600 hover:text-white transition"
+                                                                                            >
+                                                                                                ✓ Verify
+                                                                                            </button>
+                                                                                            <button
+                                                                                                onClick={(e) => { e.stopPropagation(); handleVerifyPlateAdmin(booking._id, 'Rejected'); }}
+                                                                                                className="bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded text-[8px] font-bold shadow-sm hover:bg-red-600 hover:text-white transition"
+                                                                                            >
+                                                                                                ✗ Reject
+                                                                                            </button>
+                                                                                        </div>
+                                                                                    )}
+                                                                                </div>
                                                                             )}
                                                                         </div>
                                                                         <div>

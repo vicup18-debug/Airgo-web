@@ -114,6 +114,11 @@ export default function PartnerDashboard() {
     const [chatBookingId, setChatBookingId] = useState('');
     const [chatBookingName, setChatBookingName] = useState('');
 
+    // Plate upload states
+    const [plateInputs, setPlateInputs] = useState<Record<string, { vehicleNumber?: string; vehiclePlateUrl?: string }>>({});
+    const [uploadingBookingId, setUploadingBookingId] = useState<string | null>(null);
+    const [isSavingPlate, setIsSavingPlate] = useState<string | null>(null);
+
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -449,6 +454,42 @@ export default function PartnerDashboard() {
             toast.error("Error connecting to server.");
         } finally {
             setIsResendingEmail(null);
+        }
+    };
+
+    const handleSavePlateInfo = async (bookingId: string) => {
+        setIsSavingPlate(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const inputData = plateInputs[bookingId] || {};
+            
+            const payload: any = {};
+            if (inputData.vehicleNumber !== undefined) payload.vehicleNumber = inputData.vehicleNumber;
+            if (inputData.vehiclePlateUrl !== undefined) payload.vehiclePlateUrl = inputData.vehiclePlateUrl;
+            
+            payload.vehiclePlateStatus = 'Pending';
+
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("License plate details saved! Verification pending.");
+                fetchPartnerData(user);
+            } else {
+                toast.error(data.message || "Failed to save plate details.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setIsSavingPlate(null);
         }
     };
 
@@ -802,6 +843,99 @@ export default function PartnerDashboard() {
                                                                              )}
                                                                          </div>
                                                                     </div>
+                                                                    {booking.itemType === 'car' && (
+                                                                        <div className="border-t border-gray-200/80 pt-4 mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                                                                            {/* Left column: Plate Info & Verification Status */}
+                                                                            <div className="bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                                                                                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider mb-2">License Plate Verification</h4>
+                                                                                <div className="space-y-2">
+                                                                                    <p className="text-xs font-medium text-slate-600">
+                                                                                        <span className="font-bold text-slate-950">Current Plate:</span> {booking.vehicleNumber || 'Not assigned'}
+                                                                                    </p>
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <span className="text-xs font-bold text-slate-600">Status:</span>
+                                                                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                                                                                            booking.vehiclePlateStatus === 'Verified' ? 'bg-green-100 text-green-800' :
+                                                                                            booking.vehiclePlateStatus === 'Rejected' ? 'bg-red-100 text-red-800' :
+                                                                                            booking.vehiclePlateUrl ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                                                                        }`}>
+                                                                                            {booking.vehiclePlateStatus === 'Verified' ? 'Verified' :
+                                                                                             booking.vehiclePlateStatus === 'Rejected' ? 'Rejected' :
+                                                                                             booking.vehiclePlateUrl ? 'Pending Verification' : 'No Photo Uploaded'}
+                                                                                        </span>
+                                                                                    </div>
+                                                                                </div>
+                                                                                {booking.vehiclePlateUrl && (
+                                                                                    <div className="mt-3">
+                                                                                        <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#004A99] hover:underline">
+                                                                                            📷 View Uploaded Plate Photo
+                                                                                        </a>
+                                                                                    </div>
+                                                                                )}
+                                                                            </div>
+
+                                                                            {/* Right columns: Update/Upload Form */}
+                                                                            <div className="md:col-span-2 space-y-4">
+                                                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                                                    <div>
+                                                                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Plate Number</label>
+                                                                                        <input 
+                                                                                            type="text" 
+                                                                                            placeholder="e.g. ABJ-888-GW" 
+                                                                                            className="w-full px-3 py-1.5 border rounded-xl text-xs text-gray-900 bg-white" 
+                                                                                            value={plateInputs[booking._id]?.vehicleNumber !== undefined ? plateInputs[booking._id].vehicleNumber : (booking.vehicleNumber || '')}
+                                                                                            onChange={(e) => setPlateInputs({
+                                                                                                ...plateInputs,
+                                                                                                [booking._id]: {
+                                                                                                    ...plateInputs[booking._id],
+                                                                                                    vehicleNumber: e.target.value
+                                                                                                }
+                                                                                            })}
+                                                                                        />
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Upload Plate Photo</label>
+                                                                                        <input 
+                                                                                            type="file" 
+                                                                                            accept="image/*" 
+                                                                                            className="w-full px-3 py-1 border rounded-xl file:mr-2 file:py-0.5 file:px-2 file:rounded-full file:border-0 file:text-[10px] file:bg-blue-50 file:text-[#004A99] text-[10px] text-gray-900 bg-white"
+                                                                                            onChange={async (e) => {
+                                                                                                const file = e.target.files?.[0];
+                                                                                                if (!file) return;
+                                                                                                try {
+                                                                                                    setUploadingBookingId(booking._id);
+                                                                                                    const url = await handleUploadToCloudinary(file);
+                                                                                                    setPlateInputs({
+                                                                                                        ...plateInputs,
+                                                                                                        [booking._id]: {
+                                                                                                            ...plateInputs[booking._id],
+                                                                                                            vehiclePlateUrl: url
+                                                                                                        }
+                                                                                                    });
+                                                                                                    toast.success("Plate photo uploaded! Remember to click Save.");
+                                                                                                } catch (err) {
+                                                                                                    toast.error("Failed to upload image. Please try again.");
+                                                                                                } finally {
+                                                                                                    setUploadingBookingId(null);
+                                                                                                }
+                                                                                            }}
+                                                                                        />
+                                                                                    </div>
+                                                                                </div>
+                                                                                <div className="flex justify-end gap-2">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        disabled={uploadingBookingId === booking._id || isSavingPlate === booking._id}
+                                                                                        onClick={() => handleSavePlateInfo(booking._id)}
+                                                                                        className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-[11px] py-1.5 px-4 rounded-xl shadow transition disabled:opacity-50"
+                                                                                    >
+                                                                                        {uploadingBookingId === booking._id ? 'Uploading...' :
+                                                                                         isSavingPlate === booking._id ? 'Saving...' : 'Save Plate Info'}
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </td>
                                                             </tr>
                                                         )}
