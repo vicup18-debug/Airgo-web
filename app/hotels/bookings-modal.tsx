@@ -223,7 +223,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
 
             toast.success("Booking Secured! Redirecting to dashboard to complete escrow payment.");
             onClose();
-            router.push('/dashboard');
+            router.push('/dashboard?hotelBooked=true');
 
         } catch (error: any) {
             toast.error(error.message || "An error occurred during booking.");

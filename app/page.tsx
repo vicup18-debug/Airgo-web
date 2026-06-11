@@ -69,6 +69,13 @@ export default function HotelHomepage() {
       setClientData({ name: parsedUser.name, email: parsedUser.email, phone: parsedUser.phone || '' });
     }
 
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('tab') === 'transport' || window.location.hash === '#transport') {
+        setActiveTab('transport');
+      }
+    }
+
     const fetchData = async () => {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -189,7 +196,7 @@ export default function HotelHomepage() {
 
       toast.success("Booking Confirmed! Your Escrow hold is active and PDF Invoice has been generated.");
       setSelectedItem(null);
-      router.push('/dashboard');
+      router.push(isCar ? '/dashboard' : '/dashboard?hotelBooked=true');
 
     } catch (error: any) {
       toast.error(`❌ ${error.message}`);
@@ -314,17 +321,29 @@ export default function HotelHomepage() {
           {/* TRUST BAR */}
           <div className="mt-10 bg-[#000060] rounded-2xl p-4 md:p-6 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
             <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
-              <span className="text-3xl mb-2 group-hover:scale-125 transition-transform duration-300">✅</span>
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
               <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Verified Partners</span>
               <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Strictly vetted luxury properties and verified chauffeurs.</span>
             </div>
             <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
-              <span className="text-3xl mb-2 group-hover:scale-125 transition-transform duration-300">🔒</span>
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
               <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Escrow-Protected</span>
               <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Your funds are held securely until service is completely delivered.</span>
             </div>
             <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
-              <span className="text-3xl mb-2 group-hover:scale-125 transition-transform duration-300">📞</span>
+              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+                <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
               <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">24/7 Support</span>
               <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Always available for VIP assistance and priority booking support.</span>
             </div>
@@ -481,7 +500,10 @@ export default function HotelHomepage() {
                       
                       {!isCar && item.location && (
                         <div className="flex items-start gap-2 mb-4 text-gray-500">
-                          <span className="text-sm mt-0.5">📍</span>
+                          <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
                           <p className="text-sm font-medium leading-relaxed line-clamp-1">{item.location}</p>
                         </div>
                       )}
@@ -489,12 +511,17 @@ export default function HotelHomepage() {
                       {isCar && item.type && (
                          <div className="flex flex-col gap-1.5 mb-4 text-gray-500">
                            <div className="flex items-center gap-2">
-                             <span className="text-sm">🏷️</span>
+                             <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M6 20h12a2 2 0 002-2V8a2 2 0 00-2-2H6a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                             </svg>
                              <p className="text-sm font-bold uppercase tracking-wide">{item.type} <span className="mx-2">•</span> {item.capacity} Seats</p>
                            </div>
                            {item.location && item.state && (
                              <div className="flex items-center gap-2 text-xs font-bold text-[#000080]">
-                               <span>📍</span>
+                               <svg className="w-3.5 h-3.5 text-[#000080] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                               </svg>
                                <span>{item.location}, {item.state}</span>
                              </div>
                            )}

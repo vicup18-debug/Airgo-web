@@ -92,7 +92,7 @@ export default function LoginPage() {
             } else if (data.role === 'partner') {
                 router.push('/partner');
             } else {
-                router.push('/dashboard'); // Client Dashboard
+                router.push('/'); // Client Homepage (taken to hotel booking page)
             }
 
         } catch (err: any) {
@@ -134,7 +134,7 @@ export default function LoginPage() {
 
             if (data.role === 'admin') router.push('/admin');
             else if (data.role === 'partner') router.push('/partner');
-            else router.push('/dashboard');
+            else router.push('/');
 
         } catch (err: any) {
             toast.error(err.message);
