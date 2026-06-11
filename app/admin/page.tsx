@@ -110,7 +110,7 @@ export default function SuperadminDashboard() {
 
     // CAR FORM STATES
     const [isCarModalOpen, setIsCarModalOpen] = useState(false);
-    const [newCar, setNewCar] = useState({ name: '', type: '', netPrice: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
+    const [newCar, setNewCar] = useState({ name: '', type: '', netPrice: '', retailPrice: '', vehicleCategory: 'car', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
     const [carImageFile, setCarImageFile] = useState<File | null>(null);
 
     // ROOM MATRIX FORM STATES 
@@ -122,7 +122,7 @@ export default function SuperadminDashboard() {
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', netPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
+        name: '', netPrice: '', retailPrice: '', vehicleCategory: 'car', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: ''
     });
 
     // EDIT BOOKING MODAL STATE
@@ -190,7 +190,7 @@ export default function SuperadminDashboard() {
             const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes, activeChatsRes] = await Promise.all([
                 fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/auth/partners`),
-                fetch(`${apiUrl}/api/cars`),
+                fetch(`${apiUrl}/api/cars`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/rooms`),
                 fetch(`${apiUrl}/api/affiliates`),
                 fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` } })
@@ -370,9 +370,12 @@ export default function SuperadminDashboard() {
 
     const handleEditListingClick = (item: any, type: 'room' | 'car') => {
         setSelectedInventoryForEdit({ ...item, listingType: type });
+        const isShuttle = type === 'car' && (item.vehicleCategory === 'shuttle' || item.partnerType === 'shuttle');
         setEditItemData({
             name: item.name || '',
-            netPrice: String(item.netPrice || item.price || item.pricePerNight || ''),
+            netPrice: isShuttle ? '' : String(item.netPrice || item.price || item.pricePerNight || ''),
+            retailPrice: isShuttle ? String(item.retailPrice || item.price || '') : '',
+            vehicleCategory: item.vehicleCategory || (isShuttle ? 'shuttle' : 'car'),
             totalAllocated: String(item.totalAllocated || '1'),
             amenities: item.amenities || '',
             type: item.type || '',
@@ -394,11 +397,13 @@ export default function SuperadminDashboard() {
             const isCar = selectedInventoryForEdit.listingType === 'car';
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const endpoint = isCar ? `/api/cars/${selectedInventoryForEdit._id}` : `/api/rooms/${selectedInventoryForEdit._id}`;
-
+            const isShuttle = editItemData.vehicleCategory === 'shuttle';
             const payload = isCar ? {
                 name: editItemData.name,
                 type: editItemData.type,
-                netPrice: Number(editItemData.netPrice),
+                netPrice: isShuttle ? undefined : Number(editItemData.netPrice),
+                retailPrice: isShuttle ? Number(editItemData.retailPrice) : undefined,
+                vehicleCategory: editItemData.vehicleCategory,
                 capacity: editItemData.capacity,
                 features: editItemData.features,
                 totalAllocated: Number(editItemData.totalAllocated),
@@ -661,16 +666,26 @@ export default function SuperadminDashboard() {
         try {
             const finalImageUrl = carImageFile ? await handleUploadToCloudinary(carImageFile) : '';
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            
+            const isShuttle = newCar.vehicleCategory === 'shuttle';
+            const payload = {
+                ...newCar,
+                image: finalImageUrl,
+                netPrice: isShuttle ? undefined : Number(newCar.netPrice),
+                retailPrice: isShuttle ? Number(newCar.retailPrice) : undefined,
+                partnerId: 'airgo_direct'
+            };
+
             const response = await fetch(`${apiUrl}/api/cars`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...newCar, image: finalImageUrl, netPrice: Number(newCar.netPrice), partnerId: 'airgo_direct' })
+                body: JSON.stringify(payload)
             });
 
             if (response.ok) {
                 toast.success("Vehicle deployed successfully!");
                 setIsCarModalOpen(false);
-                setNewCar({ name: '', type: '', netPrice: '', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
+                setNewCar({ name: '', type: '', netPrice: '', retailPrice: '', vehicleCategory: 'car', capacity: '', features: '', vehicleNumber: '', location: '', state: '' });
                 setCarImageFile(null);
                 fetchAllSystemData();
             }
@@ -2004,12 +2019,42 @@ export default function SuperadminDashboard() {
                         </div>
                         <form onSubmit={handleAddCar} className="p-6 space-y-4">
                             <div className="grid grid-cols-2 gap-4">
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Vehicle Category</label>
+                                    <select 
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
+                                        value={newCar.vehicleCategory} 
+                                        onChange={e => setNewCar({ ...newCar, vehicleCategory: e.target.value })}
+                                    >
+                                        <option value="car">Executive Car (Markup Model)</option>
+                                        <option value="shuttle">Airport Shuttle (Commission Model)</option>
+                                    </select>
+                                </div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
+                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price (Your Take-Home ₦)</label>
-                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.netPrice} onChange={e => setNewCar({ ...newCar, netPrice: e.target.value })} />
-                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                                        {newCar.vehicleCategory === 'shuttle' ? 'Retail Price (What the Customer Pays ₦)' : 'Net Price (Your Take-Home ₦)'}
+                                    </label>
+                                    <input 
+                                        required 
+                                        type="number" 
+                                        min="0" 
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
+                                        value={newCar.vehicleCategory === 'shuttle' ? (newCar.retailPrice || '') : (newCar.netPrice || '')} 
+                                        onChange={e => {
+                                            if (newCar.vehicleCategory === 'shuttle') {
+                                                setNewCar({ ...newCar, retailPrice: e.target.value, netPrice: '' });
+                                            } else {
+                                                setNewCar({ ...newCar, netPrice: e.target.value, retailPrice: '' });
+                                            }
+                                        }} 
+                                    />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">
+                                        {newCar.vehicleCategory === 'shuttle' 
+                                            ? 'Airgo will automatically deduct a 10% dispatch fee from this retail price.' 
+                                            : 'Airgo will automatically apply a 15% platform markup to determine the public retail price.'}
+                                    </span>
                                 </div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity</label> <input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.capacity} onChange={e => setNewCar({ ...newCar, capacity: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newCar.vehicleNumber} onChange={e => setNewCar({ ...newCar, vehicleNumber: e.target.value })} /></div>
@@ -2104,12 +2149,48 @@ export default function SuperadminDashboard() {
                             <button onClick={() => { setIsEditInventoryModalOpen(false); setSelectedInventoryForEdit(null); }} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
                         </div>
                         <form onSubmit={handleSaveEditListing} className="p-6 space-y-4 overflow-y-auto flex-1">
+                            {selectedInventoryForEdit.listingType === 'car' && (
+                                <div className="grid grid-cols-1 gap-4 mb-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Vehicle Category</label>
+                                        <select 
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
+                                            value={editItemData.vehicleCategory} 
+                                            onChange={e => setEditItemData({ ...editItemData, vehicleCategory: e.target.value })}
+                                        >
+                                            <option value="car">Executive Car (Markup Model)</option>
+                                            <option value="shuttle">Airport Shuttle (Commission Model)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Net Price (Your Take-Home ₦)</label>
-                                    <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.netPrice} onChange={e => setEditItemData({ ...editItemData, netPrice: e.target.value })} />
-                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
+                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                                        {selectedInventoryForEdit.listingType === 'car' && editItemData.vehicleCategory === 'shuttle' ? 'Retail Price (What the Customer Pays ₦)' : selectedInventoryForEdit.listingType === 'car' ? 'Net Price (Your Take-Home ₦)' : 'Net Price Per Night (₦)'}
+                                    </label>
+                                    <input 
+                                        required 
+                                        type="number" 
+                                        min="0" 
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
+                                        value={selectedInventoryForEdit.listingType === 'car' && editItemData.vehicleCategory === 'shuttle' ? (editItemData.retailPrice || '') : (editItemData.netPrice || '')} 
+                                        onChange={e => {
+                                            if (selectedInventoryForEdit.listingType === 'car' && editItemData.vehicleCategory === 'shuttle') {
+                                                setEditItemData({ ...editItemData, retailPrice: e.target.value, netPrice: '' });
+                                            } else {
+                                                setEditItemData({ ...editItemData, netPrice: e.target.value, retailPrice: '' });
+                                            }
+                                        }} 
+                                    />
+                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">
+                                        {selectedInventoryForEdit.listingType === 'car' 
+                                            ? (editItemData.vehicleCategory === 'shuttle' 
+                                                ? 'Airgo will automatically deduct a 10% dispatch fee from this retail price.' 
+                                                : 'Airgo will automatically apply a 15% platform markup to determine the public retail price.') 
+                                            : 'Airgo will automatically apply a standard platform markup to determine the final retail price for clients.'}
+                                    </span>
                                 </div>
                             </div>
 

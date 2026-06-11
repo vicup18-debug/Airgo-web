@@ -141,11 +141,12 @@ export default function CarsPage() {
                                 </div>
                             ) : (
                                 filteredCars.map((car) => {
-                                    const numericPrice = typeof car.price === 'string'
-                                        ? parseInt(car.price.replace(/[^0-9]/g, ''))
-                                        : (typeof car.price === 'object' && car.price !== null && car.price.$numberDecimal)
-                                            ? Number(car.price.$numberDecimal)
-                                            : Number(car.price) || 0;
+                                    const rawPrice = car.retailPrice !== undefined && car.retailPrice !== null ? car.retailPrice : car.price;
+                                    const numericPrice = typeof rawPrice === 'string'
+                                        ? parseInt(rawPrice.replace(/[^0-9]/g, ''))
+                                        : (typeof rawPrice === 'object' && rawPrice !== null && rawPrice.$numberDecimal)
+                                            ? Number(rawPrice.$numberDecimal)
+                                            : Number(rawPrice) || 0;
                                     const discountedPrice = Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100));
 
                                     return (
