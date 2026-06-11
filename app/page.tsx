@@ -51,6 +51,8 @@ export default function HotelHomepage() {
   const [location, setLocation] = useState('');
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
+  const [stayType, setStayType] = useState('all'); // 'all' | 'hotel' | 'apartment'
+  const [transportType, setTransportType] = useState('all'); // 'all' | 'car' | 'shuttle'
 
   // BOOKING MODAL STATES
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -213,6 +215,7 @@ export default function HotelHomepage() {
           pricePerNight: room.pricePerNight, // starting price
           discountPercentage: room.discountPercentage || 0,
           amenities: room.amenities,
+          partnerType: room.partnerType || 'hotel',
           rooms: []
         });
       }
@@ -232,6 +235,7 @@ export default function HotelHomepage() {
         hotel.discountPercentage = room.discountPercentage || 0;
         hotel.image = room.image;
         hotel.amenities = room.amenities;
+        hotel.partnerType = room.partnerType || 'hotel';
       }
     });
     
@@ -249,7 +253,12 @@ export default function HotelHomepage() {
       hotel.name?.toLowerCase().includes(location.toLowerCase()) ||
       hotel.location?.toLowerCase().includes(location.toLowerCase());
 
-    return matchesLocation;
+    // 2. Stay type match
+    const matchesStayType = stayType === 'all' || 
+      (stayType === 'hotel' && hotel.partnerType === 'hotel') ||
+      (stayType === 'apartment' && hotel.partnerType === 'apartment');
+
+    return matchesLocation && matchesStayType;
   });
 
   const filteredCars = liveCars.filter((car) => {
@@ -261,7 +270,12 @@ export default function HotelHomepage() {
     // 2. Availability match (using dates)
     const matchesAvailability = isItemAvailable(car, true);
 
-    return matchesLocation && matchesAvailability;
+    // 3. Transport type match
+    const matchesTransportType = transportType === 'all' ||
+      (transportType === 'car' && car.vehicleCategory === 'car') ||
+      (transportType === 'shuttle' && car.vehicleCategory === 'shuttle');
+
+    return matchesLocation && matchesAvailability && matchesTransportType;
   });
 
   return (
@@ -333,6 +347,43 @@ export default function HotelHomepage() {
                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">{activeTab === 'stays' ? 'Check Out' : 'Return Date'}</label>
                 <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
               </div>
+              {activeTab === 'stays' ? (
+                <div className="flex-1">
+                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Stay Type</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium appearance-none cursor-pointer" 
+                      value={stayType} 
+                      onChange={(e) => setStayType(e.target.value)}
+                    >
+                      <option value="all">🏢 All Stays</option>
+                      <option value="hotel">🏨 Hotels Only</option>
+                      <option value="apartment">🛋️ Apartments Only</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1">
+                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Vehicle Type</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium appearance-none cursor-pointer" 
+                      value={transportType} 
+                      onChange={(e) => setTransportType(e.target.value)}
+                    >
+                      <option value="all">🚗 All Vehicles</option>
+                      <option value="car">🚘 Car Hire</option>
+                      <option value="shuttle">🚐 Shuttle Service</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </div>
+                  </div>
+                </div>
+              )}
             </form>
           </div>
         </div>

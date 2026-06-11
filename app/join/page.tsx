@@ -69,7 +69,7 @@ export default function JoinPartnerPage() {
                 email: formData.email.toLowerCase(), // 🟢 SMART UPGRADE: Force email to lowercase for DB consistency
                 role: 'partner',
                 cacCertificateUrl: (formData.partnerType === 'hotel' || formData.partnerType === 'apartment') ? finalFileUrl : '',
-                driversLicenseUrl: formData.partnerType === 'car' ? finalFileUrl : '',
+                driversLicenseUrl: (formData.partnerType === 'car' || formData.partnerType === 'shuttle') ? finalFileUrl : '',
             };
 
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -227,7 +227,7 @@ export default function JoinPartnerPage() {
                                     </>
                                 )}
 
-                                {formData.partnerType === 'car' && (
+                                {(formData.partnerType === 'car' || formData.partnerType === 'shuttle') && (
                                     <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
                                         <label className="block text-xs font-bold text-gray-700 uppercase mb-2">Upload Driver's License *</label>
                                         <input required type="file" accept="image/*,application/pdf" className="w-full text-sm text-gray-900 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-[#000080] file:text-white hover:file:bg-blue-900 cursor-pointer" onChange={(e) => setVerificationFile(e.target.files?.[0] || null)} />
