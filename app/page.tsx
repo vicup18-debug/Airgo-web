@@ -53,6 +53,8 @@ export default function HotelHomepage() {
   const [checkOut, setCheckOut] = useState('');
   const [stayType, setStayType] = useState('all'); // 'all' | 'hotel' | 'apartment'
   const [transportType, setTransportType] = useState('all'); // 'all' | 'car' | 'shuttle'
+  const [isStayTypeOpen, setIsStayTypeOpen] = useState(false);
+  const [isTransportTypeOpen, setIsTransportTypeOpen] = useState(false);
 
   // BOOKING MODAL STATES
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -370,36 +372,140 @@ export default function HotelHomepage() {
                 <div className="flex-1">
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Stay Type</label>
                   <div className="relative">
-                    <select 
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium appearance-none cursor-pointer" 
-                      value={stayType} 
-                      onChange={(e) => setStayType(e.target.value)}
+                    <button
+                      type="button"
+                      onClick={() => setIsStayTypeOpen(!isStayTypeOpen)}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-left flex items-center justify-between cursor-pointer"
                     >
-                      <option value="all">🏢 All Stays</option>
-                      <option value="hotel">🏨 Hotels Only</option>
-                      <option value="apartment">🛋️ Apartments Only</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                    </div>
+                      <span className="flex items-center gap-2 text-sm text-gray-900">
+                        {stayType === 'all' && (
+                          <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        )}
+                        {stayType === 'hotel' && (
+                          <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        )}
+                        {stayType === 'apartment' && (
+                          <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11v11a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                          </svg>
+                        )}
+                        {stayType === 'all' ? 'All Stays' : stayType === 'hotel' ? 'Hotels Only' : 'Apartments Only'}
+                      </span>
+                      <svg className="fill-current h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </button>
+                    {isStayTypeOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsStayTypeOpen(false)} />
+                        <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl border border-gray-150 shadow-xl overflow-hidden py-1">
+                          <button
+                            type="button"
+                            onClick={() => { setStayType('all'); setIsStayTypeOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            All Stays
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setStayType('hotel'); setIsStayTypeOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Hotels Only
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setStayType('apartment'); setIsStayTypeOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11v11a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                            </svg>
+                            Apartments Only
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : (
                 <div className="flex-1">
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Vehicle Type</label>
                   <div className="relative">
-                    <select 
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium appearance-none cursor-pointer" 
-                      value={transportType} 
-                      onChange={(e) => setTransportType(e.target.value)}
+                    <button
+                      type="button"
+                      onClick={() => setIsTransportTypeOpen(!isTransportTypeOpen)}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-left flex items-center justify-between cursor-pointer"
                     >
-                      <option value="all">🚗 All Vehicles</option>
-                      <option value="car">🚘 Car Hire</option>
-                      <option value="shuttle">🚐 Shuttle Service</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                      <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                    </div>
+                      <span className="flex items-center gap-2 text-sm text-gray-900">
+                        {transportType === 'all' && (
+                          <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                          </svg>
+                        )}
+                        {transportType === 'car' && (
+                          <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                          </svg>
+                        )}
+                        {transportType === 'shuttle' && (
+                          <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v9m-8-9v9m-8-6a3 3 0 013-3h12a3 3 0 013 3v8a3 3 0 01-3 3H6a3 3 0 01-3-3v-8zm2 3h14M8 14h8" />
+                          </svg>
+                        )}
+                        {transportType === 'all' ? 'All Vehicles' : transportType === 'car' ? 'Car Hire' : 'Shuttle Service'}
+                      </span>
+                      <svg className="fill-current h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                    </button>
+                    {isTransportTypeOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsTransportTypeOpen(false)} />
+                        <div className="absolute z-50 mt-2 w-full bg-white rounded-2xl border border-gray-150 shadow-xl overflow-hidden py-1">
+                          <button
+                            type="button"
+                            onClick={() => { setTransportType('all'); setIsTransportTypeOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                            </svg>
+                            All Vehicles
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setTransportType('car'); setIsTransportTypeOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                            </svg>
+                            Car Hire
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setTransportType('shuttle'); setIsTransportTypeOpen(false); }}
+                            className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v9m-8-9v9m-8-6a3 3 0 013-3h12a3 3 0 013 3v8a3 3 0 01-3 3H6a3 3 0 01-3-3v-8zm2 3h14M8 14h8" />
+                            </svg>
+                            Shuttle Service
+                          </button>
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               )}
