@@ -119,6 +119,10 @@ export default function PartnerDashboard() {
     const [uploadingBookingId, setUploadingBookingId] = useState<string | null>(null);
     const [isSavingPlate, setIsSavingPlate] = useState<string | null>(null);
 
+    // Offer custom price state inputs
+    const [counterInputs, setCounterInputs] = useState<Record<string, string>>({});
+    const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
+
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -512,6 +516,53 @@ export default function PartnerDashboard() {
         }
     };
 
+    const handlePartnerOfferAction = async (bookingId: string, action: 'Accept' | 'Reject' | 'Counter', counterVal?: string) => {
+        setUpdatingOfferId(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            
+            const payload: any = {};
+            if (action === 'Accept') {
+                payload.offerStatus = 'Accepted';
+            } else if (action === 'Reject') {
+                payload.offerStatus = 'Rejected';
+            } else if (action === 'Counter') {
+                payload.offerStatus = 'Pending Client';
+                payload.counterPrice = Number(counterVal).toLocaleString();
+            }
+
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (action === 'Accept') {
+                    toast.success("Offer accepted! Waiting for client payment.");
+                } else if (action === 'Reject') {
+                    toast.success("Offer declined. Booking cancelled.");
+                } else if (action === 'Counter') {
+                    toast.success(`Counter offer of ₦${Number(counterVal).toLocaleString()} sent to client!`);
+                }
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchPartnerData(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to update offer status.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setUpdatingOfferId(null);
+        }
+    };
+
     const isCarPartner = user?.partnerType?.toLowerCase().includes('car') || user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isShuttlePartner = user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isApartmentPartner = user?.partnerType === 'apartment';
@@ -862,6 +913,91 @@ export default function PartnerDashboard() {
                                                                              )}
                                                                          </div>
                                                                     </div>
+
+                                                                    {booking.isOffer && (
+                                                                        <div className="border-t border-gray-200/80 pt-4 mt-4 bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                                                                            <div className="flex-1">
+                                                                                <div className="flex items-center gap-2 mb-2">
+                                                                                    <span className="bg-purple-100 text-purple-800 text-[10px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider font-sans">
+                                                                                        Indrive Bidding Flow
+                                                                                    </span>
+                                                                                    <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                                                                                </div>
+                                                                                <div className="space-y-1 text-left">
+                                                                                    <p className="text-sm font-medium text-slate-800">
+                                                                                        Client Custom Bid: <span className="font-extrabold text-purple-750">₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>
+                                                                                    </p>
+                                                                                    {booking.offerStatus === 'Pending Partner' && (
+                                                                                        <p className="text-xs text-slate-500 font-bold">
+                                                                                            Action Required: Review the client's price offer. You can accept, decline, or counter.
+                                                                                        </p>
+                                                                                    )}
+                                                                                    {booking.offerStatus === 'Pending Client' && (
+                                                                                        <p className="text-xs text-amber-700 font-bold">
+                                                                                            Waiting for client response to your counter offer of <span className="font-black">₦{Number(booking.counterPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>.
+                                                                                        </p>
+                                                                                    )}
+                                                                                    {booking.offerStatus === 'Accepted' && (
+                                                                                        <p className="text-xs text-green-700 font-bold">
+                                                                                            Offer accepted at ₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}! Waiting for payment escrow.
+                                                                                        </p>
+                                                                                    )}
+                                                                                    {booking.offerStatus === 'Rejected' && (
+                                                                                        <p className="text-xs text-rose-600 font-bold">
+                                                                                            Offer declined and booking cancelled.
+                                                                                        </p>
+                                                                                    )}
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {booking.offerStatus === 'Pending Partner' && (
+                                                                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
+                                                                                    <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-1.5">
+                                                                                        <span className="text-xs font-bold text-gray-500">₦</span>
+                                                                                        <input
+                                                                                            type="number"
+                                                                                            placeholder="Counter price..."
+                                                                                            className="w-28 text-xs text-gray-900 focus:outline-none font-bold bg-white"
+                                                                                            value={counterInputs[booking._id] || ''}
+                                                                                            onChange={(e) => setCounterInputs({
+                                                                                                ...counterInputs,
+                                                                                                [booking._id]: e.target.value
+                                                                                            })}
+                                                                                        />
+                                                                                    </div>
+                                                                                    <button
+                                                                                        disabled={updatingOfferId === booking._id}
+                                                                                        onClick={() => {
+                                                                                            const val = counterInputs[booking._id];
+                                                                                            if (!val || Number(val) <= 0) {
+                                                                                                toast.error("Please enter a valid counter price.");
+                                                                                                return;
+                                                                                            }
+                                                                                            handlePartnerOfferAction(booking._id, 'Counter', val);
+                                                                                        }}
+                                                                                        className="bg-purple-750 hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
+                                                                                    >
+                                                                                        Counter Bid
+                                                                                    </button>
+                                                                                    <button
+                                                                                        disabled={updatingOfferId === booking._id}
+                                                                                        onClick={() => handlePartnerOfferAction(booking._id, 'Accept')}
+                                                                                        className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
+                                                                                    >
+                                                                                        Accept Bid
+                                                                                    </button>
+                                                                                    <button
+                                                                                        disabled={updatingOfferId === booking._id}
+                                                                                        onClick={() => handlePartnerOfferAction(booking._id, 'Reject')}
+                                                                                        className="bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs px-4.5 py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center"
+                                                                                    >
+                                                                                        Reject
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+
                                                                     {booking.itemType === 'car' && (
                                                                         <div className="border-t border-gray-200/80 pt-4 mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
                                                                             {/* Left column: Plate Info & Verification Status */}

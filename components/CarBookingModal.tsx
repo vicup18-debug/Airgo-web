@@ -29,6 +29,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const [rentalType, setRentalType] = useState<'Chauffeur Driven' | 'Self Drive'>('Chauffeur Driven');
     const [fuelPlan, setFuelPlan] = useState<'Self Fueling' | 'Fuel Inclusive'>('Self Fueling');
     const [travelScope, setTravelScope] = useState<'Intra-City' | 'Inter-State'>('Intra-City');
+    const [isCustomOffer, setIsCustomOffer] = useState(false);
+    const [customOfferPrice, setCustomOfferPrice] = useState('');
 
     useEffect(() => {
         if (isOpen) {
@@ -64,6 +66,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             setRentalType('Chauffeur Driven');
             setFuelPlan('Self Fueling');
             setTravelScope('Intra-City');
+            setIsCustomOffer(false);
+            setCustomOfferPrice('');
             setStep(1); // Reset to first step
         }
     }, [isOpen, initialCheckIn, initialCheckOut]);
@@ -111,6 +115,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         setRentalType('Chauffeur Driven');
         setFuelPlan('Self Fueling');
         setTravelScope('Intra-City');
+        setIsCustomOffer(false);
+        setCustomOfferPrice('');
         onClose();
     };
 
@@ -148,7 +154,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkIn: bookingDetails.checkIn,
                 checkOut: bookingDetails.checkOut,
                 guests: 1,
-                totalPrice: finalPrice.toLocaleString(),
+                totalPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : finalPrice.toLocaleString(),
                 status: 'Pending Escrow',
                 clientName: bookingDetails.name,
                 clientEmail: bookingDetails.email,
@@ -157,7 +163,10 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 referredBy,
                 rentalType,
                 fuelPlan,
-                travelScope
+                travelScope,
+                isOffer: isCustomOffer,
+                offerStatus: isCustomOffer ? 'Pending Partner' : 'None',
+                offeredPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : ''
             };
 
             const response = await fetch(`${apiUrl}/api/bookings`, {
@@ -350,24 +359,54 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                     <p>💡 Inter-State: <strong>+₦35,000/day</strong> (includes state transit permits)</p>
                                 </div>
                             </div>
+ 
+                            {/* CUSTOM PRICE OFFER (INDRIVE STYLE) */}
+                            <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/65 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Make a custom price offer?</label>
+                                    <input
+                                        type="checkbox"
+                                        checked={isCustomOffer}
+                                        onChange={(e) => setIsCustomOffer(e.target.checked)}
+                                        className="w-4 h-4 text-[#000080] border-gray-300 rounded focus:ring-[#000080]/30 cursor-pointer"
+                                    />
+                                </div>
+                                {isCustomOffer && (
+                                    <div className="animate-in fade-in slide-in-from-top-1 duration-200">
+                                        <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">YOUR OFFERED PRICE (₦)</label>
+                                        <input
+                                            required
+                                            type="number"
+                                            min="1000"
+                                            placeholder="e.g. 150000"
+                                            className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-white text-gray-900 focus:border-[#000080] outline-none transition font-medium"
+                                            value={customOfferPrice}
+                                            onChange={(e) => setCustomOfferPrice(e.target.value)}
+                                        />
+                                        <p className="text-[9px] text-blue-600 font-medium mt-1">Recommended price is ₦{finalPrice.toLocaleString()}. Your custom bid will be sent to the partner for approval.</p>
+                                    </div>
+                                )}
+                            </div>
 
                             <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-100">
                                 <span className="text-gray-400 font-bold uppercase tracking-wider text-xs">TOTAL ESCROW</span>
                                 <div className="flex flex-col items-end">
-                                    {car.discountPercentage > 0 && (
+                                    {car.discountPercentage > 0 && !isCustomOffer && (
                                         <span className="text-xs text-gray-400 line-through font-bold">
                                             ₦{(((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1) * (numericPrice + (rentalType === 'Chauffeur Driven' ? 15000 : 0) + (fuelPlan === 'Fuel Inclusive' ? 25000 : 0) + (travelScope === 'Inter-State' ? 35000 : 0))).toLocaleString()}
                                         </span>
                                     )}
-                                    <span className="text-3xl font-black text-[#000080]">₦{finalPrice.toLocaleString()}</span>
-                                    {car.discountPercentage > 0 && (
+                                    <span className="text-3xl font-black text-[#000080]">
+                                        ₦{isCustomOffer && customOfferPrice ? Number(customOfferPrice).toLocaleString() : finalPrice.toLocaleString()}
+                                    </span>
+                                    {car.discountPercentage > 0 && !isCustomOffer && (
                                         <span className="text-[9px] text-red-600 font-bold uppercase mt-0.5">🔥 {car.discountPercentage}% OFF APPLIED</span>
                                     )}
                                 </div>
                             </div>
 
                             <button type="submit" disabled={isProcessing} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
-                                {isProcessing ? 'Locking Asset...' : 'Confirm Booking'}
+                                {isProcessing ? 'Locking Asset...' : (isCustomOffer ? 'Send Custom Offer' : 'Confirm Booking')}
                             </button>
                         </form>
                     </div>

@@ -317,6 +317,45 @@ export default function ClientDashboard() {
         }
     };
 
+    const handleOfferAction = async (bookingId: string, action: 'Accept' | 'Decline', counterPrice?: string) => {
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            
+            const payload: any = {
+                offerStatus: action === 'Accept' ? 'Accepted' : 'Rejected'
+            };
+            if (action === 'Accept' && counterPrice) {
+                payload.totalPrice = counterPrice;
+            }
+
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (action === 'Accept') {
+                    toast.success("🎉 Counter-offer accepted! You can now proceed to payment.");
+                } else {
+                    toast.success("Offer declined. Booking cancelled.");
+                }
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to update offer status.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
     const fetchMyBookings = async (parsedUser: any, silent = false) => {
         try {
             if (!silent) setIsLoading(true);
@@ -657,17 +696,33 @@ export default function ClientDashboard() {
                                             <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end gap-2">
                                                 <p className="text-sm text-gray-500 font-bold mb-0">Total Escrow</p>
                                                 <p className="text-2xl font-black text-gray-900">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</p>
-                                                <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                                    booking.status === 'Pending Escrow' 
-                                                        ? 'bg-yellow-100 text-yellow-800' 
-                                                        : booking.status === 'Approved for Disbursement'
-                                                            ? 'bg-blue-100 text-blue-800'
-                                                            : booking.status === 'Cancelled'
-                                                                ? 'bg-red-100 text-red-800'
-                                                                : 'bg-green-100 text-green-800'
-                                                }`}>
-                                                    {booking.status}
-                                                </span>
+                                                {booking.isOffer ? (
+                                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                                                        booking.offerStatus === 'Pending Partner' 
+                                                            ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                                                            : booking.offerStatus === 'Pending Client'
+                                                                ? 'bg-purple-100 text-purple-800 border border-purple-200'
+                                                                : booking.offerStatus === 'Rejected'
+                                                                    ? 'bg-rose-100 text-rose-800 border border-rose-200'
+                                                                    : 'bg-green-100 text-green-800 border border-green-200'
+                                                    }`}>
+                                                        {booking.offerStatus === 'Pending Partner' ? 'Waiting for Driver' :
+                                                         booking.offerStatus === 'Pending Client' ? 'Counter Offer Received' :
+                                                         booking.offerStatus === 'Rejected' ? 'Offer Declined' : 'Offer Accepted'}
+                                                    </span>
+                                                ) : (
+                                                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
+                                                        booking.status === 'Pending Escrow' 
+                                                            ? 'bg-yellow-100 text-yellow-800' 
+                                                            : booking.status === 'Approved for Disbursement'
+                                                                ? 'bg-blue-100 text-blue-800'
+                                                                : booking.status === 'Cancelled'
+                                                                    ? 'bg-red-100 text-red-800'
+                                                                    : 'bg-green-100 text-green-800'
+                                                    }`}>
+                                                        {booking.status}
+                                                    </span>
+                                                )}
                                                 
                                                 <div className="flex flex-wrap gap-2 mt-2">
                                                     {!canDownloadInvoice ? (
@@ -777,7 +832,7 @@ export default function ClientDashboard() {
                                                     )}
                                                 </div>
  
-                                                {booking.status === 'Pending Escrow' && (
+                                                {booking.status === 'Pending Escrow' && (!booking.isOffer || booking.offerStatus === 'Accepted') && (
                                                     <PaystackPaymentButton 
                                                         booking={booking} 
                                                         user={user} 
@@ -786,6 +841,68 @@ export default function ClientDashboard() {
                                                 )}
                                             </div>
                                         </div>
+
+                                        {/* Custom Price Offer Banner & Actions */}
+                                        {booking.isOffer && (
+                                            <div className={`w-full p-4 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left ${
+                                                booking.offerStatus === 'Pending Partner' 
+                                                    ? 'bg-amber-50/70 border-amber-200 text-amber-900' 
+                                                    : booking.offerStatus === 'Pending Client'
+                                                        ? 'bg-purple-50/70 border-purple-200 text-purple-900'
+                                                        : booking.offerStatus === 'Rejected'
+                                                            ? 'bg-rose-50/70 border-rose-200 text-rose-950'
+                                                            : 'bg-emerald-50/70 border-emerald-200 text-emerald-950'
+                                            }`}>
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className="text-xs font-bold uppercase tracking-wider">Custom Offer Status</span>
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse"></span>
+                                                    </div>
+                                                    {booking.offerStatus === 'Pending Partner' && (
+                                                        <p className="text-sm font-medium">
+                                                            Your offer of <span className="font-extrabold text-amber-700">₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span> has been submitted to the partner/driver. Waiting for them to accept or counter.
+                                                        </p>
+                                                    )}
+                                                    {booking.offerStatus === 'Pending Client' && (
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm font-medium">
+                                                                The partner proposed a counter-offer of <span className="font-extrabold text-purple-700">₦{Number(booking.counterPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>.
+                                                            </p>
+                                                            <p className="text-xs opacity-80">Your original bid was ₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}.</p>
+                                                        </div>
+                                                    )}
+                                                    {booking.offerStatus === 'Accepted' && (
+                                                        <p className="text-sm font-medium text-emerald-800">
+                                                            🎉 Your price offer of <span className="font-extrabold text-emerald-700">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span> was <span className="font-bold">accepted</span>! Please complete payment to lock your reservation.
+                                                        </p>
+                                                    )}
+                                                    {booking.offerStatus === 'Rejected' && (
+                                                        <p className="text-sm font-medium text-rose-800">
+                                                            This price offer was declined and the booking is cancelled. Feel free to request another booking with a different bid.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                {booking.offerStatus === 'Pending Client' && (
+                                                    <div className="flex gap-2 self-stretch sm:self-center shrink-0">
+                                                        <button
+                                                            onClick={() => handleOfferAction(booking._id, 'Accept', booking.counterPrice)}
+                                                            className="flex-1 sm:flex-initial bg-purple-750 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                                                        >
+                                                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                                                            </svg>
+                                                            Accept Counter
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleOfferAction(booking._id, 'Decline')}
+                                                            className="flex-1 sm:flex-initial bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 font-bold text-xs px-4 py-2 rounded-lg transition"
+                                                        >
+                                                            Decline
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                         
                                         {/* Nested Simulated Map tracker inside paid car rentals */}
                                         {isPaidCar && trackingBookingId === booking._id && (
