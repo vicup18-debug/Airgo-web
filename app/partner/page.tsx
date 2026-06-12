@@ -589,8 +589,12 @@ export default function PartnerDashboard() {
     if (!user.isApproved) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6 font-sans">
-                <div className="bg-white rounded-3xl p-10 text-center shadow-xl border border-gray-200 max-w-md w-full">
-                    <div className="text-6xl mb-6 animate-pulse">🛡️</div>
+                <div className="bg-white rounded-3xl p-10 text-center shadow-xl border border-gray-200 max-w-md w-full flex flex-col items-center">
+                    <div className="w-20 h-20 bg-blue-50 text-[#004A99] rounded-full flex items-center justify-center mb-6">
+                        <svg className="w-10 h-10 text-[#004A99] animate-pulse" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                        </svg>
+                    </div>
                     <h2 className="text-2xl font-black text-gray-900 mb-2">Verification Pending</h2>
                     <p className="text-gray-500 text-sm leading-relaxed mb-8">
                         Your partner registration has been received and is currently under review by our compliance team. You will be granted dashboard access once approved.
@@ -629,11 +633,30 @@ export default function PartnerDashboard() {
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
                 <nav className="flex-1 p-4 space-y-2">
-                    <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📊 Dashboard</button>
-                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>
-                        {isShuttlePartner ? '🚘 My Shuttle Trips' : isCarPartner ? '🚘 My Fleet' : isApartmentPartner ? '🏨 My Apartments' : '🏨 Room Categories'}
+                    <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'overview' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
+                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" />
+                        </svg>
+                        Dashboard
                     </button>
-                    <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>📅 Reservations</button>
+                    <button onClick={() => { setActiveTab('inventory'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'inventory' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
+                        {isCarPartner ? (
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124l-.321-5.128a3.375 3.375 0 00-3.37-3.164H5.056m14.238 5.4H4.5m14.512-5.4l-.569-2.28A2.25 2.25 0 0016.26 6H7.74a2.25 2.25 0 00-2.182 1.72l-.569 2.28m11.268 0A3 3 0 1112 9a3 3 0 012.27 1.002z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21h10.5V3.75c0-.621-.504-1.125-1.125-1.125H7.875A1.125 1.125 0 006.75 3.75V21z" />
+                            </svg>
+                        )}
+                        <span>{isShuttlePartner ? 'My Shuttle Trips' : isCarPartner ? 'My Fleet' : isApartmentPartner ? 'My Apartments' : 'Room Categories'}</span>
+                    </button>
+                    <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
+                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
+                        </svg>
+                        Reservations
+                    </button>
                     <button onClick={() => { 
                         setActiveTab('profile'); 
                         setIsMobileMenuOpen(false);
@@ -645,7 +668,12 @@ export default function PartnerDashboard() {
                             businessAddress: user.businessAddress || '',
                             cacNumber: user.cacNumber || ''
                         });
-                    }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition ${activeTab === 'profile' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800'}`}>👤 My Profile</button>
+                    }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'profile' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
+                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                        My Profile
+                    </button>
                 </nav>
                 <div className="p-4 border-t border-blue-800">
                     <button onClick={handleLogout} className="w-full bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-xl font-bold transition shadow-md">Sign Out</button>
@@ -657,7 +685,7 @@ export default function PartnerDashboard() {
                 <header className="bg-white px-8 py-5 border-b border-gray-200 hidden md:flex items-center justify-between sticky top-0 z-10">
                     <h1 className="text-2xl font-black text-gray-900 capitalize">
                         {activeTab === 'overview' 
-                            ? (isShuttlePartner ? '🚘 Airport Shuttle Panel' : isCarPartner ? '🚘 Fleet Control Panel' : isApartmentPartner ? '🏨 Apartment Host Panel' : '🏨 Property Management Panel') 
+                            ? (isShuttlePartner ? 'Airport Shuttle Panel' : isCarPartner ? 'Fleet Control Panel' : isApartmentPartner ? 'Apartment Host Panel' : 'Property Management Panel') 
                             : activeTab === 'inventory' 
                                 ? (isShuttlePartner ? 'Airport Shuttle Routes' : isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
                                 : activeTab === 'profile' 
@@ -740,7 +768,13 @@ export default function PartnerDashboard() {
                                                             {isCarPartner ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
                                                         </p>
                                                         {item.hotelAddress && (
-                                                            <p className="text-[10px] text-gray-400 mt-1">📍 {item.hotelAddress}</p>
+                                                            <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                                                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                                </svg>
+                                                                {item.hotelAddress}
+                                                            </p>
                                                         )}
                                                     </div>
                                                 </div>
@@ -832,7 +866,11 @@ export default function PartnerDashboard() {
                                                     <tr>
                                                         <td colSpan={4} className="p-0">
                                                             <div className="p-12 text-center bg-white border border-gray-100 shadow-sm m-6 rounded-3xl">
-                                                                 <div className="text-6xl mb-4">📭</div>
+                                                                 <div className="w-16 h-16 bg-blue-50 text-[#004A99] rounded-full flex items-center justify-center mx-auto mb-4">
+                                                                     <svg className="w-8 h-8 text-[#004A99]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                                                     </svg>
+                                                                 </div>
                                                                  <h3 className="text-2xl font-black text-[#004A99] mb-2">No Reservations Yet</h3>
                                                                  <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all booking details and dispatch information will appear here.</p>
                                                              </div>
@@ -895,9 +933,12 @@ export default function PartnerDashboard() {
                                                                              <button
                                                                                  onClick={() => handleResendEmail(booking._id)}
                                                                                  disabled={isResendingEmail === booking._id}
-                                                                                 className="text-[10px] font-black bg-blue-50 text-[#000080] px-3 py-2 rounded-lg border border-blue-100 hover:bg-blue-100 transition disabled:opacity-50 mt-1 flex items-center gap-1 w-full justify-center"
+                                                                                 className="text-[10px] font-black bg-blue-50 text-[#000080] px-3 py-2 rounded-lg border border-blue-100 hover:bg-blue-100 transition disabled:opacity-50 mt-1 flex items-center gap-1.5 w-full justify-center"
                                                                              >
-                                                                                 ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
+                                                                                 <svg className="w-3.5 h-3.5 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                                                     <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                                                                                 </svg>
+                                                                                 {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
                                                                              </button>
                                                                              {booking.status !== 'Cancelled' && booking.status !== 'Archived' && (
                                                                                  <button
@@ -906,9 +947,12 @@ export default function PartnerDashboard() {
                                                                                          setChatBookingName(booking.itemName);
                                                                                          setIsChatOpen(true);
                                                                                      }}
-                                                                                     className="text-[10px] font-black bg-yellow-50 text-[#000080] px-3 py-2 rounded-lg border border-yellow-100 hover:bg-yellow-100 transition mt-1.5 flex items-center gap-1 cursor-pointer w-full justify-center"
+                                                                                     className="text-[10px] font-black bg-yellow-50 text-[#000080] px-3 py-2 rounded-lg border border-yellow-100 hover:bg-yellow-100 transition mt-1.5 flex items-center gap-1.5 cursor-pointer w-full justify-center"
                                                                                  >
-                                                                                     💬 Chatroom
+                                                                                     <svg className="w-3.5 h-3.5 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a.596.596 0 01-.737-.556 5.996 5.996 0 011.085-3.22C4.167 15.68 3 13.98 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+                                                                                     </svg>
+                                                                                     Chatroom
                                                                                  </button>
                                                                              )}
                                                                          </div>
@@ -1022,8 +1066,12 @@ export default function PartnerDashboard() {
                                                                                 </div>
                                                                                 {booking.vehiclePlateUrl && (
                                                                                     <div className="mt-3">
-                                                                                        <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[11px] font-bold text-[#004A99] hover:underline">
-                                                                                            📷 View Uploaded Plate Photo
+                                                                                        <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#004A99] hover:underline">
+                                                                                            <svg className="w-3.5 h-3.5 text-[#004A99]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                                                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                                                                                            </svg>
+                                                                                            View Uploaded Plate Photo
                                                                                         </a>
                                                                                     </div>
                                                                                 )}

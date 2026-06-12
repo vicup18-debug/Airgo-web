@@ -254,7 +254,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
                         <div className="bg-blue-50 p-5 rounded-2xl border border-blue-100 mb-6">
                             <div className="flex items-center gap-2 mb-2">
-                                <span className="text-xl">🛡️</span>
+                                <svg className="w-5 h-5 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                                </svg>
                                 <h4 className="text-sm font-black text-[#000080] uppercase tracking-wide">Airgo Escrow Protection</h4>
                             </div>
                             <p className="text-xs text-blue-900 leading-relaxed font-medium">
@@ -400,7 +402,13 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                         ₦{isCustomOffer && customOfferPrice ? Number(customOfferPrice).toLocaleString() : finalPrice.toLocaleString()}
                                     </span>
                                     {car.discountPercentage > 0 && !isCustomOffer && (
-                                        <span className="text-[9px] text-red-600 font-bold uppercase mt-0.5">🔥 {car.discountPercentage}% OFF APPLIED</span>
+                                        <span className="text-[9px] text-red-600 font-bold uppercase mt-0.5 flex items-center gap-1">
+                                            <svg className="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a1.5 1.5 0 002.122 0l4.318-4.318a1.5 1.5 0 000-2.122L10.16 3.659A2.25 2.25 0 009.568 3z" />
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 7.5h.008v.008H6V7.5z" />
+                                            </svg>
+                                            {car.discountPercentage}% OFF APPLIED
+                                        </span>
                                     )}
                                 </div>
                             </div>

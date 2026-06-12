@@ -525,8 +525,12 @@ export default function HotelHomepage() {
           {isLoading ? (
             <div className="text-center py-20 text-gray-400 font-bold animate-pulse text-lg">Scanning live matrices...</div>
           ) : (activeTab === 'stays' ? filteredRooms : filteredCars).length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-[2rem] border border-gray-100 shadow-sm max-w-xl mx-auto p-8 my-8">
-              <div className="text-5xl mb-4">🔍</div>
+            <div className="text-center py-16 bg-white rounded-[2rem] border border-gray-100 shadow-sm max-w-xl mx-auto p-8 my-8 flex flex-col items-center">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 text-[#000080]">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
               <h3 className="text-xl font-bold text-gray-800">No Matches Found</h3>
               <p className="text-gray-500 mt-2">Try adjusting your search query or choosing different dates.</p>
             </div>
