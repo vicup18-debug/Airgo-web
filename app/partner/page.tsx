@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -106,6 +106,106 @@ export default function PartnerDashboard() {
     const [myInventory, setMyInventory] = useState<any[]>([]);
     const [myBookings, setMyBookings] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [hasLoadedBookings, setHasLoadedBookings] = useState(false);
+    const prevBookingsRef = useRef<any[]>([]);
+
+    const playNotificationSound = () => {
+        try {
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContextClass) return;
+            const ctx = new AudioContextClass();
+            
+            // First chime (D5)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+            
+            gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start();
+            osc1.stop(ctx.currentTime + 0.4);
+            
+            // Second chime (A5, delayed by 120ms)
+            setTimeout(() => {
+                try {
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880, ctx.currentTime);
+                    
+                    gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                    
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start();
+                    osc2.stop(ctx.currentTime + 0.5);
+                } catch (e) {}
+            }, 120);
+        } catch (error) {
+            console.error("Failed to play notification sound", error);
+        }
+    };
+
+    // Unlock Web Audio API on first user interaction to bypass autoplay restrictions
+    useEffect(() => {
+        const unlockAudio = () => {
+            try {
+                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+                if (AudioContextClass) {
+                    const ctx = new AudioContextClass();
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
+                }
+            } catch (e) {}
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+        };
+        window.addEventListener('click', unlockAudio);
+        window.addEventListener('touchstart', unlockAudio);
+        return () => {
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!hasLoadedBookings) {
+            prevBookingsRef.current = myBookings;
+            return;
+        }
+
+        let shouldPlaySound = false;
+        for (const booking of myBookings) {
+            const prevBooking = prevBookingsRef.current.find((b: any) => b._id === booking._id);
+            if (!prevBooking) {
+                // A new booking has arrived!
+                shouldPlaySound = true;
+                break;
+            } else if (
+                prevBooking.status !== booking.status ||
+                prevBooking.offerStatus !== booking.offerStatus ||
+                prevBooking.counterPrice !== booking.counterPrice ||
+                prevBooking.totalPrice !== booking.totalPrice
+            ) {
+                // A booking status or offer status has changed!
+                shouldPlaySound = true;
+                break;
+            }
+        }
+
+        if (shouldPlaySound) {
+            playNotificationSound();
+        }
+
+        prevBookingsRef.current = myBookings;
+    }, [myBookings, hasLoadedBookings]);
+
     const [expandedBookingId, setExpandedBookingId] = useState<string | null>(null);
     const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
 
@@ -237,6 +337,7 @@ export default function PartnerDashboard() {
             console.error("Error fetching partner data");
         } finally {
             setIsLoading(false);
+            setHasLoadedBookings(true);
         }
     };
 
@@ -969,7 +1070,7 @@ export default function PartnerDashboard() {
                                                                                 </div>
                                                                                 <div className="space-y-1 text-left">
                                                                                     <p className="text-sm font-medium text-slate-800">
-                                                                                        Client Custom Bid: <span className="font-extrabold text-purple-750">₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>
+                                                                                        Client Custom Bid: <span className="font-extrabold text-purple-700">₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>
                                                                                     </p>
                                                                                     {booking.offerStatus === 'Pending Partner' && (
                                                                                         <p className="text-xs text-slate-500 font-bold">
@@ -1019,7 +1120,7 @@ export default function PartnerDashboard() {
                                                                                             }
                                                                                             handlePartnerOfferAction(booking._id, 'Counter', val);
                                                                                         }}
-                                                                                        className="bg-purple-750 hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
+                                                                                        className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
                                                                                     >
                                                                                         Counter Bid
                                                                                     </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -203,6 +203,106 @@ export default function ClientDashboard() {
     const [showCarRentalBanner, setShowCarRentalBanner] = useState(false);
     const router = useRouter();
 
+    const [hasLoadedBookings, setHasLoadedBookings] = useState(false);
+    const prevBookingsRef = useRef<any[]>([]);
+
+    const playNotificationSound = () => {
+        try {
+            const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContextClass) return;
+            const ctx = new AudioContextClass();
+            
+            // First chime (D5)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(587.33, ctx.currentTime);
+            
+            gain1.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+            
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start();
+            osc1.stop(ctx.currentTime + 0.4);
+            
+            // Second chime (A5, delayed by 120ms)
+            setTimeout(() => {
+                try {
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(880, ctx.currentTime);
+                    
+                    gain2.gain.setValueAtTime(0.15, ctx.currentTime);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+                    
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start();
+                    osc2.stop(ctx.currentTime + 0.5);
+                } catch (e) {}
+            }, 120);
+        } catch (error) {
+            console.error("Failed to play notification sound", error);
+        }
+    };
+
+    // Unlock Web Audio API on first user interaction to bypass autoplay restrictions
+    useEffect(() => {
+        const unlockAudio = () => {
+            try {
+                const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+                if (AudioContextClass) {
+                    const ctx = new AudioContextClass();
+                    if (ctx.state === 'suspended') {
+                        ctx.resume();
+                    }
+                }
+            } catch (e) {}
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+        };
+        window.addEventListener('click', unlockAudio);
+        window.addEventListener('touchstart', unlockAudio);
+        return () => {
+            window.removeEventListener('click', unlockAudio);
+            window.removeEventListener('touchstart', unlockAudio);
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!hasLoadedBookings) {
+            prevBookingsRef.current = myBookings;
+            return;
+        }
+
+        let shouldPlaySound = false;
+        for (const booking of myBookings) {
+            const prevBooking = prevBookingsRef.current.find((b: any) => b._id === booking._id);
+            if (!prevBooking) {
+                // A new booking has arrived!
+                shouldPlaySound = true;
+                break;
+            } else if (
+                prevBooking.status !== booking.status ||
+                prevBooking.offerStatus !== booking.offerStatus ||
+                prevBooking.counterPrice !== booking.counterPrice ||
+                prevBooking.totalPrice !== booking.totalPrice
+            ) {
+                // A booking status or offer status has changed!
+                shouldPlaySound = true;
+                break;
+            }
+        }
+
+        if (shouldPlaySound) {
+            playNotificationSound();
+        }
+
+        prevBookingsRef.current = myBookings;
+    }, [myBookings, hasLoadedBookings]);
+
     // Chatroom states
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatBookingId, setChatBookingId] = useState('');
@@ -386,6 +486,7 @@ export default function ClientDashboard() {
             console.error("Failed to fetch bookings");
         } finally {
             setIsLoading(false);
+            setHasLoadedBookings(true);
         }
     };
 
@@ -886,7 +987,7 @@ export default function ClientDashboard() {
                                                     <div className="flex gap-2 self-stretch sm:self-center shrink-0">
                                                         <button
                                                             onClick={() => handleOfferAction(booking._id, 'Accept', booking.counterPrice)}
-                                                            className="flex-1 sm:flex-initial bg-purple-750 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                                                            className="flex-1 sm:flex-initial bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4 py-2 rounded-lg shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
                                                         >
                                                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />

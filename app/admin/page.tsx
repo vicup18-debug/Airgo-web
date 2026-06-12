@@ -1370,13 +1370,13 @@ export default function SuperadminDashboard() {
                                                                             <p className="text-xs font-bold text-green-700">In: {formatDisplayDate(booking.checkIn, booking.itemType)}</p>
                                                                             <p className="text-xs font-bold text-red-700 mt-1">Out: {formatDisplayDate(booking.checkOut, booking.itemType)}</p>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mt-2 mb-1">Reserved At</p>
-                                                                            <p className="text-xs text-gray-700 font-bold">{booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-gray-700">{booking.createdAt ? new Date(booking.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : 'N/A'}</p>
                                                                         </div>
                                                                         <div className="flex flex-col gap-2 justify-center">
                                                                              {booking.status === 'Pending Escrow' && (
                                                                                   <button 
                                                                                       onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
-                                                                                      className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-750 transition"
+                                                                                      className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-700 transition"
                                                                                   >
                                                                                       💵 Confirm Deposit
                                                                                   </button>
