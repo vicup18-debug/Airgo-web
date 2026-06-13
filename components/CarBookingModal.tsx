@@ -21,7 +21,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         name: '',
         email: '',
         phone: '',
-        address: '',
+        fromAddress: '',
+        toAddress: '',
         checkIn: '',
         checkOut: ''
     });
@@ -59,7 +60,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 name,
                 email,
                 phone,
-                address: '',
+                fromAddress: '',
+                toAddress: '',
                 checkIn: formattedCheckIn,
                 checkOut: formattedCheckOut
             });
@@ -108,7 +110,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             name: '',
             email: '',
             phone: '',
-            address: '',
+            fromAddress: '',
+            toAddress: '',
             checkIn: '',
             checkOut: ''
         });
@@ -159,7 +162,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 clientName: bookingDetails.name,
                 clientEmail: bookingDetails.email,
                 clientPhone: bookingDetails.phone,
-                deliveryAddress: bookingDetails.address,
+                deliveryAddress: `From: ${bookingDetails.fromAddress} | To: ${bookingDetails.toAddress}`,
                 referredBy,
                 rentalType,
                 fuelPlan,
@@ -305,9 +308,15 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">DELIVERY ADDRESS</label>
-                                <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" placeholder="Where should we bring the car?" value={bookingDetails.address} onChange={e => setBookingDetails({ ...bookingDetails, address: e.target.value })} />
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">FROM (Pickup / Delivery Address)</label>
+                                    <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" placeholder="Pickup location" value={bookingDetails.fromAddress} onChange={e => setBookingDetails({ ...bookingDetails, fromAddress: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">TO (Return / Destination)</label>
+                                    <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" placeholder="Destination location" value={bookingDetails.toAddress} onChange={e => setBookingDetails({ ...bookingDetails, toAddress: e.target.value })} />
+                                </div>
                             </div>
 
                             {/* SERVICE CONFIGURATION */}
@@ -431,7 +440,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                         <div className="bg-gray-50 border border-gray-100 p-5 rounded-2xl w-full text-left mb-6">
                             <h4 className="font-bold text-[#000080] text-xs mb-1.5 uppercase tracking-wider">Dispatch Scheduled</h4>
                             <p className="text-xs text-gray-600 leading-relaxed font-medium">
-                                A PDF invoice has been generated and sent to you. Our dispatch manager will contact you on <span className="font-bold text-gray-900">{bookingDetails.phone}</span> shortly to confirm your delivery to <span className="font-bold text-gray-900">{bookingDetails.address}</span>.
+                                A PDF invoice has been generated and sent to you. Our dispatch manager will contact you on <span className="font-bold text-gray-900">{bookingDetails.phone}</span> shortly to confirm your trip from <span className="font-bold text-gray-900">{bookingDetails.fromAddress}</span> to <span className="font-bold text-gray-900">{bookingDetails.toAddress}</span>.
                             </p>
                         </div>
                         <button onClick={() => { handleClose(); router.push('/dashboard'); }} className="w-full bg-[#000080] text-white py-4 rounded-xl font-black text-lg hover:bg-blue-900 transition shadow-lg">

@@ -222,6 +222,7 @@ export default function PartnerDashboard() {
     // Offer custom price state inputs
     const [counterInputs, setCounterInputs] = useState<Record<string, string>>({});
     const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
+    const [startingTripId, setStartingTripId] = useState<string | null>(null);
 
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -261,12 +262,24 @@ export default function PartnerDashboard() {
         const token = localStorage.getItem('airgo_token');
         const userData = localStorage.getItem('airgo_user');
 
-        if (!token || !userData) return router.push('/login');
+        if (!token || !userData) {
+            router.push('/login');
+            return;
+        }
 
-        const parsedUser = JSON.parse(userData);
-        if (parsedUser.role !== 'partner') {
+        let parsedUser;
+        try {
+            parsedUser = JSON.parse(userData);
+        } catch (e) {
+            console.error("Failed to parse user data from localStorage", e);
+            router.push('/login');
+            return;
+        }
+
+        if (!parsedUser || parsedUser.role !== 'partner') {
             toast.error("Unauthorized Access.");
-            return router.push('/dashboard');
+            router.push('/dashboard');
+            return;
         }
 
         setUser(parsedUser);
@@ -664,6 +677,38 @@ export default function PartnerDashboard() {
         }
     };
 
+    const handleStartTrip = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to start this trip? Both the client and Airgo will be notified by email.")) {
+            return;
+        }
+        setStartingTripId(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/start-trip`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success(data.message || "Trip started! Notifications sent.");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchPartnerData(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to start trip.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setStartingTripId(null);
+        }
+    };
+
     const isCarPartner = user?.partnerType?.toLowerCase().includes('car') || user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isShuttlePartner = user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isApartmentPartner = user?.partnerType === 'apartment';
@@ -795,7 +840,7 @@ export default function PartnerDashboard() {
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>
-                        <div className="w-10 h-10 bg-[#004A99] rounded-full flex items-center justify-center text-white font-black shadow-inner">{user.name.charAt(0)}</div>
+                        <div className="w-10 h-10 bg-[#004A99] rounded-full flex items-center justify-center text-white font-black shadow-inner">{user?.name?.charAt(0) || 'P'}</div>
                     </div>
                 </header>
 
@@ -1019,6 +1064,32 @@ export default function PartnerDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Guest Details</p>
                                                                             <p className="text-xs font-black text-gray-900">Name: {booking.clientName || 'N/A'}</p>
+                                                                            {booking.itemType === 'car' && (
+                                                                                <>
+                                                                                    <p className="text-xs text-gray-500 font-bold mt-1">Phone: {booking.clientPhone || 'N/A'}</p>
+                                                                                    <p className="text-xs text-gray-500 font-bold mt-1">Email: {booking.clientEmail || 'N/A'}</p>
+                                                                                    {booking.deliveryAddress && (
+                                                                                        <div className="mt-2 bg-white p-2.5 rounded-xl border border-gray-200">
+                                                                                            <p className="text-[9px] uppercase font-extrabold text-gray-400 mb-1">Route / Address</p>
+                                                                                            {booking.deliveryAddress.includes('From:') ? (
+                                                                                                (() => {
+                                                                                                    const parts = booking.deliveryAddress.split(' | ');
+                                                                                                    const fromVal = parts[0]?.replace('From:', '').trim() || 'N/A';
+                                                                                                    const toVal = parts[1]?.replace('To:', '').trim() || 'N/A';
+                                                                                                    return (
+                                                                                                        <>
+                                                                                                            <p className="text-xs text-gray-700 font-semibold"><span className="text-green-600 font-bold">From:</span> {fromVal}</p>
+                                                                                                            <p className="text-xs text-gray-700 font-semibold mt-1"><span className="text-red-500 font-bold">To:</span> {toVal}</p>
+                                                                                                        </>
+                                                                                                    );
+                                                                                                })()
+                                                                                            ) : (
+                                                                                                <p className="text-xs text-gray-700 font-semibold">{booking.deliveryAddress}</p>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    )}
+                                                                                </>
+                                                                            )}
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Exact Timeframe</p>
@@ -1055,6 +1126,25 @@ export default function PartnerDashboard() {
                                                                                      </svg>
                                                                                      Chatroom
                                                                                  </button>
+                                                                             )}
+                                                                             {booking.itemType === 'car' && ['Paid', 'Approved for Disbursement', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
+                                                                                 <button
+                                                                                     onClick={() => handleStartTrip(booking._id)}
+                                                                                     disabled={startingTripId === booking._id}
+                                                                                     className="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition disabled:opacity-50 mt-1.5 flex items-center gap-1.5 w-full justify-center shadow-sm cursor-pointer"
+                                                                                 >
+                                                                                     <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-8.22-.07l-.02-.02a6 6 0 010-8.56L10.05 3V1h1.74v2l2.7 2.72a6 6 0 010 8.65z" />
+                                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                                                                                     </svg>
+                                                                                     {startingTripId === booking._id ? 'Starting...' : 'Start Trip'}
+                                                                                 </button>
+                                                                             )}
+                                                                             {booking.itemType === 'car' && booking.status === 'Trip Started' && (
+                                                                                 <div className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-3 py-2 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-emerald-200">
+                                                                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                                                     Trip In Progress
+                                                                                 </div>
                                                                              )}
                                                                          </div>
                                                                     </div>
@@ -1120,7 +1210,8 @@ export default function PartnerDashboard() {
                                                                                             }
                                                                                             handlePartnerOfferAction(booking._id, 'Counter', val);
                                                                                         }}
-                                                                                        className="bg-purple-700 hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
+                                                                                        style={{ backgroundColor: '#6b21a8' }}
+                                                                                        className="hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
                                                                                     >
                                                                                         Counter Bid
                                                                                     </button>

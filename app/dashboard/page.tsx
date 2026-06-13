@@ -47,7 +47,7 @@ function LiveCarTracker({ booking }: { booking: any }) {
     const [speed, setSpeed] = React.useState(60);
     const [fuel, setFuel] = React.useState(82);
     const [eta, setEta] = React.useState(15);
-    const [statusText, setStatusText] = React.useState('En Route to Delivery Address');
+    const [statusText, setStatusText] = React.useState('En Route to Destination');
 
     React.useEffect(() => {
         // Animate the progress along the path (0 to 100)
@@ -1119,10 +1119,61 @@ export default function ClientDashboard() {
                                     <input required type="tel" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={editData.clientPhone} onChange={e => setEditData({ ...editData, clientPhone: e.target.value })} />
                                 </div>
                             </div>
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Delivery / Stay Address</label>
-                                <input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={editData.deliveryAddress} onChange={e => setEditData({ ...editData, deliveryAddress: e.target.value })} />
-                            </div>
+                            {selectedBooking?.itemType === 'car' ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">FROM (Delivery / Pickup)</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900"
+                                            value={(() => {
+                                                const parts = (editData.deliveryAddress || '').split(' | ');
+                                                return parts[0]?.replace('From:', '').trim() || '';
+                                            })()}
+                                            onChange={e => {
+                                                const parts = (editData.deliveryAddress || '').split(' | ');
+                                                const toVal = parts[1] || 'To: ';
+                                                setEditData({
+                                                    ...editData,
+                                                    deliveryAddress: `From: ${e.target.value} | ${toVal}`
+                                                });
+                                            }}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">TO (Return / Destination)</label>
+                                        <input
+                                            required
+                                            type="text"
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900"
+                                            value={(() => {
+                                                const parts = (editData.deliveryAddress || '').split(' | ');
+                                                return parts[1]?.replace('To:', '').trim() || '';
+                                            })()}
+                                            onChange={e => {
+                                                const parts = (editData.deliveryAddress || '').split(' | ');
+                                                const fromVal = parts[0] || 'From: ';
+                                                setEditData({
+                                                    ...editData,
+                                                    deliveryAddress: `${fromVal} | To: ${e.target.value}`
+                                                });
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Stay Address</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        className="w-full px-4 py-2 border rounded-xl text-gray-900"
+                                        value={editData.deliveryAddress}
+                                        onChange={e => setEditData({ ...editData, deliveryAddress: e.target.value })}
+                                    />
+                                </div>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Check In / Pickup Date</label>
