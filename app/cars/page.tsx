@@ -19,7 +19,8 @@ const FALLBACK_FLEET = [
         isFallback: true,
         location: 'Maitama',
         state: 'Abuja',
-        vehicleNumber: 'ABJ-888-GW'
+        vehicleNumber: 'ABJ-888-GW',
+        totalAllocated: 1
     }
 ];
 

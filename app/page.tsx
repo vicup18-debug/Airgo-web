@@ -36,7 +36,8 @@ const FALLBACK_CARS = [
     bookedDates: [],
     location: 'Maitama',
     state: 'Abuja',
-    vehicleNumber: 'ABJ-888-GW'
+    vehicleNumber: 'ABJ-888-GW',
+    totalAllocated: 1
   }
 ];
 
@@ -104,7 +105,8 @@ export default function HotelHomepage() {
 
   // 🛡️ DYNAMIC AVAILABILITY ENGINE
   const isItemAvailable = (item: any, isCar: boolean = false) => {
-    if ((item.totalAllocated || 0) <= 0) return false;
+    const allocated = item.totalAllocated !== undefined ? item.totalAllocated : 1;
+    if (allocated <= 0) return false;
     if (!checkIn || !checkOut) return true;
     if (!item.bookedDates) return true;
 
@@ -112,7 +114,7 @@ export default function HotelHomepage() {
     const endD = new Date(checkOut);
     
     // Total capacity vs allocated threshold
-    const capacityThreshold = item.totalAllocated || 1;
+    const capacityThreshold = allocated;
 
     while (d < endD) {
       const dateStr = d.toISOString().split('T')[0];

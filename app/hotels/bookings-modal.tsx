@@ -151,13 +151,12 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     if (!isOpen || !hotel) return null;
 
     // 🟢 CALCULATE TOTAL NIGHTS & PRICE
-    const calculateTotal = () => {
-        if (!checkIn || !checkOut || !selectedRoom) return 0;
+    const getPriceBreakdown = () => {
+        if (!checkIn || !checkOut || !selectedRoom) return { base: 0, fee: 0, total: 0 };
         const start = new Date(checkIn);
         const end = new Date(checkOut);
         const nights = Math.max((end.getTime() - start.getTime()) / (1000 * 3600 * 24), 1);
 
-        // Strip out the "₦" and commas to do math, then multiply by nights
         const rawPrice = typeof selectedRoom.pricePerNight === 'string'
             ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, ''))
             : selectedRoom.pricePerNight;
@@ -165,7 +164,15 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
         const discount = selectedRoom.discountPercentage || 0;
         const discountedRate = Math.round(rawPrice * (1 - discount / 100));
 
-        return (discountedRate * nights).toLocaleString();
+        const base = discountedRate * nights;
+        const fee = Math.round(base * 0.11);
+        const total = base + fee;
+        return { base, fee, total };
+    };
+
+    // 🟢 CALCULATE TOTAL NIGHTS & PRICE
+    const calculateTotal = () => {
+        return getPriceBreakdown().total.toLocaleString();
     };
 
     const handleBooking = async (e: React.FormEvent) => {
@@ -440,9 +447,21 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                         ₦{Math.round((typeof selectedRoom.pricePerNight === 'string' ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, '')) : selectedRoom.pricePerNight) * (1 - (selectedRoom.discountPercentage || 0) / 100)).toLocaleString()}
                                     </span>
                                 </div>
-                                <div className="flex justify-between items-end">
+                                <div className="flex justify-between items-center mb-1">
+                                    <span className="text-gray-500 font-medium">Stay duration cost</span>
+                                    <span className="font-bold text-gray-900">
+                                        ₦{getPriceBreakdown().base.toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <span className="text-gray-500 font-medium">Processing Fee (11%)</span>
+                                    <span className="font-bold text-gray-900">
+                                        ₦{getPriceBreakdown().fee.toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="flex justify-between items-end border-t border-gray-100 pt-2">
                                     <span className="text-lg font-black text-gray-900">Total Escrow</span>
-                                    <span className="text-2xl font-black text-[#000080]">₦{calculateTotal()}</span>
+                                    <span className="text-2xl font-black text-[#000080]">₦{getPriceBreakdown().total.toLocaleString()}</span>
                                 </div>
                             </div>
 

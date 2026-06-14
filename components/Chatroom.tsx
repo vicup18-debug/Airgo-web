@@ -39,6 +39,24 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
     const currentUserId = currentUser.id || currentUser.userId || currentUser._id || '';
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
+    // 🟢 VoIP STATE & REFS
+    const [callState, setCallState] = useState<'idle' | 'calling' | 'incoming' | 'connecting' | 'active' | 'ended'>('idle');
+    const [callerName, setCallerName] = useState('');
+    const [isMuted, setIsMuted] = useState(false);
+    const [callDuration, setCallDuration] = useState(0);
+    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+
+    const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+    const localStreamRef = useRef<MediaStream | null>(null);
+    const remoteAudioRef = useRef<HTMLAudioElement | null>(null);
+    const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const incomingOfferRef = useRef<any>(null);
+
+    const callStateRef = useRef(callState);
+    useEffect(() => {
+        callStateRef.current = callState;
+    }, [callState]);
+
     // Auto-scroll to bottom of chat
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -49,6 +67,178 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
             scrollToBottom();
         }
     }, [messages]);
+
+    const startTimer = () => {
+        if (callTimerRef.current) clearInterval(callTimerRef.current);
+        setCallDuration(0);
+        callTimerRef.current = setInterval(() => {
+            setCallDuration(prev => prev + 1);
+        }, 1000);
+    };
+
+    const handleHangUp = (shouldSignal = true) => {
+        if (shouldSignal && socketRef.current) {
+            socketRef.current.emit('voip_signal', {
+                bookingId,
+                type: 'hangup',
+                senderId: currentUserId
+            });
+        }
+
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => track.stop());
+            localStreamRef.current = null;
+        }
+
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+            peerConnectionRef.current = null;
+        }
+
+        if (callTimerRef.current) {
+            clearInterval(callTimerRef.current);
+            callTimerRef.current = null;
+        }
+
+        setCallState('ended');
+        setRemoteStream(null);
+        setIsMuted(false);
+
+        setTimeout(() => {
+            setCallState('idle');
+        }, 2000);
+    };
+
+    const handleHangUpRef = useRef<any>(null);
+    handleHangUpRef.current = handleHangUp;
+
+    const initPeerConnection = () => {
+        if (peerConnectionRef.current) {
+            peerConnectionRef.current.close();
+        }
+        const pc = new RTCPeerConnection({
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        });
+        peerConnectionRef.current = pc;
+
+        pc.onicecandidate = (event) => {
+            if (event.candidate && socketRef.current) {
+                socketRef.current.emit('voip_signal', {
+                    bookingId,
+                    type: 'candidate',
+                    candidate: event.candidate,
+                    senderId: currentUserId
+                });
+            }
+        };
+
+        pc.ontrack = (event) => {
+            if (event.streams && event.streams[0]) {
+                setRemoteStream(event.streams[0]);
+                if (remoteAudioRef.current) {
+                    remoteAudioRef.current.srcObject = event.streams[0];
+                }
+            }
+        };
+
+        if (localStreamRef.current) {
+            localStreamRef.current.getTracks().forEach(track => {
+                if (localStreamRef.current) {
+                    pc.addTrack(track, localStreamRef.current);
+                }
+            });
+        }
+
+        return pc;
+    };
+
+    const getLocalStream = async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+            localStreamRef.current = stream;
+            return stream;
+        } catch (err) {
+            toast.error("🔒 Microphone permission denied or device not found.");
+            throw err;
+        }
+    };
+
+    const handleStartCall = async () => {
+        setCallState('calling');
+        setCallDuration(0);
+        try {
+            await getLocalStream();
+            const pc = initPeerConnection();
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+
+            if (socketRef.current) {
+                socketRef.current.emit('voip_signal', {
+                    bookingId,
+                    type: 'offer',
+                    offer,
+                    senderId: currentUserId,
+                    senderName: currentUser.name
+                });
+            }
+        } catch (err) {
+            handleHangUp();
+        }
+    };
+
+    const handleAcceptCall = async () => {
+        if (!incomingOfferRef.current) return;
+        setCallState('connecting');
+        try {
+            await getLocalStream();
+            const pc = initPeerConnection();
+            await pc.setRemoteDescription(new RTCSessionDescription(incomingOfferRef.current));
+            const answer = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+
+            if (socketRef.current) {
+                socketRef.current.emit('voip_signal', {
+                    bookingId,
+                    type: 'answer',
+                    answer,
+                    senderId: currentUserId
+                });
+            }
+            setCallState('active');
+            startTimer();
+        } catch (err) {
+            handleHangUp();
+        }
+    };
+
+    const handleDeclineCall = () => {
+        if (socketRef.current) {
+            socketRef.current.emit('voip_signal', {
+                bookingId,
+                type: 'reject',
+                senderId: currentUserId
+            });
+        }
+        setCallState('idle');
+    };
+
+    const handleToggleMute = () => {
+        if (localStreamRef.current) {
+            localStreamRef.current.getAudioTracks().forEach(track => {
+                track.enabled = !track.enabled;
+            });
+            setIsMuted(!isMuted);
+        }
+    };
+
+    const formatDuration = (sec: number) => {
+        const mins = Math.floor(sec / 60);
+        const secs = sec % 60;
+        return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    };
 
     // Initialize messages and socket connection
     useEffect(() => {
@@ -102,7 +292,6 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
 
         // 3. Listen for incoming messages
         socket.on('receive_chat_message', (msg: Message) => {
-            // Avoid duplicate messages if already in local state
             setMessages((prev) => {
                 const exists = prev.some(m => m._id === msg._id || (m.createdAt === msg.createdAt && m.senderId === msg.senderId && m.text === msg.text));
                 if (exists) return prev;
@@ -110,10 +299,71 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
             });
         });
 
+        // 4. Listen for VoIP signals
+        socket.on('voip_signal', async (data: any) => {
+            if (data.senderId === currentUserId) return;
+
+            switch (data.type) {
+                case 'offer':
+                    if (callStateRef.current !== 'idle') {
+                        socket.emit('voip_signal', {
+                            bookingId,
+                            type: 'reject',
+                            reason: 'busy',
+                            senderId: currentUserId
+                        });
+                        return;
+                    }
+                    setCallerName(data.senderName || 'Partner');
+                    setCallState('incoming');
+                    incomingOfferRef.current = data.offer;
+                    break;
+                case 'answer':
+                    if (peerConnectionRef.current) {
+                        try {
+                            await peerConnectionRef.current.setRemoteDescription(new RTCSessionDescription(data.answer));
+                            setCallState('active');
+                            startTimer();
+                        } catch (err) {
+                            console.error("Error setting remote answer:", err);
+                        }
+                    }
+                    break;
+                case 'candidate':
+                    if (peerConnectionRef.current) {
+                        try {
+                            await peerConnectionRef.current.addIceCandidate(new RTCIceCandidate(data.candidate));
+                        } catch (e) {
+                            console.error("Error adding candidate:", e);
+                        }
+                    }
+                    break;
+                case 'hangup':
+                    handleHangUpRef.current(false);
+                    break;
+                case 'reject':
+                    toast.error(data.reason === 'busy' ? "User is busy in another call." : "Call declined.");
+                    handleHangUpRef.current(false);
+                    break;
+                default:
+                    break;
+            }
+        });
+
         return () => {
             socket.emit('leave_booking_chat', { bookingId });
             socket.disconnect();
             socketRef.current = null;
+
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach(track => track.stop());
+            }
+            if (peerConnectionRef.current) {
+                peerConnectionRef.current.close();
+            }
+            if (callTimerRef.current) {
+                clearInterval(callTimerRef.current);
+            }
         };
     }, [isOpen, bookingId, apiUrl]);
 
@@ -177,7 +427,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
 
     return (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm overflow-hidden">
-            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col h-[85vh] animate-in fade-in zoom-in duration-200">
+            <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl flex flex-col h-[85vh] animate-in fade-in zoom-in duration-200 relative">
                 
                 {/* Header */}
                 <div className="bg-[#000080] p-4 text-white rounded-t-3xl flex justify-between items-center shrink-0">
@@ -186,14 +436,25 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                             💬
                         </div>
                         <div>
-                            <h3 className="font-black text-sm truncate max-w-[250px]">{bookingName}</h3>
+                            <h3 className="font-black text-sm truncate max-w-[200px]">{bookingName}</h3>
                             <p className="text-[10px] text-blue-200 font-bold flex items-center gap-1.5 mt-0.5">
                                 <span className={`w-2 h-2 rounded-full inline-block ${isConnected ? 'bg-green-400' : 'bg-red-400 animate-pulse'}`}></span>
                                 {isConnected ? 'Secure Connection Active' : 'Connecting to Server...'}
                             </p>
                         </div>
                     </div>
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center transition cursor-pointer">✕</button>
+                    <div className="flex items-center gap-2">
+                        {isConnected && callState === 'idle' && (
+                            <button 
+                                onClick={handleStartCall}
+                                title="Start Voice Call"
+                                className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold flex items-center justify-center transition cursor-pointer select-none"
+                            >
+                                📞
+                            </button>
+                        )}
+                        <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center transition cursor-pointer">✕</button>
+                    </div>
                 </div>
 
                 {/* Warning Banner */}
@@ -265,6 +526,93 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                         Send
                     </button>
                 </form>
+
+                {/* VoIP CALL OVERLAY */}
+                {callState !== 'idle' && (
+                    <div className="absolute inset-0 bg-[#000080]/95 backdrop-blur-md z-50 flex flex-col items-center justify-center p-6 text-white rounded-3xl animate-in fade-in duration-200">
+                        {/* Audio Element */}
+                        <audio ref={remoteAudioRef} autoPlay playsInline className="hidden" />
+
+                        {/* Caller/Receiver Avatar and Ringing/Pulse Wave */}
+                        <div className="relative mb-8">
+                            <div className={`w-24 h-24 bg-[#FFB81C] text-[#000080] rounded-full flex items-center justify-center text-4xl font-black shadow-lg z-10 relative ${
+                                ['calling', 'incoming', 'connecting'].includes(callState) ? 'animate-bounce' : ''
+                            }`}>
+                                📞
+                            </div>
+                            {/* Pulse Waves */}
+                            {['calling', 'incoming', 'active'].includes(callState) && (
+                                <div className="absolute inset-0 -m-4 bg-white/10 rounded-full animate-ping z-0" />
+                            )}
+                        </div>
+
+                        {/* Caller Info */}
+                        <h4 className="text-xl font-black mb-1 text-center">
+                            {callState === 'incoming' ? callerName : bookingName}
+                        </h4>
+                        <p className="text-sm font-bold text-blue-200 mb-8 uppercase tracking-widest">
+                            {callState === 'calling' && 'Ringing...'}
+                            {callState === 'incoming' && 'Incoming Call...'}
+                            {callState === 'connecting' && 'Connecting WebRTC...'}
+                            {callState === 'active' && `Call Active • ${formatDuration(callDuration)}`}
+                            {callState === 'ended' && 'Call Ended'}
+                        </p>
+
+                        {/* Call Action buttons */}
+                        <div className="flex gap-6 justify-center items-center">
+                            {callState === 'incoming' ? (
+                                <>
+                                    {/* Decline Button */}
+                                    <button 
+                                        type="button"
+                                        onClick={handleDeclineCall}
+                                        className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-xl shadow-lg transition cursor-pointer select-none"
+                                        title="Decline Call"
+                                    >
+                                        ❌
+                                    </button>
+                                    {/* Accept Button */}
+                                    <button 
+                                        type="button"
+                                        onClick={handleAcceptCall}
+                                        className="w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-xl shadow-lg transition animate-pulse cursor-pointer select-none"
+                                        title="Answer Call"
+                                    >
+                                        📞
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    {/* Mute Button (Only when active) */}
+                                    {callState === 'active' && (
+                                        <button 
+                                            type="button"
+                                            onClick={handleToggleMute}
+                                            className={`w-12 h-12 rounded-full flex items-center justify-center text-lg shadow-md transition cursor-pointer select-none ${
+                                                isMuted ? 'bg-amber-500 hover:bg-amber-600' : 'bg-white/10 hover:bg-white/20'
+                                            }`}
+                                            title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
+                                        >
+                                            {isMuted ? '🎙️❌' : '🎙️'}
+                                        </button>
+                                    )}
+                                    
+                                    {/* Hang Up Button (For caller ringing, connecting, active) */}
+                                    {callState !== 'ended' && (
+                                        <button 
+                                            type="button"
+                                            onClick={() => handleHangUp(true)}
+                                            className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-xl shadow-lg transition cursor-pointer select-none"
+                                            title="End Call"
+                                        >
+                                            🛑
+                                        </button>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </div>
+                )}
 
             </div>
         </div>
