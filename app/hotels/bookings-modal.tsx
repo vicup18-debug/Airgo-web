@@ -454,7 +454,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                     </span>
                                 </div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <span className="text-gray-500 font-medium">Processing Fee (11%)</span>
+                                    <span className="text-gray-500 font-medium">Processing Fee</span>
                                     <span className="font-bold text-gray-900">
                                         ₦{getPriceBreakdown().fee.toLocaleString()}
                                     </span>
