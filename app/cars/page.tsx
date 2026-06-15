@@ -20,7 +20,8 @@ const FALLBACK_FLEET = [
         location: 'Maitama',
         state: 'Abuja',
         vehicleNumber: 'ABJ-888-GW',
-        totalAllocated: 1
+        totalAllocated: 1,
+        vehicleCategory: 'car'
     }
 ];
 
@@ -33,6 +34,8 @@ export default function CarsPage() {
     const [searchQuery, setSearchQuery] = useState('');
     const [pickupDate, setPickupDate] = useState('');
     const [returnDate, setReturnDate] = useState('');
+    const [transportType, setTransportType] = useState('all'); // 'all' | 'car' | 'shuttle'
+    const [isTransportTypeOpen, setIsTransportTypeOpen] = useState(false);
 
     const [user, setUser] = useState<any>(null);
 
@@ -65,12 +68,18 @@ export default function CarsPage() {
 
     // LIVE FILTERING LOGIC
     const filteredCars = carFleet.filter(car => {
-        if (!searchQuery) return true;
-        const searchLower = searchQuery.toLowerCase();
-        return (
-            (car.location && car.location.toLowerCase().includes(searchLower)) ||
-            (car.state && car.state.toLowerCase().includes(searchLower))
+        // 1. Location/State match
+        const matchesLocation = !searchQuery || (
+            (car.location && car.location.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (car.state && car.state.toLowerCase().includes(searchQuery.toLowerCase()))
         );
+
+        // 2. Transport type match
+        const matchesTransportType = transportType === 'all' ||
+            (transportType === 'car' && car.vehicleCategory === 'car') ||
+            (transportType === 'shuttle' && car.vehicleCategory === 'shuttle');
+
+        return matchesLocation && matchesTransportType;
     });
 
     return (
@@ -124,6 +133,77 @@ export default function CarsPage() {
                                     value={returnDate}
                                     onChange={(e) => setReturnDate(e.target.value)}
                                 />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Vehicle Type</label>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsTransportTypeOpen(!isTransportTypeOpen)}
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-950 focus:border-[#000080] outline-none text-left flex items-center justify-between cursor-pointer"
+                                    >
+                                        <span className="flex items-center gap-2 text-sm text-gray-900">
+                                            {transportType === 'all' && (
+                                                <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                                                </svg>
+                                            )}
+                                            {transportType === 'car' && (
+                                                <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                                                </svg>
+                                            )}
+                                            {transportType === 'shuttle' && (
+                                                <svg className="w-4 h-4 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v9m-8-9v9m-8-6a3 3 0 013-3h12a3 3 0 013 3v8a3 3 0 01-3 3H6a3 3 0 01-3-3v-8zm2 3h14M8 14h8" />
+                                                </svg>
+                                            )}
+                                            {transportType === 'all' ? 'All Vehicles' : transportType === 'car' ? 'Car Hire' : 'Shuttle Service'}
+                                        </span>
+                                        <svg className="fill-current h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                                    </button>
+                                    {isTransportTypeOpen && (
+                                        <>
+                                            <div className="fixed inset-0 z-40" onClick={() => setIsTransportTypeOpen(false)} />
+                                            <div className="absolute z-50 mt-2 w-full bg-white rounded-xl border border-gray-150 shadow-xl overflow-hidden py-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setTransportType('all'); setIsTransportTypeOpen(false); }}
+                                                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                                                >
+                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                                                    </svg>
+                                                    All Vehicles
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setTransportType('car'); setIsTransportTypeOpen(false); }}
+                                                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                                                >
+                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 17a2 2 0 100-4 2 2 0 000 4zm10 0a2 2 0 100-4 2 2 0 000 4z" />
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 10h16M4 14h16m-2-7l-1.5-4.5h-9L6 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2h-2z" />
+                                                    </svg>
+                                                    Car Hire
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => { setTransportType('shuttle'); setIsTransportTypeOpen(false); }}
+                                                    className="w-full px-4 py-3 text-left text-sm text-gray-800 hover:bg-gray-50 font-medium flex items-center gap-2.5 transition"
+                                                >
+                                                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v9m-8-9v9m-8-6a3 3 0 013-3h12a3 3 0 013 3v8a3 3 0 01-3 3H6a3 3 0 01-3-3v-8zm2 3h14M8 14h8" />
+                                                    </svg>
+                                                    Shuttle Service
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -227,6 +307,8 @@ export default function CarsPage() {
                 isOpen={!!selectedCar}
                 onClose={() => setSelectedCar(null)}
                 car={selectedCar}
+                initialCheckIn={pickupDate}
+                initialCheckOut={returnDate}
             />
 
             
