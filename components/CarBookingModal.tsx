@@ -319,57 +319,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                             </div>
 
-                            {/* SERVICE CONFIGURATION */}
-                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-150 space-y-3">
-                                <h4 className="text-xs font-black text-[#000080] uppercase tracking-wider">Service Configuration</h4>
-                                
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                    {/* Chauffeur Service */}
-                                    <div className="flex flex-col">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Chauffeur Service</label>
-                                        <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
-                                            <button type="button" onClick={() => setRentalType('Chauffeur Driven')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${rentalType === 'Chauffeur Driven' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-                                                Chauffeur
-                                            </button>
-                                            <button type="button" onClick={() => setRentalType('Self Drive')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${rentalType === 'Self Drive' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-                                                Self Drive
-                                            </button>
-                                        </div>
-                                    </div>
 
-                                    {/* Fuel Plan */}
-                                    <div className="flex flex-col">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Fueling Plan</label>
-                                        <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
-                                            <button type="button" onClick={() => setFuelPlan('Self Fueling')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${fuelPlan === 'Self Fueling' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-                                                Self Fuel
-                                            </button>
-                                            <button type="button" onClick={() => setFuelPlan('Fuel Inclusive')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${fuelPlan === 'Fuel Inclusive' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-                                                Inclusive
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Travel Scope */}
-                                    <div className="flex flex-col">
-                                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Travel Scope</label>
-                                        <div className="flex bg-white rounded-lg border border-gray-200 p-0.5">
-                                            <button type="button" onClick={() => setTravelScope('Intra-City')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${travelScope === 'Intra-City' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-                                                Intra-City
-                                            </button>
-                                            <button type="button" onClick={() => setTravelScope('Inter-State')} className={`flex-1 text-[10px] font-bold py-1.5 px-2 rounded-md transition ${travelScope === 'Inter-State' ? 'bg-[#000080] text-white shadow-sm' : 'text-gray-500 hover:text-gray-900'}`}>
-                                                Inter-State
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="text-[9px] text-gray-400 font-medium leading-relaxed bg-white p-2.5 rounded-xl border border-gray-100 flex flex-col gap-0.5">
-                                    <p>💡 Chauffeur: <strong>+₦15,000/day</strong> (includes professional driver allowance)</p>
-                                    <p>💡 Fuel Inclusive: <strong>+₦25,000/day</strong> (vehicle delivered with full tank)</p>
-                                    <p>💡 Inter-State: <strong>+₦35,000/day</strong> (includes state transit permits)</p>
-                                </div>
-                            </div>
  
                             {/* CUSTOM PRICE OFFER (INDRIVE STYLE) */}
                             <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/65 space-y-3">

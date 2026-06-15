@@ -54,6 +54,143 @@ const formatDisplayDate = (dateStr: string, itemType: string) => {
     }
 };
 
+// Simulated Live GPS tracking component for active car rentals for drivers
+function LiveDriverTracker({ booking }: { booking: any }) {
+    const [progress, setProgress] = useState(0);
+    const [speed, setSpeed] = useState(55);
+    const [fuel, setFuel] = useState(85);
+    const [eta, setEta] = useState(18);
+    const [statusText, setStatusText] = useState('Broadcasting Location...');
+
+    useEffect(() => {
+        const progressInterval = setInterval(() => {
+            setProgress((prev) => {
+                if (prev >= 100) {
+                    clearInterval(progressInterval);
+                    setStatusText('Arrived at Destination');
+                    setSpeed(0);
+                    setEta(0);
+                    return 100;
+                }
+                const next = prev + 1.5;
+                setEta(Math.max(1, Math.ceil(18 * (1 - next / 100))));
+                return next;
+            });
+        }, 3000);
+
+        const telemetryInterval = setInterval(() => {
+            setSpeed((prev) => {
+                if (progress >= 100) return 0;
+                const change = Math.floor(Math.random() * 11) - 5;
+                return Math.min(80, Math.max(30, prev + change));
+            });
+            setFuel((prev) => Math.max(10, prev - (Math.random() > 0.8 ? 1 : 0)));
+        }, 2000);
+
+        return () => {
+            clearInterval(progressInterval);
+            clearInterval(telemetryInterval);
+        };
+    }, [progress]);
+
+    const getCarCoordinates = (p: number) => {
+        const t = p / 100;
+        const x = (1-t)**3 * 20 + 3 * (1-t)**2 * t * 100 + 3 * (1-t) * t**2 * 200 + t**3 * 280;
+        const y = (1-t)**3 * 90 + 3 * (1-t)**2 * t * 10 + 3 * (1-t) * t**2 * 110 + t**3 * 40;
+        return { x, y };
+    };
+
+    const carPos = getCarCoordinates(progress);
+
+    // Parse delivery address to get To address
+    const routeParts = (booking.deliveryAddress || "").split(" | ");
+    const toAddress = routeParts[1]?.replace("To:", "").trim() || booking.deliveryAddress || "Client Destination";
+
+    return (
+        <div className="w-full mt-4 bg-gray-900 text-white p-5 rounded-2xl border border-gray-800 shadow-inner flex flex-col gap-4 animate-fade-in text-left">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-gray-800 pb-3 gap-2">
+                <div>
+                    <h4 className="text-sm font-black text-green-400 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
+                        <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                        📡 Driver Live GPS active
+                    </h4>
+                    <p className="text-xs text-gray-400 mt-0.5">Status: <span className="text-gray-200 font-bold">{statusText}</span></p>
+                </div>
+                <div className="text-left sm:text-right">
+                    <p className="text-xs text-gray-500 font-bold">Estimated Arrival</p>
+                    <p className="text-lg font-black text-[#FFB81C]">{eta > 0 ? `${eta} mins` : 'Arrived'}</p>
+                </div>
+            </div>
+
+            <div className="relative w-full h-36 bg-gray-950 rounded-xl overflow-hidden border border-gray-800/80">
+                <svg className="w-full h-full" viewBox="0 0 300 120" preserveAspectRatio="none">
+                    <defs>
+                        <pattern id="driver-grid" width="15" height="15" patternUnits="userSpaceOnUse">
+                            <path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5"/>
+                        </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#driver-grid)" />
+
+                    <text x="15" y="110" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase font-sans">Airgo Depot</text>
+                    <text x="110" y="25" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase font-sans">Wuse II Toll</text>
+                    <text x="225" y="110" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase font-sans">Destination</text>
+                    <text x="215" y="25" className="fill-green-400 font-bold text-[8px] tracking-wider uppercase font-sans font-black">Driver Position</text>
+
+                    <path 
+                        d="M 20 90 C 100 10, 200 110, 280 40" 
+                        fill="none" 
+                        stroke="#1f2937" 
+                        strokeWidth="4" 
+                        strokeLinecap="round"
+                    />
+                    <path 
+                        d="M 20 90 C 100 10, 200 110, 280 40" 
+                        fill="none" 
+                        stroke="#004A99" 
+                        strokeWidth="2.5" 
+                        strokeDasharray="4 2"
+                        strokeLinecap="round"
+                    />
+
+                    <circle cx="20" cy="90" r="5" className="fill-blue-500 stroke-white stroke-2" />
+                    <circle cx="280" cy="40" r="5" className="fill-green-500 stroke-white stroke-2 animate-ping" />
+                    <circle cx="280" cy="40" r="5" className="fill-green-500 stroke-white stroke-2" />
+
+                    <g transform={`translate(${carPos.x - 6}, ${carPos.y - 6})`}>
+                        <circle cx="6" cy="6" r="8" className="fill-green-500/20 stroke-green-500/40 stroke-1 animate-pulse" />
+                        <circle cx="6" cy="6" r="4" className="fill-green-400 stroke-white stroke-1" />
+                    </g>
+                </svg>
+                
+                <div className="absolute bottom-2 left-2 flex gap-1.5 flex-wrap">
+                    <span className="bg-[#000080]/85 text-blue-200 border border-blue-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.rentalType || 'Chauffeur Driven'}</span>
+                    <span className="bg-[#FFB81C]/25 text-yellow-200 border border-yellow-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.fuelPlan || 'Self Fueling'}</span>
+                    <span className="bg-green-900/80 text-green-200 border border-green-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.travelScope || 'Intra-City'}</span>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-950 p-4 rounded-xl border border-gray-800/80">
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Current Speed</span>
+                    <span className="text-sm font-black text-gray-200">{speed} km/h</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Fuel Level</span>
+                    <span className="text-sm font-black text-gray-200">{fuel}%</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Passenger</span>
+                    <span className="text-sm font-black text-[#FFB81C]">{booking.clientName || 'Valued Guest'}</span>
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Destination</span>
+                    <span className="text-sm font-black text-gray-200 truncate" title={toAddress}>{toAddress}</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function PartnerDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings' | 'profile'>('overview');
@@ -1148,6 +1285,12 @@ export default function PartnerDashboard() {
                                                                              )}
                                                                          </div>
                                                                     </div>
+
+                                                                    {booking.itemType === 'car' && booking.status === 'Trip Started' && (
+                                                                        <div className="border-t border-gray-200/80 pt-4 mt-4">
+                                                                            <LiveDriverTracker booking={booking} />
+                                                                        </div>
+                                                                    )}
 
                                                                     {booking.isOffer && (
                                                                         <div className="border-t border-gray-200/80 pt-4 mt-4 bg-slate-50 border border-slate-100 p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
