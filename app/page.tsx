@@ -648,7 +648,7 @@ export default function HotelHomepage() {
                         {isCar ? (
                           <div>
                             <p className="text-xl font-black text-gray-900">₦{calculateTotal(basePrice, item.discountPercentage).toLocaleString()}</p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{checkIn && checkOut ? 'Total Escrow' : 'Per Day'}</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{checkIn && checkOut ? 'Total Escrow' : 'starting from'}</p>
                           </div>
                         ) : (
                           <div>
@@ -660,7 +660,7 @@ export default function HotelHomepage() {
                               )}
                               <span>₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}</span>
                             </p>
-                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Starting Rate / Night</p>
+                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Rate / Night</p>
                           </div>
                         )}
                         <button

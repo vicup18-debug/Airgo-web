@@ -190,7 +190,7 @@ export default function CarsPage() {
                                                             )}
                                                             ₦{discountedPrice.toLocaleString()}
                                                         </p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">per day</p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">starting from</p>
                                                     </div>
                                                     {car.isFallback ? (
                                                         <a

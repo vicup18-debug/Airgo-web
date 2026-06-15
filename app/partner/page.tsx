@@ -534,6 +534,7 @@ export default function PartnerDashboard() {
                 vehicleCategory: isShuttlePartner ? 'shuttle' : 'car',
                 capacity: newItem.capacity, 
                 features: newItem.features, 
+                totalAllocated: 1,
                 image: finalImageUrl, 
                 images: finalImageUrls, 
                 previewImage: finalImageUrl, 
@@ -607,7 +608,7 @@ export default function PartnerDashboard() {
                 vehicleCategory: isShuttlePartner ? 'shuttle' : 'car',
                 capacity: editItemData.capacity,
                 features: editItemData.features,
-                totalAllocated: Number(editItemData.totalAllocated),
+                totalAllocated: 1,
                 image: editItemData.image,
                 images: editItemData.images,
                 previewImage: editItemData.previewImage,
@@ -1078,20 +1079,22 @@ export default function PartnerDashboard() {
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
-                                                            <span className="text-xs font-bold text-gray-600">{!isCarPartner ? 'Airgo Pool Allocation (Available Today)' : 'Airgo Pool Allocation'}</span>
-                                                            <div className="flex items-center gap-3">
-                                                                <button 
-                                                                    onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
-                                                                    className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
-                                                                >-</button>
-                                                                <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
-                                                                <button 
-                                                                    onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
-                                                                    className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
-                                                                >+</button>
+                                                        {!isCarPartner && (
+                                                            <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
+                                                                <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation (Available Today)</span>
+                                                                <div className="flex items-center gap-3">
+                                                                    <button 
+                                                                        onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
+                                                                        className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+                                                                    >-</button>
+                                                                    <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
+                                                                    <button 
+                                                                        onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
+                                                                        className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
+                                                                    >+</button>
+                                                                </div>
                                                             </div>
-                                                        </div>
+                                                        )}
 
                                                         {(() => {
                                                             const todayStr = new Date().toISOString().split('T')[0];
@@ -1589,7 +1592,6 @@ export default function PartnerDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.type} onChange={e => setNewItem({ ...newItem, type: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity (Seats)</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" placeholder="e.g. Wi-Fi, Bluetooth" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.features} onChange={e => setNewItem({ ...newItem, features: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Fleet Count</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate / Vehicle Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.vehicleNumber} onChange={e => setNewItem({ ...newItem, vehicleNumber: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.location} onChange={e => setNewItem({ ...newItem, location: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.state} onChange={e => setNewItem({ ...newItem, state: e.target.value })} /></div>
@@ -1695,7 +1697,6 @@ export default function PartnerDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.type} onChange={e => setEditItemData({ ...editItemData, type: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Capacity (Seats)</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Features</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.features} onChange={e => setEditItemData({ ...editItemData, features: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Total Fleet Count</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate / Vehicle Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.vehicleNumber} onChange={e => setEditItemData({ ...editItemData, vehicleNumber: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.location} onChange={e => setEditItemData({ ...editItemData, location: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.state} onChange={e => setEditItemData({ ...editItemData, state: e.target.value })} /></div>
