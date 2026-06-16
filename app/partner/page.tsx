@@ -847,6 +847,35 @@ export default function PartnerDashboard() {
         }
     };
 
+    const handleConfirmEndTrip = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to confirm that the trip has ended?")) {
+            return;
+        }
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/confirm-end-trip`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Trip completed and booking finalized!");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchPartnerData(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to confirm trip end.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
     const isCarPartner = user?.partnerType?.toLowerCase().includes('car') || user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isShuttlePartner = user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle';
     const isApartmentPartner = user?.partnerType === 'apartment';
@@ -1183,7 +1212,15 @@ export default function PartnerDashboard() {
                                                                          ? 'bg-yellow-100 text-yellow-800' 
                                                                          : booking.status === 'Approved for Disbursement'
                                                                              ? 'bg-blue-100 text-blue-800'
-                                                                             : 'bg-green-100 text-green-800'
+                                                                             : booking.status === 'Trip Start Pending'
+                                                                                 ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                                                                 : booking.status === 'Trip Started'
+                                                                                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                                                                     : booking.status === 'Trip End Pending'
+                                                                                         ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                                                         : booking.status === 'Completed'
+                                                                                             ? 'bg-gray-100 text-gray-800 border border-gray-200'
+                                                                                             : 'bg-green-100 text-green-800'
                                                                  }`}>
                                                                      {booking.status}
                                                                  </span>
@@ -1280,16 +1317,33 @@ export default function PartnerDashboard() {
                                                                                      {startingTripId === booking._id ? 'Starting...' : 'Start Trip'}
                                                                                  </button>
                                                                              )}
+                                                                             {booking.itemType === 'car' && booking.status === 'Trip Start Pending' && (
+                                                                                 <div className="text-[10px] font-black bg-indigo-100 text-indigo-800 px-3 py-2 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-indigo-200">
+                                                                                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                                                                     Awaiting Client Start Confirmation
+                                                                                 </div>
+                                                                             )}
                                                                              {booking.itemType === 'car' && booking.status === 'Trip Started' && (
                                                                                  <div className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-3 py-2 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-emerald-200">
                                                                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                                                                      Trip In Progress
                                                                                  </div>
                                                                              )}
+                                                                             {booking.itemType === 'car' && booking.status === 'Trip End Pending' && (
+                                                                                 <button
+                                                                                     onClick={() => handleConfirmEndTrip(booking._id)}
+                                                                                     className="text-[10px] font-black bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg transition mt-1.5 flex items-center gap-1.5 w-full justify-center shadow-sm cursor-pointer"
+                                                                                 >
+                                                                                     <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                                                                     </svg>
+                                                                                     Confirm Trip End
+                                                                                 </button>
+                                                                             )}
                                                                          </div>
                                                                     </div>
 
-                                                                    {booking.itemType === 'car' && booking.status === 'Trip Started' && (
+                                                                    {booking.itemType === 'car' && ['Trip Started', 'Trip End Pending'].includes(booking.status) && (
                                                                         <div className="border-t border-gray-200/80 pt-4 mt-4">
                                                                             <LiveDriverTracker booking={booking} />
                                                                         </div>

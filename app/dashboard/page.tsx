@@ -456,6 +456,64 @@ export default function ClientDashboard() {
         }
     };
 
+    const handleConfirmStartTrip = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to confirm that the driver has started the trip?")) {
+            return;
+        }
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/confirm-start-trip`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Trip start confirmed successfully!");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to confirm trip start.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
+    const handleEndTrip = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to request ending this trip? The driver will be prompted to confirm.")) {
+            return;
+        }
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/end-trip`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Trip end request submitted. Waiting for driver confirmation.");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to request trip end.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
     const fetchMyBookings = async (parsedUser: any, silent = false) => {
         try {
             if (!silent) setIsLoading(true);
@@ -693,9 +751,9 @@ export default function ClientDashboard() {
                     ) : (
                         <div className="space-y-4">
                             {myBookings.map((booking) => {
-                                const allowedInvoiceStatuses = ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'];
+                                const allowedInvoiceStatuses = ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'];
                                 const canDownloadInvoice = allowedInvoiceStatuses.includes(booking.status);
-                                const isPaidCar = booking.itemType === 'car' && ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed'].includes(booking.status);
+                                const isPaidCar = booking.itemType === 'car' && ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status);
 
                                 return (
                                     <div key={booking._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-4 hover:shadow-md transition">
@@ -819,7 +877,15 @@ export default function ClientDashboard() {
                                                                 ? 'bg-blue-100 text-blue-800'
                                                                 : booking.status === 'Cancelled'
                                                                     ? 'bg-red-100 text-red-800'
-                                                                    : 'bg-green-100 text-green-800'
+                                                                    : booking.status === 'Trip Start Pending'
+                                                                        ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                                                        : booking.status === 'Trip Started'
+                                                                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                                                            : booking.status === 'Trip End Pending'
+                                                                                ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                                                : booking.status === 'Completed'
+                                                                                    ? 'bg-gray-100 text-gray-800 border border-gray-200'
+                                                                                    : 'bg-green-100 text-green-800'
                                                     }`}>
                                                         {booking.status}
                                                     </span>
@@ -942,6 +1008,59 @@ export default function ClientDashboard() {
                                                 )}
                                             </div>
                                         </div>
+
+                                        {/* Trip Start / End Confirmation Banners */}
+                                        {booking.itemType === 'car' && booking.status === 'Trip Start Pending' && (
+                                            <div className="w-full p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
+                                                <div className="flex-1">
+                                                    <h4 className="text-sm font-black uppercase tracking-wider text-indigo-950 flex items-center gap-1.5">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 inline-block animate-pulse"></span>
+                                                        Driver has Arrived & Requested to Start Trip
+                                                    </h4>
+                                                    <p className="text-xs font-medium text-indigo-800 mt-1">
+                                                        Please confirm that you are with the driver and ready to begin your trip.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleConfirmStartTrip(booking._id)}
+                                                    className="w-full sm:w-auto bg-indigo-700 hover:bg-indigo-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0"
+                                                >
+                                                    Confirm Trip Start
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {booking.itemType === 'car' && booking.status === 'Trip Started' && (
+                                            <div className="w-full p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
+                                                <div className="flex-1">
+                                                    <h4 className="text-sm font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                                                        Trip In Progress
+                                                    </h4>
+                                                    <p className="text-xs font-medium text-emerald-800 mt-1">
+                                                        You are currently on your trip. At the end of the trip, please click below to request trip completion.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleEndTrip(booking._id)}
+                                                    className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0"
+                                                >
+                                                    End Trip
+                                                </button>
+                                            </div>
+                                        )}
+
+                                        {booking.itemType === 'car' && booking.status === 'Trip End Pending' && (
+                                            <div className="w-full p-4 rounded-xl border border-amber-200 bg-amber-50/70 text-amber-900 text-left">
+                                                <h4 className="text-sm font-black uppercase tracking-wider text-amber-950 flex items-center gap-1.5">
+                                                    <span className="w-2.5 h-2.5 rounded-full bg-amber-600 inline-block animate-pulse"></span>
+                                                    Awaiting Driver Confirmation
+                                                </h4>
+                                                <p className="text-xs font-medium text-amber-800 mt-1">
+                                                    You have requested to end the trip. Waiting for the driver to confirm completion.
+                                                </p>
+                                            </div>
+                                        )}
 
                                         {/* Custom Price Offer Banner & Actions */}
                                         {booking.isOffer && (
