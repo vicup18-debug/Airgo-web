@@ -27,8 +27,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         checkOut: ''
     });
 
-    const [rentalType, setRentalType] = useState<'Chauffeur Driven' | 'Self Drive'>('Chauffeur Driven');
-    const [fuelPlan, setFuelPlan] = useState<'Self Fueling' | 'Fuel Inclusive'>('Self Fueling');
+    const rentalType = 'Self Drive';
+    const fuelPlan = 'Self Fueling';
     const [travelScope, setTravelScope] = useState<'Intra-City' | 'Inter-State'>('Intra-City');
     const [isCustomOffer, setIsCustomOffer] = useState(false);
     const [customOfferPrice, setCustomOfferPrice] = useState('');
@@ -70,8 +70,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkIn: formattedCheckIn,
                 checkOut: formattedCheckOut
             });
-            setRentalType('Chauffeur Driven');
-            setFuelPlan('Self Fueling');
             setTravelScope('Intra-City');
             setIsCustomOffer(false);
             setCustomOfferPrice('');
@@ -97,8 +95,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         const discountedRate = Math.round(numericPrice * (1 - discount / 100));
         
         let dailyExtra = 0;
-        if (rentalType === 'Chauffeur Driven') dailyExtra += 15000;
-        if (fuelPlan === 'Fuel Inclusive') dailyExtra += 25000;
         if (travelScope === 'Inter-State') dailyExtra += 35000;
         
         const totalDailyRate = discountedRate + dailyExtra;
@@ -180,8 +176,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             checkIn: '',
             checkOut: ''
         });
-        setRentalType('Chauffeur Driven');
-        setFuelPlan('Self Fueling');
         setTravelScope('Intra-City');
         setIsCustomOffer(false);
         setCustomOfferPrice('');
@@ -390,33 +384,11 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                             </div>
 
                             {/* Service Configurations */}
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Rental Type</label>
-                                    <select 
-                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
-                                        value={rentalType}
-                                        onChange={(e: any) => setRentalType(e.target.value)}
-                                    >
-                                        <option value="Chauffeur Driven">Chauffeur (+₦15k/day)</option>
-                                        <option value="Self Drive">Self Drive (₦0)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fuel Plan</label>
-                                    <select 
-                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
-                                        value={fuelPlan}
-                                        onChange={(e: any) => setFuelPlan(e.target.value)}
-                                    >
-                                        <option value="Self Fueling">Self Fueling (₦0)</option>
-                                        <option value="Fuel Inclusive">Fuel Incl. (+₦25k/day)</option>
-                                    </select>
-                                </div>
+                            <div className="grid grid-cols-1 gap-3">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Travel Scope</label>
                                     <select 
-                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
                                         value={travelScope}
                                         onChange={(e: any) => setTravelScope(e.target.value)}
                                     >
@@ -514,7 +486,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 <div className="flex flex-col items-end">
                                     {(car.discountPercentage > 0 || discountAmount > 0) && !isCustomOffer && (
                                         <span className="text-xs text-gray-400 line-through font-bold">
-                                            ₦{(((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1) * (numericPrice + (rentalType === 'Chauffeur Driven' ? 15000 : 0) + (fuelPlan === 'Fuel Inclusive' ? 25000 : 0) + (travelScope === 'Inter-State' ? 35000 : 0))).toLocaleString()}
+                                            ₦{(((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1) * (numericPrice + (travelScope === 'Inter-State' ? 35000 : 0))).toLocaleString()}
                                         </span>
                                     )}
                                     <span className="text-3xl font-black text-[#000080]">
