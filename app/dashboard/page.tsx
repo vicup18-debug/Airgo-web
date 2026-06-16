@@ -456,6 +456,43 @@ export default function ClientDashboard() {
         }
     };
 
+    const handleSelectDriver = async (bookingId: string, driverId: string, counterFare?: number) => {
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            
+            const payload: any = { driverId };
+            if (counterFare) {
+                payload.counterFare = counterFare;
+            }
+
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/select-driver`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok) {
+                if (counterFare) {
+                    toast.success(`🎉 Your counter-bid of ₦${counterFare.toLocaleString()} has been sent to the driver for approval!`);
+                } else {
+                    toast.success("🎉 Driver offer accepted successfully! Proceed to checkout.");
+                }
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to select driver.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
     const handleConfirmStartTrip = async (bookingId: string) => {
         if (!window.confirm("Are you sure you want to confirm that the driver has started the trip?")) {
             return;
@@ -1124,6 +1161,69 @@ export default function ClientDashboard() {
                                             </div>
                                         )}
                                         
+                                        {/* Driver Offers Bidding List */}
+                                        {booking.itemType === 'car' && booking.status === 'Pending Escrow' && booking.partnerId === 'airgo_direct' && (
+                                            <div className="mt-4 pt-4 border-t border-gray-100 space-y-4 text-left">
+                                                <div className="flex justify-between items-center">
+                                                    <h4 className="text-xs font-black uppercase tracking-wider text-gray-500 flex items-center gap-1.5">
+                                                        <span className="relative flex h-2 w-2">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                                        </span>
+                                                        Driver Bids / Offers ({booking.driverOffers?.length || 0})
+                                                    </h4>
+                                                </div>
+
+                                                {(!booking.driverOffers || booking.driverOffers.length === 0) ? (
+                                                    <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl text-center">
+                                                        <p className="text-xs text-gray-500 font-medium animate-pulse">Waiting for drivers to submit fare bids... Airgo auto-dispatcher is notifying fleet partners.</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="grid grid-cols-1 gap-3">
+                                                        {booking.driverOffers.map((offer: any) => (
+                                                            <div key={offer.driverId} className="bg-blue-50/40 border border-blue-100/60 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:bg-blue-50">
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm font-bold text-gray-800">{offer.driverName}</p>
+                                                                    <p className="text-xs text-gray-500 font-medium mt-0.5">{offer.vehicleDetails || 'Standard Fleet Vehicle'}</p>
+                                                                    <p className="text-xs text-gray-400 font-medium mt-1">Rating: 4.8★ | VIP Driver</p>
+                                                                </div>
+                                                                <div className="flex flex-col sm:items-end w-full sm:w-auto gap-2">
+                                                                    <div className="text-left sm:text-right">
+                                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">FARE BID</p>
+                                                                        <p className="text-lg font-black text-[#000080]">₦{offer.fare.toLocaleString()}</p>
+                                                                    </div>
+                                                                    <div className="flex gap-2 w-full">
+                                                                        <button
+                                                                            onClick={() => handleSelectDriver(booking._id, offer.driverId)}
+                                                                            className="flex-1 sm:flex-initial bg-[#000080] hover:bg-blue-900 text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer"
+                                                                        >
+                                                                            Accept Offer
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const bidPrice = prompt(`Enter your counter-bid for ${offer.driverName} (₦):`, offer.fare.toString());
+                                                                                if (bidPrice) {
+                                                                                    const numericBid = parseInt(bidPrice.replace(/[^0-9]/g, ''));
+                                                                                    if (isNaN(numericBid) || numericBid <= 0) {
+                                                                                        toast.error("Please enter a valid fare bid amount.");
+                                                                                        return;
+                                                                                    }
+                                                                                    handleSelectDriver(booking._id, offer.driverId, numericBid);
+                                                                                }
+                                                                            }}
+                                                                            className="flex-1 sm:flex-initial bg-white border border-[#000080] text-[#000080] hover:bg-blue-50 font-bold text-xs px-3.5 py-2 rounded-lg transition cursor-pointer"
+                                                                        >
+                                                                            Negotiate / Bid
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         {/* Nested Simulated Map tracker inside paid car rentals */}
                                         {isPaidCar && trackingBookingId === booking._id && (
                                             <LiveCarTracker booking={booking} />

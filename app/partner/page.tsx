@@ -193,7 +193,7 @@ function LiveDriverTracker({ booking }: { booking: any }) {
 
 export default function PartnerDashboard() {
     const [user, setUser] = useState<any>(null);
-    const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings' | 'profile'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings' | 'profile' | 'available-requests'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // PROFILE STATES
@@ -361,6 +361,11 @@ export default function PartnerDashboard() {
     const [updatingOfferId, setUpdatingOfferId] = useState<string | null>(null);
     const [startingTripId, setStartingTripId] = useState<string | null>(null);
 
+    const [availableRequests, setAvailableRequests] = useState<any[]>([]);
+    const [submittingBidId, setSubmittingBidId] = useState<string | null>(null);
+    const [bidFares, setBidFares] = useState<Record<string, string>>({});
+    const [bidVehicles, setBidVehicles] = useState<Record<string, string>>({});
+
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -477,6 +482,7 @@ export default function PartnerDashboard() {
                     const allCars = await carsRes.json();
                     setMyInventory(allCars.filter((c: any) => c.partnerId === secureId));
                 }
+                fetchAvailableRequests();
             } else if (currentPartnerType === 'hotel' || currentPartnerType === 'apartment') {
                 const roomsRes = await fetch(`${apiUrl}/api/rooms/partner/${secureId}`);
                 if (roomsRes.ok) {
@@ -488,6 +494,66 @@ export default function PartnerDashboard() {
         } finally {
             setIsLoading(false);
             setHasLoadedBookings(true);
+        }
+    };
+
+    const fetchAvailableRequests = async () => {
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/available-requests`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAvailableRequests(data);
+            }
+        } catch (error) {
+            console.error("Error fetching available requests:", error);
+        }
+    };
+
+    const handleSubmitBid = async (bookingId: string) => {
+        const fare = bidFares[bookingId];
+        const vehicleDetails = bidVehicles[bookingId] || '';
+
+        if (!fare || isNaN(Number(fare)) || Number(fare) <= 0) {
+            toast.error("Please enter a valid fare bid amount.");
+            return;
+        }
+
+        setSubmittingBidId(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/driver-offers`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    fare: Number(fare),
+                    vehicleDetails
+                })
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("🎉 Your fare bid has been submitted to the client!");
+                // Clear inputs
+                setBidFares(prev => ({ ...prev, [bookingId]: '' }));
+                setBidVehicles(prev => ({ ...prev, [bookingId]: '' }));
+                fetchAvailableRequests();
+            } else {
+                toast.error(data.message || "Failed to submit fare bid.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setSubmittingBidId(null);
         }
     };
 
@@ -970,6 +1036,14 @@ export default function PartnerDashboard() {
                         </svg>
                         Reservations
                     </button>
+                    {isCarPartner && (
+                        <button onClick={() => { setActiveTab('available-requests'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'available-requests' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                            </svg>
+                            <span>Available Requests</span>
+                        </button>
+                    )}
                     <button onClick={() => { 
                         setActiveTab('profile'); 
                         setIsMobileMenuOpen(false);
@@ -1003,7 +1077,9 @@ export default function PartnerDashboard() {
                                 ? (isShuttlePartner ? 'Airport Shuttle Routes' : isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
                                 : activeTab === 'profile' 
                                     ? 'My Profile Settings' 
-                                    : activeTab}
+                                    : activeTab === 'available-requests'
+                                        ? 'Available Ride Requests'
+                                        : activeTab}
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Verified Partner</span>
@@ -1538,6 +1614,117 @@ export default function PartnerDashboard() {
                                                 ))}
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                            )}
+                            {/* AVAILABLE REQUESTS TAB */}
+                            {activeTab === 'available-requests' && isCarPartner && (
+                                <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                        <h2 className="text-lg font-black text-gray-900">Available Ride Requests</h2>
+                                        <button onClick={fetchAvailableRequests} className="text-xs bg-gray-100 hover:bg-gray-200 font-bold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 transition cursor-pointer">
+                                            Refresh List
+                                        </button>
+                                    </div>
+                                    <div className="p-6 space-y-4">
+                                        {availableRequests.length === 0 ? (
+                                            <div className="p-8 text-center bg-gray-50 rounded-2xl border border-gray-100">
+                                                <p className="text-gray-500 text-sm font-medium">No available ride requests at the moment. You'll receive dispatches here when clients request a ride.</p>
+                                            </div>
+                                        ) : (
+                                            availableRequests.map((req: any) => {
+                                                const secureUserId = user.id || user.userId || user._id;
+                                                const hasSubmittedBid = req.driverOffers?.some((o: any) => o.driverId === secureUserId);
+                                                const myBid = req.driverOffers?.find((o: any) => o.driverId === secureUserId);
+
+                                                return (
+                                                    <div key={req._id} className="border border-gray-100 rounded-2xl p-6 bg-gray-50/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-sm hover:shadow-md transition">
+                                                        <div className="space-y-2 flex-1 text-left">
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="bg-[#000080] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Ride Request</span>
+                                                                <span className="text-xs text-gray-400 font-medium">Ref: {req._id.toString().substring(0, 8).toUpperCase()}</span>
+                                                            </div>
+                                                            <h3 className="text-lg font-black text-[#004A99]">{req.itemName}</h3>
+                                                            
+                                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-600 font-medium">
+                                                                <p><span className="font-bold text-gray-800">Client:</span> {req.clientName || 'Guest'}</p>
+                                                                <p><span className="font-bold text-gray-800">Phone:</span> {req.clientPhone || 'N/A'}</p>
+                                                                <p><span className="font-bold text-gray-800">Pickup:</span> {req.checkIn ? formatDisplayDate(req.checkIn, req.itemType) : 'N/A'}</p>
+                                                                <p><span className="font-bold text-gray-800">Return:</span> {req.checkOut ? formatDisplayDate(req.checkOut, req.itemType) : 'N/A'}</p>
+                                                            </div>
+                                                            <p className="text-sm text-gray-600 font-medium"><span className="font-bold text-gray-800">Route:</span> {req.deliveryAddress?.replace('From: ', '').replace(' | To: ', ' ➔ ')}</p>
+                                                        </div>
+
+                                                        <div className="w-full md:w-80 bg-white border border-gray-200/80 p-5 rounded-2xl shadow-sm space-y-4 shrink-0 text-left">
+                                                            {hasSubmittedBid ? (
+                                                                <div className="space-y-3">
+                                                                    <div className="bg-green-50 border border-green-200 p-3 rounded-xl text-center">
+                                                                        <p className="text-xs font-bold text-green-800">Your Bid is Active</p>
+                                                                        <p className="text-2xl font-black text-[#000080] mt-1">₦{myBid.fare.toLocaleString()}</p>
+                                                                        {myBid.vehicleDetails && <p className="text-[10px] text-gray-500 mt-0.5">{myBid.vehicleDetails}</p>}
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Update / Resubmit Bid (₦)</label>
+                                                                        <div className="flex gap-2">
+                                                                            <input
+                                                                                type="number"
+                                                                                placeholder="New fare"
+                                                                                className="flex-1 px-3 py-2 border rounded-xl text-xs bg-gray-50 text-gray-900 focus:bg-white focus:border-[#004A99] outline-none transition"
+                                                                                value={bidFares[req._id] || ''}
+                                                                                onChange={(e) => setBidFares(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                                                            />
+                                                                            <button
+                                                                                onClick={() => handleSubmitBid(req._id)}
+                                                                                disabled={submittingBidId === req._id}
+                                                                                className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-4 py-2 rounded-xl transition disabled:opacity-50 cursor-pointer"
+                                                                            >
+                                                                                {submittingBidId === req._id ? '...' : 'Update'}
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="space-y-3">
+                                                                    <div className="text-left">
+                                                                        <h4 className="text-xs font-black text-gray-700 uppercase tracking-wider">Submit Fare Bid</h4>
+                                                                        <p className="text-[10px] text-gray-400 font-medium">Negotiate price with the client</p>
+                                                                    </div>
+                                                                    <div className="space-y-2">
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">PROPOSED FARE (₦)</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                placeholder="e.g. 120000"
+                                                                                className="w-full px-3 py-2 border rounded-xl text-xs bg-gray-50 text-gray-900 focus:bg-white focus:border-[#004A99] outline-none transition font-semibold"
+                                                                                value={bidFares[req._id] || ''}
+                                                                                onChange={(e) => setBidFares(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                                                            />
+                                                                        </div>
+                                                                        <div>
+                                                                            <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">VEHICLE DETAILS (Optional)</label>
+                                                                            <input
+                                                                                type="text"
+                                                                                placeholder="e.g. Toyota Prado Black"
+                                                                                className="w-full px-3 py-2 border rounded-xl text-xs bg-gray-50 text-gray-900 focus:bg-white focus:border-[#004A99] outline-none transition font-medium"
+                                                                                value={bidVehicles[req._id] || ''}
+                                                                                onChange={(e) => setBidVehicles(prev => ({ ...prev, [req._id]: e.target.value }))}
+                                                                            />
+                                                                        </div>
+                                                                        <button
+                                                                            onClick={() => handleSubmitBid(req._id)}
+                                                                            disabled={submittingBidId === req._id}
+                                                                            className="w-full bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-md disabled:opacity-50 cursor-pointer"
+                                                                        >
+                                                                            {submittingBidId === req._id ? 'Submitting Bid...' : 'Submit Bid Offer'}
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })
+                                        )}
                                     </div>
                                 </div>
                             )}

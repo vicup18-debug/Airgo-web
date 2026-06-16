@@ -33,6 +33,11 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const [isCustomOffer, setIsCustomOffer] = useState(false);
     const [customOfferPrice, setCustomOfferPrice] = useState('');
 
+    const [couponCodeInput, setCouponCodeInput] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discountType: string; discountValue: number } | null>(null);
+    const [couponError, setCouponError] = useState('');
+    const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
     useEffect(() => {
         if (isOpen) {
             const storedUser = localStorage.getItem('airgo_user');
@@ -70,6 +75,10 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             setTravelScope('Intra-City');
             setIsCustomOffer(false);
             setCustomOfferPrice('');
+            setCouponCodeInput('');
+            setAppliedCoupon(null);
+            setCouponError('');
+            setIsValidatingCoupon(false);
             setStep(1); // Reset to first step
         }
     }, [isOpen, initialCheckIn, initialCheckOut]);
@@ -104,6 +113,62 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
     const finalPrice = calculateTotal();
 
+    const getDiscountAmount = () => {
+        if (!appliedCoupon || isCustomOffer) return 0;
+        if (appliedCoupon.discountType === 'percentage') {
+            return Math.round(finalPrice * (appliedCoupon.discountValue / 100));
+        } else if (appliedCoupon.discountType === 'flat') {
+            return Math.min(finalPrice, appliedCoupon.discountValue);
+        }
+        return 0;
+    };
+
+    const discountAmount = getDiscountAmount();
+    const netPrice = Math.max(0, finalPrice - discountAmount);
+
+    const handleApplyCoupon = async () => {
+        if (!couponCodeInput.trim()) {
+            setCouponError("Please enter a coupon code");
+            return;
+        }
+        setIsValidatingCoupon(true);
+        setCouponError('');
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const response = await fetch(`${apiUrl}/api/coupons/validate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code: couponCodeInput })
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setAppliedCoupon({
+                    code: data.code,
+                    discountType: data.discountType,
+                    discountValue: data.discountValue
+                });
+                toast.success(`Coupon ${data.code} applied successfully!`);
+            } else {
+                setAppliedCoupon(null);
+                setCouponError(data.message || "Invalid coupon code");
+                toast.error(data.message || "Invalid coupon code");
+            }
+        } catch (error) {
+            console.error("Error validating coupon:", error);
+            setCouponError("Failed to validate coupon");
+            toast.error("Error validating coupon");
+        } finally {
+            setIsValidatingCoupon(false);
+        }
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setCouponCodeInput('');
+        setCouponError('');
+    };
+
     const handleClose = () => {
         setStep(1);
         setBookingDetails({
@@ -120,6 +185,10 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         setTravelScope('Intra-City');
         setIsCustomOffer(false);
         setCustomOfferPrice('');
+        setCouponCodeInput('');
+        setAppliedCoupon(null);
+        setCouponError('');
+        setIsValidatingCoupon(false);
         onClose();
     };
 
@@ -157,7 +226,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkIn: bookingDetails.checkIn,
                 checkOut: bookingDetails.checkOut,
                 guests: 1,
-                totalPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : finalPrice.toLocaleString(),
+                totalPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : netPrice.toLocaleString(),
                 status: 'Pending Escrow',
                 clientName: bookingDetails.name,
                 clientEmail: bookingDetails.email,
@@ -169,7 +238,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 travelScope,
                 isOffer: isCustomOffer,
                 offerStatus: isCustomOffer ? 'Pending Partner' : 'None',
-                offeredPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : ''
+                offeredPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : '',
+                couponCode: appliedCoupon ? appliedCoupon.code : undefined
             };
 
             const response = await fetch(`${apiUrl}/api/bookings`, {
@@ -349,18 +419,78 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 )}
                             </div>
 
+                            {/* COUPON CODE INPUT */}
+                            {!isCustomOffer && (
+                                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2">
+                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">PROMO / COUPON CODE</label>
+                                    {appliedCoupon ? (
+                                        <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-3 rounded-xl">
+                                            <div className="flex items-center gap-2">
+                                                <span className="bg-green-600 text-white font-black px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
+                                                    {appliedCoupon.code}
+                                                </span>
+                                                <span className="text-xs font-semibold text-green-800">
+                                                    {appliedCoupon.discountType === 'percentage' 
+                                                        ? `${appliedCoupon.discountValue}% Off applied` 
+                                                        : `₦${appliedCoupon.discountValue.toLocaleString()} Off applied`}
+                                                </span>
+                                            </div>
+                                            <button 
+                                                type="button" 
+                                                onClick={handleRemoveCoupon} 
+                                                className="text-red-500 hover:text-red-700 font-bold text-xs"
+                                            >
+                                                Remove
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                placeholder="Enter coupon code (e.g. WELCOME10)"
+                                                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none transition font-medium uppercase placeholder-gray-400"
+                                                value={couponCodeInput}
+                                                onChange={(e) => setCouponCodeInput(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleApplyCoupon();
+                                                    }
+                                                }}
+                                            />
+                                            <button
+                                                type="button"
+                                                disabled={isValidatingCoupon}
+                                                onClick={handleApplyCoupon}
+                                                className="bg-[#000080] hover:bg-blue-900 text-white font-bold px-5 py-3 rounded-xl transition duration-150 text-sm disabled:bg-gray-300"
+                                            >
+                                                {isValidatingCoupon ? '...' : 'Apply'}
+                                            </button>
+                                        </div>
+                                    )}
+                                    {couponError && (
+                                        <p className="text-[10px] text-red-500 font-bold mt-1">{couponError}</p>
+                                    )}
+                                </div>
+                            )}
+
                             <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-100">
                                 <span className="text-gray-400 font-bold uppercase tracking-wider text-xs">TOTAL ESCROW</span>
                                 <div className="flex flex-col items-end">
-                                    {car.discountPercentage > 0 && !isCustomOffer && (
+                                    {(car.discountPercentage > 0 || discountAmount > 0) && !isCustomOffer && (
                                         <span className="text-xs text-gray-400 line-through font-bold">
                                             ₦{(((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1) * (numericPrice + (rentalType === 'Chauffeur Driven' ? 15000 : 0) + (fuelPlan === 'Fuel Inclusive' ? 25000 : 0) + (travelScope === 'Inter-State' ? 35000 : 0))).toLocaleString()}
                                         </span>
                                     )}
                                     <span className="text-3xl font-black text-[#000080]">
-                                        ₦{isCustomOffer && customOfferPrice ? Number(customOfferPrice).toLocaleString() : finalPrice.toLocaleString()}
+                                        ₦{isCustomOffer && customOfferPrice ? Number(customOfferPrice).toLocaleString() : netPrice.toLocaleString()}
                                     </span>
-                                    {car.discountPercentage > 0 && !isCustomOffer && (
+                                    {discountAmount > 0 && !isCustomOffer && (
+                                        <span className="text-[9px] text-green-600 font-bold uppercase mt-0.5 flex items-center gap-1">
+                                            🛡️ Coupon Discount Applied (-₦{discountAmount.toLocaleString()})
+                                        </span>
+                                    )}
+                                    {car.discountPercentage > 0 && !isCustomOffer && discountAmount === 0 && (
                                         <span className="text-[9px] text-red-600 font-bold uppercase mt-0.5 flex items-center gap-1">
                                             <svg className="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a1.5 1.5 0 002.122 0l4.318-4.318a1.5 1.5 0 000-2.122L10.16 3.659A2.25 2.25 0 009.568 3z" />
