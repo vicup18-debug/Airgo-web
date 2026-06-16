@@ -389,7 +389,42 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                             </div>
 
-
+                            {/* Service Configurations */}
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Rental Type</label>
+                                    <select 
+                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
+                                        value={rentalType}
+                                        onChange={(e: any) => setRentalType(e.target.value)}
+                                    >
+                                        <option value="Chauffeur Driven">Chauffeur (+₦15k/day)</option>
+                                        <option value="Self Drive">Self Drive (₦0)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Fuel Plan</label>
+                                    <select 
+                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
+                                        value={fuelPlan}
+                                        onChange={(e: any) => setFuelPlan(e.target.value)}
+                                    >
+                                        <option value="Self Fueling">Self Fueling (₦0)</option>
+                                        <option value="Fuel Inclusive">Fuel Incl. (+₦25k/day)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Travel Scope</label>
+                                    <select 
+                                        className="w-full px-3 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs cursor-pointer"
+                                        value={travelScope}
+                                        onChange={(e: any) => setTravelScope(e.target.value)}
+                                    >
+                                        <option value="Intra-City">Intra-City (₦0)</option>
+                                        <option value="Inter-State">Inter-State (+₦35k/day)</option>
+                                    </select>
+                                </div>
+                            </div>
  
                             {/* CUSTOM PRICE OFFER (INDRIVE STYLE) */}
                             <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/65 space-y-3">
