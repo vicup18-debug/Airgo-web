@@ -1184,45 +1184,59 @@ export default function ClientDashboard() {
                                                     </div>
                                                 ) : (
                                                     <div className="grid grid-cols-1 gap-3">
-                                                        {booking.driverOffers.map((offer: any) => (
-                                                            <div key={offer.driverId} className="bg-blue-50/40 border border-blue-100/60 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all hover:bg-blue-50">
-                                                                <div className="flex-1">
-                                                                    <p className="text-sm font-bold text-gray-800">{offer.driverName}</p>
-                                                                    <p className="text-xs text-gray-500 font-medium mt-0.5">{offer.vehicleDetails || 'Standard Fleet Vehicle'}</p>
-                                                                    <p className="text-xs text-gray-400 font-medium mt-1">Rating: 4.8★ | VIP Driver</p>
-                                                                </div>
-                                                                <div className="flex flex-col sm:items-end w-full sm:w-auto gap-2">
-                                                                    <div className="text-left sm:text-right">
-                                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">FARE BID</p>
-                                                                        <p className="text-lg font-black text-[#000080]">₦{offer.fare.toLocaleString()}</p>
+                                                        {(() => {
+                                                            const sortedOffers = [...booking.driverOffers].sort((a: any, b: any) => a.fare - b.fare);
+                                                            return sortedOffers.map((offer: any, idx: number) => (
+                                                                <div key={offer.driverId} className={`border p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition-all ${
+                                                                    idx === 0 
+                                                                        ? 'bg-emerald-50/40 border-emerald-200 hover:bg-emerald-50' 
+                                                                        : 'bg-blue-50/40 border-blue-100/60 hover:bg-blue-50'
+                                                                }`}>
+                                                                    <div className="flex-1">
+                                                                        <div className="flex items-center gap-2">
+                                                                            <p className="text-sm font-bold text-gray-800">{offer.driverName}</p>
+                                                                            {idx === 0 && (
+                                                                                <span className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                                                                    Cheapest Bid
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        <p className="text-xs text-gray-500 font-medium mt-0.5">{offer.vehicleDetails || 'Standard Fleet Vehicle'}</p>
+                                                                        <p className="text-xs text-gray-400 font-medium mt-1">Rating: 4.8★ | VIP Driver</p>
                                                                     </div>
-                                                                    <div className="flex gap-2 w-full">
-                                                                        <button
-                                                                            onClick={() => handleSelectDriver(booking._id, offer.driverId)}
-                                                                            className="flex-1 sm:flex-initial bg-[#000080] hover:bg-blue-900 text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer"
-                                                                        >
-                                                                            Accept Offer
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                const bidPrice = prompt(`Enter your counter-bid for ${offer.driverName} (₦):`, offer.fare.toString());
-                                                                                if (bidPrice) {
-                                                                                    const numericBid = parseInt(bidPrice.replace(/[^0-9]/g, ''));
-                                                                                    if (isNaN(numericBid) || numericBid <= 0) {
-                                                                                        toast.error("Please enter a valid fare bid amount.");
-                                                                                        return;
+                                                                    <div className="flex flex-col sm:items-end w-full sm:w-auto gap-2">
+                                                                        <div className="text-left sm:text-right">
+                                                                            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">FARE BID</p>
+                                                                            <p className="text-lg font-black text-[#000080]">₦{offer.fare.toLocaleString()}</p>
+                                                                        </div>
+                                                                        <div className="flex gap-2 w-full">
+                                                                            <button
+                                                                                onClick={() => handleSelectDriver(booking._id, offer.driverId)}
+                                                                                className="flex-1 sm:flex-initial bg-[#000080] hover:bg-blue-900 text-white font-bold text-xs px-3.5 py-2 rounded-lg shadow-sm transition cursor-pointer"
+                                                                            >
+                                                                                Accept Offer
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    const bidPrice = prompt(`Enter your counter-bid for ${offer.driverName} (₦):`, offer.fare.toString());
+                                                                                    if (bidPrice) {
+                                                                                        const numericBid = parseInt(bidPrice.replace(/[^0-9]/g, ''));
+                                                                                        if (isNaN(numericBid) || numericBid <= 0) {
+                                                                                            toast.error("Please enter a valid fare bid amount.");
+                                                                                            return;
+                                                                                        }
+                                                                                        handleSelectDriver(booking._id, offer.driverId, numericBid);
                                                                                     }
-                                                                                    handleSelectDriver(booking._id, offer.driverId, numericBid);
-                                                                                }
-                                                                            }}
-                                                                            className="flex-1 sm:flex-initial bg-white border border-[#000080] text-[#000080] hover:bg-blue-50 font-bold text-xs px-3.5 py-2 rounded-lg transition cursor-pointer"
-                                                                        >
-                                                                            Negotiate / Bid
-                                                                        </button>
+                                                                                }}
+                                                                                className="flex-1 sm:flex-initial bg-white border border-[#000080] text-[#000080] hover:bg-blue-50 font-bold text-xs px-3.5 py-2 rounded-lg transition cursor-pointer"
+                                                                            >
+                                                                                Negotiate / Bid
+                                                                            </button>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        ))}
+                                                            ));
+                                                        })()}
                                                     </div>
                                                 )}
                                             </div>

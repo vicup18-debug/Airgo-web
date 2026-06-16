@@ -360,6 +360,8 @@ export default function PartnerDashboard() {
     const [isLoading, setIsLoading] = useState(true);
     const [hasLoadedBookings, setHasLoadedBookings] = useState(false);
     const prevBookingsRef = useRef<any[]>([]);
+    const prevRequestsRef = useRef<any[]>([]);
+    const [hasLoadedRequests, setHasLoadedRequests] = useState(false);
 
     const playNotificationSound = () => {
         try {
@@ -480,6 +482,33 @@ export default function PartnerDashboard() {
     const [submittingBidId, setSubmittingBidId] = useState<string | null>(null);
     const [bidFares, setBidFares] = useState<Record<string, string>>({});
     const [bidVehicles, setBidVehicles] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        if (!hasLoadedRequests) {
+            if (availableRequests.length > 0) {
+                prevRequestsRef.current = availableRequests;
+                setHasLoadedRequests(true);
+            }
+            return;
+        }
+
+        let shouldPlaySound = false;
+        for (const req of availableRequests) {
+            const prevReq = prevRequestsRef.current.find((r: any) => r._id === req._id);
+            if (!prevReq) {
+                // A new available ride request has arrived!
+                shouldPlaySound = true;
+                toast.success(`🚗 New Ride Dispatch Request: ${req.itemName}! Check the Available Requests tab.`, { duration: 6000 });
+                break;
+            }
+        }
+
+        if (shouldPlaySound) {
+            playNotificationSound();
+        }
+
+        prevRequestsRef.current = availableRequests;
+    }, [availableRequests, hasLoadedRequests]);
 
     // MODAL STATES
     const [isModalOpen, setIsModalOpen] = useState(false);
