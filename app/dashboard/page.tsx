@@ -283,16 +283,47 @@ export default function ClientDashboard() {
             if (!prevBooking) {
                 // A new booking has arrived!
                 shouldPlaySound = true;
-                break;
-            } else if (
-                prevBooking.status !== booking.status ||
-                prevBooking.offerStatus !== booking.offerStatus ||
-                prevBooking.counterPrice !== booking.counterPrice ||
-                prevBooking.totalPrice !== booking.totalPrice
-            ) {
-                // A booking status or offer status has changed!
-                shouldPlaySound = true;
-                break;
+                toast.success(`📅 Booking request created successfully: ${booking.itemName}`);
+            } else {
+                // Check if any driver offers (bids) have been added
+                const prevBidsCount = prevBooking.driverOffers?.length || 0;
+                const currentBidsCount = booking.driverOffers?.length || 0;
+                if (currentBidsCount > prevBidsCount) {
+                    shouldPlaySound = true;
+                    // Find the newly added bid(s)
+                    const prevDriverIds = new Set(prevBooking.driverOffers?.map((o: any) => o.driverId) || []);
+                    const newBids = booking.driverOffers.filter((o: any) => !prevDriverIds.has(o.driverId));
+                    for (const newBid of newBids) {
+                        toast.success(`🚗 New Bid: ${newBid.driverName} offered ₦${Number(newBid.fare).toLocaleString()} for ${booking.itemName}!`, { duration: 6000 });
+                    }
+                }
+
+                // Check for status or offerStatus updates
+                if (prevBooking.offerStatus !== booking.offerStatus) {
+                    if (booking.offerStatus === 'Pending Client' && prevBooking.offerStatus !== 'Pending Client') {
+                        shouldPlaySound = true;
+                        toast.success(`💜 Counter Offer: Driver countered with ₦${Number(booking.counterPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()} on your ride ${booking.itemName}!`, { duration: 6000 });
+                    } else if (booking.offerStatus === 'Accepted' && prevBooking.offerStatus !== 'Accepted') {
+                        shouldPlaySound = true;
+                        toast.success(`✅ Offer Accepted: Driver accepted your bid of ₦${Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()} for ${booking.itemName}! Please proceed to payment.`, { duration: 8000 });
+                    } else if (booking.offerStatus === 'Rejected' && prevBooking.offerStatus !== 'Rejected') {
+                        shouldPlaySound = true;
+                        toast.error(`❌ Offer Declined: Driver declined your bid for ${booking.itemName}.`, { duration: 6000 });
+                    }
+                }
+
+                if (prevBooking.status !== booking.status) {
+                    if (booking.status === 'Trip Started' && prevBooking.status !== 'Trip Started') {
+                        shouldPlaySound = true;
+                        toast.success(`🟢 Trip Started: Your ride ${booking.itemName} has started! Safety first.`, { duration: 6000 });
+                    } else if (booking.status === 'Trip End Pending' && prevBooking.status !== 'Trip End Pending') {
+                        shouldPlaySound = true;
+                        toast.success(`🏁 Trip Ended: Driver completed the trip for ${booking.itemName}. Please confirm completion.`, { duration: 8000 });
+                    } else if (booking.status === 'Paid' && prevBooking.status !== 'Paid') {
+                        shouldPlaySound = true;
+                        toast.success(`💳 Payment Confirmed: Escrow payment verified successfully for ${booking.itemName}!`, { duration: 6000 });
+                    }
+                }
             }
         }
 
