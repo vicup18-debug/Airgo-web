@@ -891,7 +891,11 @@ export default function ClientDashboard() {
                                             </div>
                                             <div className="text-left md:text-right mt-2 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-gray-100 flex flex-col items-start md:items-end gap-2">
                                                 <p className="text-sm text-gray-500 font-bold mb-0">Total Escrow</p>
-                                                <p className="text-2xl font-black text-gray-900">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</p>
+                                                {booking.itemType === 'car' && booking.partnerId === 'airgo_direct' ? (
+                                                    <p className="text-lg font-black text-gray-500 italic">Pending Driver Bids</p>
+                                                ) : (
+                                                    <p className="text-2xl font-black text-gray-900">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</p>
+                                                )}
                                                 {booking.isOffer ? (
                                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                                                         booking.offerStatus === 'Pending Partner' 

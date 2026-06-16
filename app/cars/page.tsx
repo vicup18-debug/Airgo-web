@@ -262,15 +262,10 @@ export default function CarsPage() {
 
                                                 <div className="flex flex-col sm:flex-row gap-3 justify-between sm:items-center border-t border-gray-100 pt-4 mt-auto">
                                                     <div>
-                                                        <p className="text-2xl font-black text-[#000080]">
-                                                            {car.discountPercentage > 0 && (
-                                                                <span className="text-sm text-gray-400 line-through mr-2 font-bold">
-                                                                    ₦{numericPrice.toLocaleString()}
-                                                                </span>
-                                                            )}
-                                                            ₦{discountedPrice.toLocaleString()}
+                                                        <p className="text-xl font-black text-[#000080] italic">
+                                                            Bids from Drivers
                                                         </p>
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">starting from</p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-0.5">Fare pricing</p>
                                                     </div>
                                                     {car.isFallback ? (
                                                         <a

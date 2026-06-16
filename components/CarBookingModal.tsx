@@ -220,7 +220,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkIn: bookingDetails.checkIn,
                 checkOut: bookingDetails.checkOut,
                 guests: 1,
-                totalPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : netPrice.toLocaleString(),
+                totalPrice: '0',
                 status: 'Pending Escrow',
                 clientName: bookingDetails.name,
                 clientEmail: bookingDetails.email,
@@ -280,19 +280,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                                 <div className="mt-2">
                                     <h3 className="text-xl font-bold text-[#000080]">{car.name}</h3>
-                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                        {car.discountPercentage > 0 && (
-                                            <span className="text-sm text-gray-400 line-through font-bold">
-                                                ₦{numericPrice.toLocaleString()}
-                                            </span>
-                                        )}
-                                        <span>₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}</span>
-                                        {car.discountPercentage > 0 && (
-                                            <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
-                                                {car.discountPercentage}% OFF
-                                            </span>
-                                        )}
+                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Pricing Model</p>
+                                    <p className="text-xl font-black text-[#000080] mt-0.5 italic">
+                                        Fare Decided by Driver Bids
                                     </p>
                                 </div>
                             </div>
@@ -301,19 +291,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 <img src={car.image} alt={car.name} className="w-24 h-24 rounded-xl object-cover shadow-sm" />
                                 <div>
                                     <h3 className="text-lg font-bold text-[#000080]">{car.name}</h3>
-                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Daily Rate</p>
-                                    <p className="text-2xl font-black text-gray-900 mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
-                                        {car.discountPercentage > 0 && (
-                                            <span className="text-sm text-gray-400 line-through font-bold">
-                                                ₦{numericPrice.toLocaleString()}
-                                            </span>
-                                        )}
-                                        <span>₦{Math.round(numericPrice * (1 - (car.discountPercentage || 0) / 100)).toLocaleString()}</span>
-                                        {car.discountPercentage > 0 && (
-                                            <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
-                                                {car.discountPercentage}% OFF
-                                            </span>
-                                        )}
+                                    <p className="text-xs text-gray-400 font-bold uppercase tracking-wider mt-1">Pricing Model</p>
+                                    <p className="text-xl font-black text-[#000080] mt-0.5 italic">
+                                        Fare Decided by Driver Bids
                                     </p>
                                 </div>
                             </div>
@@ -398,119 +378,15 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                             </div>
  
-                            {/* CUSTOM PRICE OFFER (INDRIVE STYLE) */}
-                            <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/65 space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Make a custom price offer?</label>
-                                    <input
-                                        type="checkbox"
-                                        checked={isCustomOffer}
-                                        onChange={(e) => setIsCustomOffer(e.target.checked)}
-                                        className="w-4 h-4 text-[#000080] border-gray-300 rounded focus:ring-[#000080]/30 cursor-pointer"
-                                    />
-                                </div>
-                                {isCustomOffer && (
-                                    <div className="animate-in fade-in slide-in-from-top-1 duration-200">
-                                        <label className="block text-[10px] font-bold text-blue-800 uppercase tracking-wider mb-1">YOUR OFFERED PRICE (₦)</label>
-                                        <input
-                                            required
-                                            type="number"
-                                            min="1000"
-                                            placeholder="e.g. 150000"
-                                            className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-white text-gray-900 focus:border-[#000080] outline-none transition font-medium"
-                                            value={customOfferPrice}
-                                            onChange={(e) => setCustomOfferPrice(e.target.value)}
-                                        />
-                                        <p className="text-[9px] text-blue-600 font-medium mt-1">Recommended price is ₦{finalPrice.toLocaleString()}. Your custom bid will be sent to the partner for approval.</p>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* COUPON CODE INPUT */}
-                            {!isCustomOffer && (
-                                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 space-y-2">
-                                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">PROMO / COUPON CODE</label>
-                                    {appliedCoupon ? (
-                                        <div className="flex items-center justify-between bg-green-50 border border-green-200 px-4 py-3 rounded-xl">
-                                            <div className="flex items-center gap-2">
-                                                <span className="bg-green-600 text-white font-black px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
-                                                    {appliedCoupon.code}
-                                                </span>
-                                                <span className="text-xs font-semibold text-green-800">
-                                                    {appliedCoupon.discountType === 'percentage' 
-                                                        ? `${appliedCoupon.discountValue}% Off applied` 
-                                                        : `₦${appliedCoupon.discountValue.toLocaleString()} Off applied`}
-                                                </span>
-                                            </div>
-                                            <button 
-                                                type="button" 
-                                                onClick={handleRemoveCoupon} 
-                                                className="text-red-500 hover:text-red-700 font-bold text-xs"
-                                            >
-                                                Remove
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                placeholder="Enter coupon code (e.g. WELCOME10)"
-                                                className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-gray-900 focus:border-[#000080] outline-none transition font-medium uppercase placeholder-gray-400"
-                                                value={couponCodeInput}
-                                                onChange={(e) => setCouponCodeInput(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === 'Enter') {
-                                                        e.preventDefault();
-                                                        handleApplyCoupon();
-                                                    }
-                                                }}
-                                            />
-                                            <button
-                                                type="button"
-                                                disabled={isValidatingCoupon}
-                                                onClick={handleApplyCoupon}
-                                                className="bg-[#000080] hover:bg-blue-900 text-white font-bold px-5 py-3 rounded-xl transition duration-150 text-sm disabled:bg-gray-300"
-                                            >
-                                                {isValidatingCoupon ? '...' : 'Apply'}
-                                            </button>
-                                        </div>
-                                    )}
-                                    {couponError && (
-                                        <p className="text-[10px] text-red-500 font-bold mt-1">{couponError}</p>
-                                    )}
-                                </div>
-                            )}
-
-                            <div className="flex justify-between items-center pt-4 mt-4 border-t border-gray-100">
-                                <span className="text-gray-400 font-bold uppercase tracking-wider text-xs">TOTAL ESCROW</span>
-                                <div className="flex flex-col items-end">
-                                    {(car.discountPercentage > 0 || discountAmount > 0) && !isCustomOffer && (
-                                        <span className="text-xs text-gray-400 line-through font-bold">
-                                            ₦{(((bookingDetails.checkIn && bookingDetails.checkOut) ? Math.ceil(Math.max((new Date(bookingDetails.checkOut).getTime() - new Date(bookingDetails.checkIn).getTime()) / (1000 * 3600), 1) / 24) : 1) * (numericPrice + (travelScope === 'Inter-State' ? 35000 : 0))).toLocaleString()}
-                                        </span>
-                                    )}
-                                    <span className="text-3xl font-black text-[#000080]">
-                                        ₦{isCustomOffer && customOfferPrice ? Number(customOfferPrice).toLocaleString() : netPrice.toLocaleString()}
-                                    </span>
-                                    {discountAmount > 0 && !isCustomOffer && (
-                                        <span className="text-[9px] text-green-600 font-bold uppercase mt-0.5 flex items-center gap-1">
-                                            🛡️ Coupon Discount Applied (-₦{discountAmount.toLocaleString()})
-                                        </span>
-                                    )}
-                                    {car.discountPercentage > 0 && !isCustomOffer && discountAmount === 0 && (
-                                        <span className="text-[9px] text-red-600 font-bold uppercase mt-0.5 flex items-center gap-1">
-                                            <svg className="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581a1.5 1.5 0 002.122 0l4.318-4.318a1.5 1.5 0 000-2.122L10.16 3.659A2.25 2.25 0 009.568 3z" />
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M6 7.5h.008v.008H6V7.5z" />
-                                            </svg>
-                                            {car.discountPercentage}% OFF APPLIED
-                                        </span>
-                                    )}
-                                </div>
+                            <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100/65 pt-4 mt-4 text-center">
+                                <span className="text-[#000080] font-black uppercase tracking-wider text-xs block mb-1">Fare Pricing Model</span>
+                                <p className="text-xs text-blue-900 leading-relaxed font-semibold">
+                                    No immediate payment is required. Once you submit this request, registered drivers will manually place competitive bids. You choose the best bid!
+                                </p>
                             </div>
 
                             <button type="submit" disabled={isProcessing} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
-                                {isProcessing ? 'Locking Asset...' : (isCustomOffer ? 'Send Custom Offer' : 'Confirm Booking')}
+                                {isProcessing ? 'Submitting Request...' : 'Send Request to Drivers'}
                             </button>
                         </form>
                     </div>
