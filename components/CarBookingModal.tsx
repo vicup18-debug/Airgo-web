@@ -58,7 +58,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             }
             let formattedCheckOut = '';
             if (initialCheckOut) {
-                formattedCheckOut = initialCheckOut.includes('T') ? initialCheckOut.substring(0, 16) : `${initialCheckOut}T18:00`;
+                formattedCheckOut = initialCheckOut.includes('T') ? initialCheckOut.substring(0, 16) : `${initialCheckOut}T09:00`;
             }
 
             setBookingDetails({
