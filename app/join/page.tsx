@@ -4,17 +4,89 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+const NIGERIAN_BANKS = [
+    { name: "Access Bank", code: "044" },
+    { name: "Access Bank (Diamond)", code: "063" },
+    { name: "ALAT by WEMA", code: "035A" },
+    { name: "ASO Savings and Loans", code: "401" },
+    { name: "Bowen Microfinance Bank", code: "50931" },
+    { name: "Carbon", code: "565" },
+    { name: "CEMCS Microfinance Bank", code: "50823" },
+    { name: "Citibank Nigeria", code: "023" },
+    { name: "Coronation Merchant Bank", code: "559" },
+    { name: "Ecobank Nigeria", code: "050" },
+    { name: "Ekondo Microfinance Bank", code: "562" },
+    { name: "Eyowo", code: "50126" },
+    { name: "Fidelity Bank", code: "070" },
+    { name: "First Bank of Nigeria", code: "011" },
+    { name: "First City Monument Bank - FCMB", code: "214" },
+    { name: "FSDH Merchant Bank", code: "501" },
+    { name: "Globus Bank", code: "00103" },
+    { name: "Guaranty Trust Bank - GTB", code: "058" },
+    { name: "Hackman Microfinance Bank", code: "51251" },
+    { name: "Hasal Microfinance Bank", code: "50383" },
+    { name: "Heritage Bank", code: "030" },
+    { name: "HopePSB", code: "120002" },
+    { name: "Ibile Microfinance Bank", code: "51244" },
+    { name: "Infinity MFB", code: "50457" },
+    { name: "Jaiz Bank", code: "301" },
+    { name: "Keystone Bank", code: "082" },
+    { name: "Kuda Bank", code: "50211" },
+    { name: "Lagos Building Investment Company Plc", code: "90052" },
+    { name: "Links MFB", code: "50549" },
+    { name: "Living Trust Mortgage Bank", code: "50767" },
+    { name: "Lotus Bank", code: "302" },
+    { name: "Mayfair MFB", code: "50563" },
+    { name: "Mint MFB", code: "50304" },
+    { name: "Moniepoint MFB", code: "50515" },
+    { name: "OPay", code: "999992" },
+    { name: "Optimus Bank", code: "107" },
+    { name: "Paga", code: "100002" },
+    { name: "Palmpay", code: "999991" },
+    { name: "Parallex Bank", code: "104" },
+    { name: "Parkway - ReadyCash", code: "311" },
+    { name: "Paycom - OPay", code: "305" },
+    { name: "Polaris Bank", code: "076" },
+    { name: "PremiumTrust Bank", code: "105" },
+    { name: "Providus Bank", code: "101" },
+    { name: "QuickFund MFB", code: "51293" },
+    { name: "Rubies MFB", code: "125" },
+    { name: "Safe Haven MFB", code: "51113" },
+    { name: "Safe Haven Microfinance Bank", code: "951113" },
+    { name: "Signature Bank", code: "106" },
+    { name: "Sparkle Bank", code: "51310" },
+    { name: "Stanbic IBTC Bank", code: "221" },
+    { name: "Standard Chartered Bank", code: "068" },
+    { name: "Sterling Bank", code: "232" },
+    { name: "Suntrust Bank", code: "100" },
+    { name: "TAJ Bank", code: "302" },
+    { name: "Tangerine Money", code: "51269" },
+    { name: "TCF MFB", code: "51211" },
+    { name: "Titan Bank", code: "102" },
+    { name: "Titan Trust Bank", code: "100005" },
+    { name: "Union Bank of Nigeria", code: "032" },
+    { name: "United Bank for Africa - UBA", code: "033" },
+    { name: "Unity Bank", code: "215" },
+    { name: "VFD Microfinance Bank", code: "566" },
+    { name: "Wema Bank", code: "035" },
+    { name: "Zenith Bank", code: "057" }
+];
+
 export default function JoinPartnerPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
         password: '',
-        confirmPassword: '', // 🟢 ADDED: Confirm Password State
+        confirmPassword: '',
         phone: '',
         businessName: '',
         businessAddress: '',
         cacNumber: '',
-        partnerType: 'car'
+        partnerType: 'car',
+        bankName: '',
+        accountNumber: '',
+        accountName: '',
+        bankCode: ''
     });
 
     const [verificationFile, setVerificationFile] = useState<File | null>(null);
@@ -23,12 +95,51 @@ export default function JoinPartnerPage() {
     const [error, setError] = useState('');
     const [step, setStep] = useState(1);
 
-    // 🟢 ADDED: UI States for Premium Experience
+    const [isResolvingAccount, setIsResolvingAccount] = useState(false);
+    const [resolveError, setResolveError] = useState('');
+
     const [successMessage, setSuccessMessage] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
     const router = useRouter();
+
+    const handleAccountNumberChange = async (value: string) => {
+        const cleanValue = value.replace(/\D/g, '');
+        setFormData(prev => ({ ...prev, accountNumber: cleanValue }));
+        
+        if (cleanValue.length === 10 && formData.bankCode) {
+            resolveBankAccount(cleanValue, formData.bankCode);
+        } else {
+            setFormData(prev => ({ ...prev, accountName: '' }));
+            setResolveError('');
+        }
+    };
+
+    const resolveBankAccount = async (accNum: string, bankCode: string) => {
+        setIsResolvingAccount(true);
+        setResolveError('');
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/resolve-bank-account`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ accountNumber: accNum, bankCode })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setFormData(prev => ({ ...prev, accountName: data.accountName }));
+            } else {
+                setResolveError(data.message || "Could not resolve account name. Please check details.");
+                setFormData(prev => ({ ...prev, accountName: '' }));
+            }
+        } catch (err) {
+            console.error("Resolve Error:", err);
+            setResolveError("Server error resolving account.");
+        } finally {
+            setIsResolvingAccount(false);
+        }
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -39,6 +150,9 @@ export default function JoinPartnerPage() {
         if (!formData.phone) return setError("Phone number is required.");
         if (formData.password !== formData.confirmPassword) return setError("Passwords do not match.");
         if (formData.password.length < 6) return setError("Password must be at least 6 characters.");
+        if (!formData.bankName || !formData.accountNumber || !formData.accountName) {
+            return setError("Please complete all steps and provide verified bank disbursement details.");
+        }
 
         setIsLoading(true);
         setError('');
@@ -234,7 +348,97 @@ export default function JoinPartnerPage() {
                                     </div>
                                 )}
 
-                                <button disabled={isLoading} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                                <button type="button" onClick={() => {
+                                    if (!formData.businessAddress) {
+                                        setError("Business address is required.");
+                                        return;
+                                    }
+                                    if ((formData.partnerType === 'hotel' || formData.partnerType === 'apartment') && !formData.cacNumber) {
+                                        setError("CAC Registration or Tax/ID Number is required.");
+                                        return;
+                                    }
+                                    if (!verificationFile) {
+                                        setError("Please upload the required verification document.");
+                                        return;
+                                    }
+                                    setError('');
+                                    setStep(3);
+                                }} className="w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 bg-[#000080] hover:bg-blue-900">
+                                    Continue
+                                </button>
+                            </>
+                        )}
+
+                        {step === 3 && (
+                            <>
+                                <div className="flex items-center mb-4">
+                                    <button type="button" onClick={() => setStep(2)} className="text-[#000080] font-black text-sm mr-4 hover:underline">← Back</button>
+                                    <h3 className="text-lg font-bold text-gray-900">Disbursement Details</h3>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bank Name *</label>
+                                    <select
+                                        required
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none"
+                                        value={formData.bankCode}
+                                        onChange={(e) => {
+                                            const selectedCode = e.target.value;
+                                            const bank = NIGERIAN_BANKS.find(b => b.code === selectedCode);
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                bankCode: selectedCode,
+                                                bankName: bank ? bank.name : '',
+                                                accountName: '' // Reset account name when bank changes
+                                            }));
+                                            setResolveError('');
+                                            if (formData.accountNumber.length === 10 && selectedCode) {
+                                                resolveBankAccount(formData.accountNumber, selectedCode);
+                                            }
+                                        }}
+                                    >
+                                        <option value="">Select Bank</option>
+                                        {NIGERIAN_BANKS.map((bank) => (
+                                            <option key={bank.code} value={bank.code}>{bank.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Number (NUBAN) *</label>
+                                    <input
+                                        required
+                                        type="text"
+                                        maxLength={10}
+                                        placeholder="Enter 10-digit account number"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none"
+                                        value={formData.accountNumber}
+                                        onChange={(e) => handleAccountNumberChange(e.target.value)}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Name</label>
+                                    <div className="relative">
+                                        <input
+                                            readOnly
+                                            type="text"
+                                            placeholder={isResolvingAccount ? "Resolving account name..." : "Account name will auto-resolve"}
+                                            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-700 outline-none font-bold"
+                                            value={formData.accountName}
+                                        />
+                                        {isResolvingAccount && (
+                                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-blue-600 animate-pulse font-bold">
+                                                Resolving...
+                                            </span>
+                                        )}
+                                    </div>
+                                    {resolveError && (
+                                        <p className="mt-1 text-xs text-red-500 font-semibold">{resolveError}</p>
+                                    )}
+                                </div>
+
+                                <button disabled={isLoading || isResolvingAccount || !formData.accountName} type="submit" className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(isLoading || isResolvingAccount || !formData.accountName) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
                                     {isLoading ? 'Encrypting & Submitting...' : 'Submit Application'}
                                 </button>
                             </>

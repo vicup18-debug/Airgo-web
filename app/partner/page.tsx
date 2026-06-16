@@ -6,6 +6,74 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Chatroom from '../../components/Chatroom';
 
+const NIGERIAN_BANKS = [
+    { name: "Access Bank", code: "044" },
+    { name: "Access Bank (Diamond)", code: "063" },
+    { name: "ALAT by WEMA", code: "035A" },
+    { name: "ASO Savings and Loans", code: "401" },
+    { name: "Bowen Microfinance Bank", code: "50931" },
+    { name: "Carbon", code: "565" },
+    { name: "CEMCS Microfinance Bank", code: "50823" },
+    { name: "Citibank Nigeria", code: "023" },
+    { name: "Coronation Merchant Bank", code: "559" },
+    { name: "Ecobank Nigeria", code: "050" },
+    { name: "Ekondo Microfinance Bank", code: "562" },
+    { name: "Eyowo", code: "50126" },
+    { name: "Fidelity Bank", code: "070" },
+    { name: "First Bank of Nigeria", code: "011" },
+    { name: "First City Monument Bank - FCMB", code: "214" },
+    { name: "FSDH Merchant Bank", code: "501" },
+    { name: "Globus Bank", code: "00103" },
+    { name: "Guaranty Trust Bank - GTB", code: "058" },
+    { name: "Hackman Microfinance Bank", code: "51251" },
+    { name: "Hasal Microfinance Bank", code: "50383" },
+    { name: "Heritage Bank", code: "030" },
+    { name: "HopePSB", code: "120002" },
+    { name: "Ibile Microfinance Bank", code: "51244" },
+    { name: "Infinity MFB", code: "50457" },
+    { name: "Jaiz Bank", code: "301" },
+    { name: "Keystone Bank", code: "082" },
+    { name: "Kuda Bank", code: "50211" },
+    { name: "Lagos Building Investment Company Plc", code: "90052" },
+    { name: "Links MFB", code: "50549" },
+    { name: "Living Trust Mortgage Bank", code: "50767" },
+    { name: "Lotus Bank", code: "302" },
+    { name: "Mayfair MFB", code: "50563" },
+    { name: "Mint MFB", code: "50304" },
+    { name: "Moniepoint MFB", code: "50515" },
+    { name: "OPay", code: "999992" },
+    { name: "Optimus Bank", code: "107" },
+    { name: "Paga", code: "100002" },
+    { name: "Palmpay", code: "999991" },
+    { name: "Parallex Bank", code: "104" },
+    { name: "Parkway - ReadyCash", code: "311" },
+    { name: "Paycom - OPay", code: "305" },
+    { name: "Polaris Bank", code: "076" },
+    { name: "PremiumTrust Bank", code: "105" },
+    { name: "Providus Bank", code: "101" },
+    { name: "QuickFund MFB", code: "51293" },
+    { name: "Rubies MFB", code: "125" },
+    { name: "Safe Haven MFB", code: "51113" },
+    { name: "Safe Haven Microfinance Bank", code: "951113" },
+    { name: "Signature Bank", code: "106" },
+    { name: "Sparkle Bank", code: "51310" },
+    { name: "Stanbic IBTC Bank", code: "221" },
+    { name: "Standard Chartered Bank", code: "068" },
+    { name: "Sterling Bank", code: "232" },
+    { name: "Suntrust Bank", code: "100" },
+    { name: "TAJ Bank", code: "302" },
+    { name: "Tangerine Money", code: "51269" },
+    { name: "TCF MFB", code: "51211" },
+    { name: "Titan Bank", code: "102" },
+    { name: "Titan Trust Bank", code: "100005" },
+    { name: "Union Bank of Nigeria", code: "032" },
+    { name: "United Bank for Africa - UBA", code: "033" },
+    { name: "Unity Bank", code: "215" },
+    { name: "VFD Microfinance Bank", code: "566" },
+    { name: "Wema Bank", code: "035" },
+    { name: "Zenith Bank", code: "057" }
+];
+
 const AMENITIES_LIST = [
   "High-speed WiFi",
   "24hrs Electricity",
@@ -203,9 +271,56 @@ export default function PartnerDashboard() {
         phoneNumber: '',
         businessName: '',
         businessAddress: '',
-        cacNumber: ''
+        cacNumber: '',
+        bankName: '',
+        accountNumber: '',
+        accountName: '',
+        bankCode: ''
     });
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+    const [isResolvingAccount, setIsResolvingAccount] = useState(false);
+    const [resolveError, setResolveError] = useState('');
+
+    const handleAccountNumberChange = async (value: string) => {
+        const cleanValue = value.replace(/\D/g, '');
+        setProfileData(prev => ({ ...prev, accountNumber: cleanValue }));
+        
+        if (cleanValue.length === 10 && profileData.bankCode) {
+            resolveBankAccount(cleanValue, profileData.bankCode);
+        } else {
+            setProfileData(prev => ({ ...prev, accountName: '' }));
+            setResolveError('');
+        }
+    };
+
+    const resolveBankAccount = async (accNum: string, bankCode: string) => {
+        setIsResolvingAccount(true);
+        setResolveError('');
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/auth/resolve-bank-account`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ accountNumber: accNum, bankCode })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                setProfileData(prev => ({ ...prev, accountName: data.accountName }));
+            } else {
+                setResolveError(data.message || "Could not resolve account name. Please check details.");
+                setProfileData(prev => ({ ...prev, accountName: '' }));
+            }
+        } catch (err) {
+            console.error("Resolve Error:", err);
+            setResolveError("Server error resolving account.");
+        } finally {
+            setIsResolvingAccount(false);
+        }
+    };
 
     const handleSaveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -1053,7 +1168,11 @@ export default function PartnerDashboard() {
                             phoneNumber: user.phoneNumber || user.phone || '',
                             businessName: user.businessName || '',
                             businessAddress: user.businessAddress || '',
-                            cacNumber: user.cacNumber || ''
+                            cacNumber: user.cacNumber || '',
+                            bankName: user.bankName || '',
+                            accountNumber: user.accountNumber || '',
+                            accountName: user.accountName || '',
+                            bankCode: user.bankCode || ''
                         });
                     }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'profile' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
                         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -1776,8 +1895,74 @@ export default function PartnerDashboard() {
                                             </div>
                                         </div>
 
+                                        <div className="border-t border-gray-100 pt-4 mt-4 space-y-4">
+                                            <h3 className="text-xs font-black text-[#004A99] uppercase tracking-wider">Disbursement Bank Details</h3>
+                                            
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Bank Name *</label>
+                                                <select
+                                                    required
+                                                    className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white outline-none"
+                                                    value={profileData.bankCode}
+                                                    onChange={(e) => {
+                                                        const selectedCode = e.target.value;
+                                                        const bank = NIGERIAN_BANKS.find(b => b.code === selectedCode);
+                                                        setProfileData(prev => ({
+                                                            ...prev,
+                                                            bankCode: selectedCode,
+                                                            bankName: bank ? bank.name : '',
+                                                            accountName: '' // Reset account name when bank changes
+                                                        }));
+                                                        setResolveError('');
+                                                        if (profileData.accountNumber.length === 10 && selectedCode) {
+                                                            resolveBankAccount(profileData.accountNumber, selectedCode);
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="">Select Bank</option>
+                                                    {NIGERIAN_BANKS.map((bank) => (
+                                                        <option key={bank.code} value={bank.code}>{bank.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Number (NUBAN) *</label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    maxLength={10}
+                                                    placeholder="Enter 10-digit account number"
+                                                    className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white outline-none"
+                                                    value={profileData.accountNumber}
+                                                    onChange={(e) => handleAccountNumberChange(e.target.value)}
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Account Name</label>
+                                                <div className="relative">
+                                                    <input
+                                                        readOnly
+                                                        type="text"
+                                                        placeholder={isResolvingAccount ? "Resolving account name..." : "Account name will auto-resolve"}
+                                                        className="w-full px-4 py-2 border rounded-xl text-gray-700 bg-gray-100 outline-none font-bold"
+                                                        value={profileData.accountName}
+                                                    />
+                                                    {isResolvingAccount && (
+                                                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-blue-600 animate-pulse font-bold">
+                                                            Resolving...
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                {resolveError && (
+                                                    <p className="mt-1 text-xs text-red-500 font-semibold">{resolveError}</p>
+                                                )}
+                                            </div>
+                                        </div>
+
                                         <div className="pt-4 flex justify-end">
-                                            <button disabled={isSavingProfile} type="submit" className="px-6 py-2.5 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition shadow-md cursor-pointer">
+                                            <button disabled={isSavingProfile || isResolvingAccount || !profileData.accountName} type="submit" className="px-6 py-2.5 rounded-xl font-bold text-white bg-[#004A99] hover:bg-blue-800 transition shadow-md cursor-pointer">
                                                 {isSavingProfile ? 'Saving...' : 'Save Profile Changes'}
                                             </button>
                                         </div>
