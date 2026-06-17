@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Chatroom from '../../components/Chatroom';
+import { io } from 'socket.io-client';
 
 const NIGERIAN_BANKS = [
     { name: "Access Bank", code: "044" },
@@ -263,6 +264,28 @@ export default function PartnerDashboard() {
     const [user, setUser] = useState<any>(null);
     const [activeTab, setActiveTab] = useState<'overview' | 'inventory' | 'bookings' | 'profile' | 'available-requests'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // Real-time dispatch alerts (Bolt style)
+    const [incomingDispatch, setIncomingDispatch] = useState<any>(null);
+    const [dispatchCountdown, setDispatchCountdown] = useState(30);
+    const [dispatchBidPrice, setDispatchBidPrice] = useState('');
+
+    // Countdown timer for incoming alerts
+    useEffect(() => {
+        if (!incomingDispatch) return;
+        const timer = setInterval(() => {
+            setDispatchCountdown(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setIncomingDispatch(null);
+                    toast.error("Dispatch alert timed out.");
+                    return 0;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+        return () => clearInterval(timer);
+    }, [incomingDispatch]);
 
     // PROFILE STATES
     const [profileData, setProfileData] = useState({
@@ -575,7 +598,53 @@ export default function PartnerDashboard() {
         const interval = setInterval(() => {
             fetchPartnerData(parsedUser, true);
         }, 30000);
-        return () => clearInterval(interval);
+
+        // Connect to Socket.io for real-time dispatch alerts
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+        const socketInstance = io(apiUrl, {
+            transports: ['websocket', 'polling']
+        });
+
+        socketInstance.on('connect', () => {
+            socketInstance.emit('join_drivers');
+            console.log("📡 WebSocket: Partner Dashboard connected and joined drivers general room");
+        });
+
+        socketInstance.on('new_booking_request', (booking: any) => {
+            console.log("📡 WebSocket: Real-time dispatch request received", booking);
+            
+            // Only show alert if driver is a car/shuttle partner
+            const isCarPartner = parsedUser.partnerType?.toLowerCase().includes('car') || 
+                                 parsedUser.partnerType === 'shuttle' || 
+                                 parsedUser.partnerType === 'airport-shuttle';
+            if (isCarPartner) {
+                // Ensure they haven't already bid on it
+                const myUserId = parsedUser.id || parsedUser.userId || parsedUser._id;
+                const hasBid = booking.driverOffers?.some((o: any) => o.driverId === myUserId);
+                if (!hasBid) {
+                    setIncomingDispatch(booking);
+                    setDispatchCountdown(30);
+                    playNotificationSound();
+                    fetchAvailableRequests();
+                }
+            }
+        });
+
+        socketInstance.on('booking_claimed', (data: any) => {
+            setIncomingDispatch((prev: any) => {
+                if (prev && prev._id === data.bookingId) {
+                    toast.error("This dispatch request has been claimed by another driver.");
+                    return null;
+                }
+                return prev;
+            });
+            fetchAvailableRequests();
+        });
+
+        return () => {
+            clearInterval(interval);
+            socketInstance.disconnect();
+        };
     }, [router]);
 
     const fetchPartnerData = async (partnerData: any, silent = false) => {
@@ -2309,6 +2378,138 @@ export default function PartnerDashboard() {
                     bookingName={chatBookingName}
                     currentUser={user}
                 />
+            )}
+
+            {/* INCOMING DISPATCH ALERT MODAL (Bolt style) */}
+            {incomingDispatch && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-950/80 backdrop-blur-md overflow-y-auto font-sans">
+                    <div className="bg-[#121212] border border-gray-800 rounded-[2.5rem] w-full max-w-md shadow-2xl p-8 overflow-hidden animate-in fade-in zoom-in duration-200 text-center flex flex-col items-center">
+                        {/* Pulse matching circle */}
+                        <div className="relative w-24 h-24 flex items-center justify-center mb-6">
+                            <div className="absolute inset-0 rounded-full bg-amber-500/10 border border-amber-500/20 animate-ping opacity-35" style={{ animationDuration: '2.5s' }}></div>
+                            <div className="w-16 h-16 bg-[#FFB81C] rounded-full flex items-center justify-center text-gray-950 shadow-lg relative z-10">
+                                <svg className="w-9 h-9 text-gray-950 animate-bounce" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        <span className="bg-amber-400/10 text-amber-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 border border-amber-400/25">
+                            ⚡ New Dispatch Alert
+                        </span>
+                        
+                        <h3 className="text-xl font-black text-white">{incomingDispatch.itemName}</h3>
+                        <p className="text-xs text-gray-400 font-semibold mt-1">Requested by: {incomingDispatch.clientName || 'Valued Guest'}</p>
+
+                        <div className="w-full bg-gray-900 border border-gray-800 p-4.5 rounded-2xl text-left space-y-3 mt-6">
+                            <div>
+                                <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider block mb-0.5 font-sans">Route details</span>
+                                <p className="text-xs text-gray-200 leading-relaxed font-semibold font-sans">
+                                    {(() => {
+                                        const parts = (incomingDispatch.deliveryAddress || '').split(' | ');
+                                        const from = parts[0]?.replace('From:', '').trim() || 'Unknown Pickup';
+                                        const to = parts[1]?.replace('To:', '').trim() || 'Unknown Destination';
+                                        return (
+                                            <>
+                                                <span className="text-blue-400 font-bold">From:</span> {from} <br/>
+                                                <span className="text-purple-400 font-bold">To:</span> {to}
+                                            </>
+                                        );
+                                    })()}
+                                </p>
+                            </div>
+
+                            {/* Distance display */}
+                            {(() => {
+                                const parts = (incomingDispatch.deliveryAddress || '').split(' | ');
+                                const distanceText = parts[2]?.replace('Distance:', '').trim();
+                                if (distanceText) {
+                                    return (
+                                        <div className="flex justify-between items-center border-t border-gray-800 pt-2.5 font-sans">
+                                            <span className="text-[9px] text-gray-500 font-bold uppercase tracking-wider">Estimated Distance</span>
+                                            <span className="text-xs text-green-400 font-black">{distanceText}</span>
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })()}
+                        </div>
+
+                        {/* Progress ring countdown */}
+                        <div className="mt-6 w-full">
+                            <span className="text-sm font-black text-white block">
+                                {dispatchCountdown}s remaining
+                            </span>
+                            <div className="w-full h-1.5 bg-gray-800 rounded-full mt-2 overflow-hidden">
+                                <div 
+                                    className="h-full bg-amber-500 transition-all duration-1000" 
+                                    style={{ width: `${(dispatchCountdown / 30) * 100}%` }}
+                                ></div>
+                            </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="w-full mt-8 space-y-3">
+                            <div className="flex items-center gap-2 bg-gray-900 border border-gray-800 rounded-xl px-4 py-3">
+                                <span className="text-xs font-bold text-gray-400">₦</span>
+                                <input 
+                                    type="number" 
+                                    placeholder="Enter your fare offer..."
+                                    className="bg-transparent border-none outline-none flex-1 text-xs text-white font-bold placeholder-gray-500 font-sans"
+                                    value={dispatchBidPrice}
+                                    onChange={e => setDispatchBidPrice(e.target.value)}
+                                />
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button 
+                                    onClick={() => {
+                                        setIncomingDispatch(null);
+                                        toast.success("Dispatch alert ignored.");
+                                    }}
+                                    className="flex-1 bg-gray-900 hover:bg-gray-800 border border-gray-800 text-gray-400 font-bold text-xs py-3 rounded-xl transition font-sans cursor-pointer"
+                                >
+                                    Decline
+                                </button>
+                                <button 
+                                    onClick={async () => {
+                                        if (!dispatchBidPrice || isNaN(Number(dispatchBidPrice)) || Number(dispatchBidPrice) <= 0) {
+                                            toast.error("Please enter a valid custom fare bid.");
+                                            return;
+                                        }
+                                        const fare = dispatchBidPrice;
+                                        const bookingId = incomingDispatch._id;
+                                        setIncomingDispatch(null);
+                                        
+                                        try {
+                                            const token = localStorage.getItem('airgo_token');
+                                            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                                            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/driver-offers`, {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'Authorization': `Bearer ${token}`
+                                                },
+                                                body: JSON.stringify({ fare: Number(fare), vehicleDetails: user?.businessName || '' })
+                                            });
+                                            if (res.ok) {
+                                                toast.success("🎉 Custom fare offer submitted live!");
+                                                setDispatchBidPrice('');
+                                            } else {
+                                                toast.error("Failed to submit fare offer.");
+                                            }
+                                        } catch (err) {
+                                            toast.error("Error connecting to server.");
+                                        }
+                                    }}
+                                    className="flex-1 bg-[#FFB81C] hover:bg-yellow-400 text-gray-950 font-black text-xs py-3 rounded-xl transition shadow-lg shadow-amber-500/10 font-sans cursor-pointer"
+                                >
+                                    Submit Bid
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

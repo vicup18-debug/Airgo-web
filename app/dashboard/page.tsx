@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import dynamic from 'next/dynamic';
+import { io } from 'socket.io-client';
 import Chatroom from '../../components/Chatroom';
 
 const PaystackPaymentButton = dynamic(() => import('./paystack-button'), { ssr: false });
@@ -647,6 +648,43 @@ export default function ClientDashboard() {
         }, 30000);
         return () => clearInterval(interval);
     }, [router]);
+
+    // Sync socket rooms with active bookings for real-time dashboard updates
+    useEffect(() => {
+        const token = localStorage.getItem('airgo_token');
+        const userData = localStorage.getItem('airgo_user');
+        if (!token || !userData || myBookings.length === 0) return;
+
+        const parsedUser = JSON.parse(userData);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+        
+        const socketInstance = io(apiUrl, {
+            transports: ['websocket', 'polling']
+        });
+
+        socketInstance.on('connect', () => {
+            myBookings.forEach((booking: any) => {
+                if (['Pending Escrow', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status)) {
+                    socketInstance.emit('join_booking', { bookingId: booking._id });
+                    console.log(`📡 WebSocket: Dashboard joined room booking_${booking._id}`);
+                }
+            });
+        });
+
+        socketInstance.on('new_driver_bid', (data: any) => {
+            console.log("📡 WebSocket: Live driver bid received", data);
+            fetchMyBookings(parsedUser, true);
+        });
+
+        socketInstance.on('booking_updated', (data: any) => {
+            console.log("📡 WebSocket: Live booking status update received", data);
+            fetchMyBookings(parsedUser, true);
+        });
+
+        return () => {
+            socketInstance.disconnect();
+        };
+    }, [myBookings]);
 
     const handlePaymentSuccess = async (bookingId: string, reference: string) => {
         try {
