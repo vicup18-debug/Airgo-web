@@ -370,8 +370,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to save profile details.");
             }
-        } catch (error) {
-            toast.error("Error connecting to server.");
+        } catch (error: any) {
+            console.error("Profile save error:", error);
+            toast.error(`Error connecting to server: ${error.message || error}`);
         } finally {
             setIsSavingProfile(false);
         }
@@ -763,8 +764,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to submit fare bid.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
+        } catch (err: any) {
+            console.error("Bid submission error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
         } finally {
             setSubmittingBidId(null);
         }
@@ -1004,8 +1006,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to resend email.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
+        } catch (err: any) {
+            console.error("Resend email error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
         } finally {
             setIsResendingEmail(null);
         }
@@ -1040,8 +1043,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to save plate details.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
+        } catch (err: any) {
+            console.error("Save plate info error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
         } finally {
             setIsSavingPlate(null);
         }
@@ -1087,8 +1091,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to update offer status.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
+        } catch (err: any) {
+            console.error("Offer action error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
         } finally {
             setUpdatingOfferId(null);
         }
@@ -1119,8 +1124,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to start trip.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
+        } catch (err: any) {
+            console.error("Start trip error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
         } finally {
             setStartingTripId(null);
         }
@@ -1150,8 +1156,9 @@ export default function PartnerDashboard() {
             } else {
                 toast.error(data.message || "Failed to confirm trip end.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
+        } catch (err: any) {
+            console.error("End trip confirmation error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
         }
     };
 
@@ -2498,8 +2505,9 @@ export default function PartnerDashboard() {
                                             } else {
                                                 toast.error("Failed to submit fare offer.");
                                             }
-                                        } catch (err) {
-                                            toast.error("Error connecting to server.");
+                                        } catch (err: any) {
+                                            console.error("Modal bid submission error:", err);
+                                            toast.error(`Error connecting to server: ${err.message || err}`);
                                         }
                                     }}
                                     className="flex-1 bg-[#FFB81C] hover:bg-yellow-400 text-gray-950 font-black text-xs py-3 rounded-xl transition shadow-lg shadow-amber-500/10 font-sans cursor-pointer"
