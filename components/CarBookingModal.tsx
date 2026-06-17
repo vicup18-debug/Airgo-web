@@ -11,10 +11,12 @@ interface CarBookingModalProps {
     car: any;
     initialCheckIn?: string;
     initialCheckOut?: string;
+    initialFromAddress?: string;
+    initialToAddress?: string;
 }
 
-export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, initialCheckOut }: CarBookingModalProps) {
-    const [step, setStep] = useState<1 | 2 | 3>(1);
+export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, initialCheckOut, initialFromAddress, initialToAddress }: CarBookingModalProps) {
+    const [step, setStep] = useState<1 | 2 | 3>(2);
     const [isProcessing, setIsProcessing] = useState(false);
     const router = useRouter();
 
@@ -277,15 +279,15 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             }
             let formattedCheckOut = '';
             if (initialCheckOut) {
-                formattedCheckOut = initialCheckOut.includes('T') ? initialCheckOut.substring(0, 16) : `${initialCheckOut}T09:00`;
+                formattedCheckOut = initialCheckOut.includes('T') ? initialCheckOut.substring(0, 16) : `${initialCheckOut}T11:00`;
             }
 
             setBookingDetails({
                 name,
                 email,
                 phone,
-                fromAddress: '',
-                toAddress: '',
+                fromAddress: initialFromAddress || '',
+                toAddress: initialToAddress || '',
                 checkIn: formattedCheckIn,
                 checkOut: formattedCheckOut
             });
@@ -297,9 +299,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             setDestCoords(null);
             setDistance(0);
             setMatchingBids([]);
-            setStep(1);
+            setStep(2);
         }
-    }, [isOpen, initialCheckIn, initialCheckOut]);
+    }, [isOpen, initialCheckIn, initialCheckOut, initialFromAddress, initialToAddress]);
 
     if (!isOpen || !car) return null;
 
@@ -308,7 +310,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             mapRef.current.remove();
             mapRef.current = null;
         }
-        setStep(1);
+        setStep(2);
         setBookingDetails({
             name: '',
             email: '',
@@ -503,7 +505,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 {step === 2 && (
                     <div className="p-8 overflow-y-auto flex-1 text-left">
                         <div className="flex items-center mb-6 border-b border-gray-100 pb-4">
-                            <button onClick={() => setStep(1)} className="text-[#000080] font-black text-sm mr-4 hover:underline">← Back</button>
+                            <button onClick={handleClose} className="text-[#000080] font-black text-sm mr-4 hover:underline">✕ Close</button>
                             <h2 className="text-xl font-black text-gray-900">Delivery Logistics & Route</h2>
                         </div>
 
@@ -655,7 +657,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                         </p>
 
                         <p className="text-xs text-gray-500 max-w-sm mt-3 leading-relaxed">
-                            Bids from nearby {car.name} drivers will appear live below. Select the best bid to secure your ride!
+                            Bids from nearby airport shuttle drivers will appear live below. Select the best bid to secure your ride!
                         </p>
 
                         {/* Live Driver Bids List */}

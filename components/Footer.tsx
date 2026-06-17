@@ -142,7 +142,7 @@ export default function Footer() {
         </Link>
         <Link href="/cars" className={`flex flex-col items-center ${pathname === '/cars' ? 'text-[#000080]' : 'text-gray-400 hover:text-[#000080] transition'}`}>
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-          <span className="text-[10px] font-bold">Car Rental</span>
+          <span className="text-[10px] font-bold">Airport Shuttle</span>
         </Link>
         <Link href="/support" className={`flex flex-col items-center ${pathname === '/support' ? 'text-[#000080]' : 'text-gray-400 hover:text-[#000080] transition'}`}>
           <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>

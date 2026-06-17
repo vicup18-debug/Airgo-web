@@ -156,6 +156,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
         const start = new Date(checkIn);
         const end = new Date(checkOut);
         const nights = Math.max((end.getTime() - start.getTime()) / (1000 * 3600 * 24), 1);
+        const activeDays = Math.ceil(nights);
 
         const rawPrice = typeof selectedRoom.pricePerNight === 'string'
             ? parseInt(selectedRoom.pricePerNight.replace(/\D/g, ''))
@@ -164,8 +165,9 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
         const discount = selectedRoom.discountPercentage || 0;
         const discountedRate = Math.round(rawPrice * (1 - discount / 100));
 
-        const base = discountedRate * nights;
-        const fee = Math.round(base * 0.11);
+        const base = discountedRate * activeDays;
+        const processingFeeDays = activeDays > 3 ? 2 : 1;
+        const fee = Math.round(discountedRate * processingFeeDays * 0.11);
         const total = base + fee;
         return { base, fee, total };
     };
