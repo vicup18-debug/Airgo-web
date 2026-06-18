@@ -715,7 +715,7 @@ export default function PartnerDashboard() {
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings/available-requests`, {
+            const res = await fetch(`${apiUrl}/api/ride-requests/available`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -726,6 +726,37 @@ export default function PartnerDashboard() {
             }
         } catch (error) {
             console.error("Error fetching available requests:", error);
+        }
+    };
+
+    const [isAcceptingRequestId, setIsAcceptingRequestId] = useState<string | null>(null);
+
+    const handleAcceptRideRequest = async (requestId: string) => {
+        setIsAcceptingRequestId(requestId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/ride-requests/${requestId}/accept`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("🎉 Ride Request accepted successfully! Converted to Booking.");
+                fetchAvailableRequests();
+                fetchPartnerData(user, true);
+            } else {
+                toast.error(data.message || "Failed to accept ride request.");
+            }
+        } catch (err: any) {
+            console.error("Accept request error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
+        } finally {
+            setIsAcceptingRequestId(null);
         }
     };
 
@@ -742,7 +773,7 @@ export default function PartnerDashboard() {
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/driver-offers`, {
+            const res = await fetch(`${apiUrl}/api/ride-requests/${bookingId}/driver-offers`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -1856,7 +1887,7 @@ export default function PartnerDashboard() {
                                                 <p className="text-gray-500 text-sm font-medium">No available ride requests at the moment. You'll receive dispatches here when clients request a ride.</p>
                                             </div>
                                         ) : (
-                                            availableRequests.map((req: any) => {
+                                                                                    availableRequests.map((req: any) => {
                                                 const secureUserId = user.id || user.userId || user._id;
                                                 const hasSubmittedBid = req.driverOffers?.some((o: any) => o.driverId === secureUserId);
                                                 const myBid = req.driverOffers?.find((o: any) => o.driverId === secureUserId);
@@ -1868,18 +1899,22 @@ export default function PartnerDashboard() {
                                                                 <span className="bg-[#000080] text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Ride Request</span>
                                                                 <span className="text-xs text-gray-400 font-medium">Ref: {req._id.toString().substring(0, 8).toUpperCase()}</span>
                                                             </div>
-                                                            <h3 className="text-lg font-black text-[#004A99]">{req.itemName}</h3>
+                                                            <h3 className="text-lg font-black text-[#004A99]">Taxi Ride Request</h3>
                                                             
                                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-600 font-medium">
                                                                 <p><span className="font-bold text-gray-800">Client:</span> {req.clientName || 'Guest'}</p>
                                                                 <p><span className="font-bold text-gray-800">Phone:</span> {req.clientPhone || 'N/A'}</p>
-                                                                <p><span className="font-bold text-gray-800">Pickup:</span> {req.checkIn ? formatDisplayDate(req.checkIn, req.itemType) : 'N/A'}</p>
-                                                                <p><span className="font-bold text-gray-800">Return:</span> {req.checkOut ? formatDisplayDate(req.checkOut, req.itemType) : 'N/A'}</p>
+                                                                <p><span className="font-bold text-gray-800">Pickup:</span> {req.checkIn ? formatDisplayDate(req.checkIn, 'car') : 'N/A'}</p>
+                                                                <p><span className="font-bold text-gray-800">Return:</span> {req.checkOut ? formatDisplayDate(req.checkOut, 'car') : 'N/A'}</p>
                                                             </div>
-                                                            <p className="text-sm text-gray-600 font-medium"><span className="font-bold text-gray-800">Route:</span> {req.deliveryAddress?.replace('From: ', '').replace(' | To: ', ' ➔ ')}</p>
+                                                            <p className="text-sm text-gray-600 font-medium">
+                                                                <span className="font-bold text-gray-800">From:</span> {req.fromAddress} <br />
+                                                                <span className="font-bold text-gray-800">To:</span> {req.toAddress} <br />
+                                                                {req.distance > 0 && <span><span className="font-bold text-gray-800">Distance:</span> {req.distance} km</span>}
+                                                            </p>
                                                             <div className="mt-2 bg-purple-50 border border-purple-100 rounded-xl p-3 w-fit">
                                                                 <p className="text-xs font-bold text-purple-800">
-                                                                    Client Bid Price: <span className="text-base font-black text-purple-900">₦{Number(req.offeredPrice?.replace(/[^0-9.-]+/g,"") || req.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>
+                                                                    Client Bid Price: <span className="text-base font-black text-purple-900">₦{Number(req.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1914,9 +1949,17 @@ export default function PartnerDashboard() {
                                                                 </div>
                                                             ) : (
                                                                 <div className="space-y-3">
-                                                                    <div className="text-left">
-                                                                        <h4 className="text-xs font-black text-gray-700 uppercase tracking-wider">Submit Fare Bid</h4>
-                                                                        <p className="text-[10px] text-gray-400 font-medium">Negotiate price with the client</p>
+                                                                    <button
+                                                                        onClick={() => handleAcceptRideRequest(req._id)}
+                                                                        disabled={isAcceptingRequestId === req._id}
+                                                                        className="w-full bg-[#FFB81C] hover:bg-yellow-400 text-[#000080] font-black text-xs py-2.5 rounded-xl transition shadow-md disabled:opacity-50 cursor-pointer mb-1"
+                                                                    >
+                                                                        {isAcceptingRequestId === req._id ? 'Accepting...' : `Accept Client Bid (₦${Number(req.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()})`}
+                                                                    </button>
+                                                                    <div className="relative flex py-1 items-center">
+                                                                        <div className="flex-grow border-t border-gray-200"></div>
+                                                                        <span className="flex-shrink mx-3 text-gray-400 text-[8px] font-bold uppercase tracking-wider">or bid custom</span>
+                                                                        <div className="flex-grow border-t border-gray-200"></div>
                                                                     </div>
                                                                     <div className="space-y-2">
                                                                         <div>

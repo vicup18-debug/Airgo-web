@@ -337,7 +337,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 payload.counterFare = counterFare;
             }
 
-            const res = await fetch(`${apiUrl}/api/bookings/${createdBookingId}/select-driver`, {
+            const res = await fetch(`${apiUrl}/api/ride-requests/${createdBookingId}/select-driver`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -394,30 +394,19 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             // Inject pickup & Dropoff address details and calculate route distance
             const payload = {
                 userId: finalUserId,
-                itemId: car._id || car.id,
-                itemName: car.name,
-                itemType: 'car',
-                partnerId: car.partnerId || 'airgo_direct',
-                checkIn: bookingDetails.checkIn,
-                checkOut: bookingDetails.checkOut,
-                guests: 1,
-                totalPrice: '0',
-                status: 'Pending Escrow',
                 clientName: bookingDetails.name,
                 clientEmail: bookingDetails.email,
                 clientPhone: bookingDetails.phone,
-                deliveryAddress: `From: ${bookingDetails.fromAddress} | To: ${bookingDetails.toAddress} | Distance: ${distance} km`,
-                referredBy,
-                rentalType,
-                fuelPlan,
-                travelScope,
-                isOffer: isCustomOffer,
-                offerStatus: isCustomOffer ? 'Pending Partner' : 'None',
-                offeredPrice: isCustomOffer ? Number(customOfferPrice).toLocaleString() : '',
-                couponCode: appliedCoupon ? appliedCoupon.code : undefined
+                fromAddress: bookingDetails.fromAddress,
+                toAddress: bookingDetails.toAddress,
+                checkIn: bookingDetails.checkIn,
+                checkOut: bookingDetails.checkOut || bookingDetails.checkIn,
+                distance: distance,
+                offeredPrice: Number(customOfferPrice).toLocaleString(),
+                travelScope: travelScope
             };
 
-            const response = await fetch(`${apiUrl}/api/bookings`, {
+            const response = await fetch(`${apiUrl}/api/ride-requests`, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
@@ -428,11 +417,11 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || "Booking creation failed on backend");
+                throw new Error(errorData.message || "Ride request creation failed on backend");
             }
 
             const resData = await response.json();
-            setCreatedBookingId(resData.bookingId || resData.booking?._id);
+            setCreatedBookingId(resData.rideRequestId || resData.rideRequest?._id);
             setStep(3); // Go to Pulse Radar Screen
 
         } catch (error: any) {

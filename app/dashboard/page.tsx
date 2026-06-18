@@ -198,6 +198,7 @@ function LiveCarTracker({ booking }: { booking: any }) {
 export default function ClientDashboard() {
     const [user, setUser] = useState<any>(null);
     const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [myRideRequests, setMyRideRequests] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [trackingBookingId, setTrackingBookingId] = useState<string | null>(null);
     const [isResendingEmail, setIsResendingEmail] = useState<string | null>(null);
@@ -498,7 +499,7 @@ export default function ClientDashboard() {
                 payload.counterFare = counterFare;
             }
 
-            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/select-driver`, {
+            const res = await fetch(`${apiUrl}/api/ride-requests/${bookingId}/select-driver`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -519,6 +520,34 @@ export default function ClientDashboard() {
                 }
             } else {
                 toast.error(data.message || "Failed to select driver.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        }
+    };
+
+    const handleCancelRideRequest = async (requestId: string) => {
+        if (!window.confirm("Are you sure you want to cancel this ride request?")) {
+            return;
+        }
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/ride-requests/${requestId}/cancel`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Ride request cancelled successfully.");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to cancel request.");
             }
         } catch (err) {
             toast.error("Error connecting to server.");
@@ -608,6 +637,17 @@ export default function ClientDashboard() {
                     b.userId === parsedUser.id || b.userId === parsedUser.userId
                 );
                 setMyBookings(clientBookings);
+            }
+
+            // Fetch pending RideRequests
+            const reqsRes = await fetch(`${apiUrl}/api/ride-requests/user/${parsedUser.id || parsedUser.userId || parsedUser._id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (reqsRes.ok) {
+                const requests = await reqsRes.json();
+                setMyRideRequests(requests);
             }
         } catch (error) {
             console.error("Failed to fetch bookings");
@@ -832,7 +872,7 @@ export default function ClientDashboard() {
 
                     {isLoading ? (
                         <div className="text-gray-500 animate-pulse font-bold">Loading your itinerary...</div>
-                    ) : myBookings.length === 0 ? (
+                    ) : (myBookings.length === 0 && myRideRequests.length === 0) ? (
                         <div className="bg-white p-8 md:p-12 rounded-3xl border border-gray-200 text-center shadow-sm">
                             <div className="text-gray-400 mb-4 flex justify-center">
                                 <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="1.8" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -856,6 +896,85 @@ export default function ClientDashboard() {
                         </div>
                     ) : (
                         <div className="space-y-4">
+                            {/* 🚕 Pending Taxi Ride Requests */}
+                            {myRideRequests.length > 0 && (
+                                <div className="mb-6 space-y-4">
+                                    <h3 className="text-sm font-black text-yellow-600 uppercase tracking-widest flex items-center gap-1.5 mb-2">
+                                        <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 inline-block animate-pulse"></span>
+                                        Pending Taxi Requests ({myRideRequests.length})
+                                    </h3>
+                                    {myRideRequests.map((req) => (
+                                        <div key={req._id} className="bg-white p-6 rounded-2xl border-2 border-yellow-100 shadow-sm flex flex-col gap-4 animate-in fade-in duration-200 text-left">
+                                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                                                <div className="flex-1 space-y-1">
+                                                    <span className="bg-yellow-100 text-yellow-800 text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-wider">Matching Drivers</span>
+                                                    <h4 className="text-base font-black text-gray-900 mt-1">Taxi Ride: {req.fromAddress.split(',')[0]} ➔ {req.toAddress.split(',')[0]}</h4>
+                                                    <p className="text-xs text-gray-500 font-medium">Requested Pickup: {formatDisplayDate(req.checkIn, 'car')}</p>
+                                                    <p className="text-xs text-gray-600 font-medium"><span className="font-bold text-gray-800">From:</span> {req.fromAddress}</p>
+                                                    <p className="text-xs text-gray-600 font-medium"><span className="font-bold text-gray-800">To:</span> {req.toAddress}</p>
+                                                    {req.distance > 0 && <p className="text-xs text-gray-600 font-medium"><span className="font-bold text-gray-800">Route Distance:</span> {req.distance} km</p>}
+                                                </div>
+                                                <div className="text-left sm:text-right shrink-0 flex flex-col gap-1 w-full sm:w-auto">
+                                                    <div>
+                                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Your Price Bid</p>
+                                                        <p className="text-xl font-black text-[#000080]">₦{Number(req.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</p>
+                                                    </div>
+                                                    <button onClick={() => handleCancelRideRequest(req._id)} className="w-full sm:w-auto bg-white border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 font-bold text-[10px] px-3 py-1.5 rounded-lg transition mt-2 cursor-pointer">
+                                                        Cancel Request
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Driver Offers Bids */}
+                                            <div className="border-t border-gray-100 pt-4">
+                                                <h5 className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span>
+                                                    Driver Offers ({req.driverOffers?.length || 0})
+                                                </h5>
+                                                {(!req.driverOffers || req.driverOffers.length === 0) ? (
+                                                    <div className="bg-gray-50/50 p-4 rounded-xl text-center border border-gray-100/50">
+                                                        <p className="text-xs text-gray-400 font-medium animate-pulse">Waiting for drivers to bid...</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        {req.driverOffers.map((offer: any) => (
+                                                            <div key={offer.driverId} className="bg-gray-50/80 border border-gray-150 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition hover:shadow-sm">
+                                                                <div className="text-left">
+                                                                    <h6 className="font-bold text-sm text-gray-900">{offer.driverName}</h6>
+                                                                    <p className="text-xs text-gray-500 font-medium">{offer.vehicleDetails || 'Premium Sedan'}</p>
+                                                                    <p className="text-[9px] text-gray-400 font-bold mt-1">VIP Chauffeur Partner</p>
+                                                                 </div>
+                                                                <div className="text-left sm:text-right flex flex-col sm:items-end gap-2 shrink-0 w-full sm:w-auto">
+                                                                    <div>
+                                                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Proposed Fare</p>
+                                                                        <p className="text-base font-black text-[#000080]">₦{offer.fare.toLocaleString()}</p>
+                                                                    </div>
+                                                                    <div className="flex gap-2 w-full sm:w-auto">
+                                                                        <button onClick={() => handleSelectDriver(req._id, offer.driverId)} className="flex-1 sm:flex-initial bg-[#000080] hover:bg-blue-900 text-white font-bold text-[10px] px-3.5 py-1.5 rounded-lg transition shadow-sm cursor-pointer whitespace-nowrap">
+                                                                            Accept Bid
+                                                                        </button>
+                                                                        <button onClick={() => {
+                                                                            const counterVal = prompt(`Enter counter price for ${offer.driverName} (₦):`, offer.fare.toString());
+                                                                            if (counterVal) {
+                                                                                const numVal = parseInt(counterVal.replace(/[^0-9]/g, ''));
+                                                                                if (!isNaN(numVal) && numVal > 0) {
+                                                                                    handleSelectDriver(req._id, offer.driverId, numVal);
+                                                                                }
+                                                                            }
+                                                                        }} className="flex-1 sm:flex-initial bg-white border border-[#000080] text-[#000080] hover:bg-blue-50 font-bold text-[10px] px-3 py-1.5 rounded-lg transition cursor-pointer whitespace-nowrap">
+                                                                            Counter Bid
+                                                                        </button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                             {myBookings.map((booking) => {
                                 const allowedInvoiceStatuses = ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'];
                                 const canDownloadInvoice = allowedInvoiceStatuses.includes(booking.status);
