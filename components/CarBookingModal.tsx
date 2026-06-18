@@ -432,7 +432,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             }
 
             const resData = await response.json();
-            setCreatedBookingId(resData.booking._id);
+            setCreatedBookingId(resData.bookingId || resData.booking?._id);
             setStep(3); // Go to Pulse Radar Screen
 
         } catch (error: any) {
