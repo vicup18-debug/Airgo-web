@@ -760,11 +760,14 @@ export default function PartnerDashboard() {
         }
     };
 
-    const handleSubmitBid = async (bookingId: string) => {
+    const handleSubmitBid = async (bookingId: string, e?: React.FormEvent) => {
+        if (e) e.preventDefault();
         const fare = bidFares[bookingId];
         const vehicleDetails = bidVehicles[bookingId] || '';
 
-        if (!fare || isNaN(Number(fare)) || Number(fare) <= 0) {
+        const sanitizedFare = parseInt(String(fare).replace(/[^0-9]/g, ''), 10);
+
+        if (!fare || isNaN(sanitizedFare) || sanitizedFare <= 0) {
             toast.error("Please enter a valid fare bid amount.");
             return;
         }
@@ -780,7 +783,7 @@ export default function PartnerDashboard() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    fare: Number(fare),
+                    fare: sanitizedFare,
                     vehicleDetails
                 })
             });
@@ -1095,7 +1098,8 @@ export default function PartnerDashboard() {
                 payload.offerStatus = 'Rejected';
             } else if (action === 'Counter') {
                 payload.offerStatus = 'Pending Client';
-                payload.counterPrice = Number(counterVal).toLocaleString();
+                const sanitizedVal = parseInt(String(counterVal).replace(/[^0-9]/g, ''), 10);
+                payload.counterPrice = isNaN(sanitizedVal) ? counterVal : sanitizedVal.toLocaleString();
             }
 
             const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
@@ -1113,7 +1117,9 @@ export default function PartnerDashboard() {
                 } else if (action === 'Reject') {
                     toast.success("Offer declined. Booking cancelled.");
                 } else if (action === 'Counter') {
-                    toast.success(`Counter offer of ₦${Number(counterVal).toLocaleString()} sent to client!`);
+                    const sanitizedVal = parseInt(String(counterVal).replace(/[^0-9]/g, ''), 10);
+                    const displayVal = isNaN(sanitizedVal) ? counterVal : sanitizedVal.toLocaleString();
+                    toast.success(`Counter offer of ₦${displayVal} sent to client!`);
                 }
                 const userData = localStorage.getItem('airgo_user');
                 if (userData) {
@@ -1128,6 +1134,17 @@ export default function PartnerDashboard() {
         } finally {
             setUpdatingOfferId(null);
         }
+    };
+
+    const handleCounterSubmit = (e: React.FormEvent, bookingId: string) => {
+        e.preventDefault();
+        const val = counterInputs[bookingId];
+        const sanitizedVal = parseInt(String(val).replace(/[^0-9]/g, ''), 10);
+        if (!val || isNaN(sanitizedVal) || sanitizedVal <= 0) {
+            toast.error("Please enter a valid counter price.");
+            return;
+        }
+        handlePartnerOfferAction(bookingId, 'Counter', String(sanitizedVal));
     };
 
     const handleStartTrip = async (bookingId: string) => {
@@ -1717,11 +1734,14 @@ export default function PartnerDashboard() {
                                                                             </div>
 
                                                                             {booking.offerStatus === 'Pending Partner' && (
-                                                                                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0">
+                                                                                <form 
+                                                                                    onSubmit={(e) => handleCounterSubmit(e, booking._id)}
+                                                                                    className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto shrink-0"
+                                                                                >
                                                                                     <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-1.5">
                                                                                         <span className="text-xs font-bold text-gray-500">₦</span>
                                                                                         <input
-                                                                                            type="number"
+                                                                                            type="text"
                                                                                             placeholder="Counter price..."
                                                                                             className="w-28 text-xs text-gray-900 focus:outline-none font-bold bg-white"
                                                                                             value={counterInputs[booking._id] || ''}
@@ -1732,35 +1752,30 @@ export default function PartnerDashboard() {
                                                                                         />
                                                                                     </div>
                                                                                     <button
+                                                                                        type="submit"
                                                                                         disabled={updatingOfferId === booking._id}
-                                                                                        onClick={() => {
-                                                                                            const val = counterInputs[booking._id];
-                                                                                            if (!val || Number(val) <= 0) {
-                                                                                                toast.error("Please enter a valid counter price.");
-                                                                                                return;
-                                                                                            }
-                                                                                            handlePartnerOfferAction(booking._id, 'Counter', val);
-                                                                                        }}
                                                                                         style={{ backgroundColor: '#6b21a8' }}
-                                                                                        className="hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
+                                                                                        className="hover:bg-purple-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer"
                                                                                     >
                                                                                         Counter Bid
                                                                                     </button>
                                                                                     <button
+                                                                                        type="button"
                                                                                         disabled={updatingOfferId === booking._id}
                                                                                         onClick={() => handlePartnerOfferAction(booking._id, 'Accept')}
-                                                                                        className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1"
+                                                                                        className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition disabled:opacity-50 flex items-center justify-center gap-1 cursor-pointer"
                                                                                     >
                                                                                         Accept Bid
                                                                                     </button>
                                                                                     <button
+                                                                                        type="button"
                                                                                         disabled={updatingOfferId === booking._id}
                                                                                         onClick={() => handlePartnerOfferAction(booking._id, 'Reject')}
-                                                                                        className="bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs px-4.5 py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center"
+                                                                                        className="bg-white border border-rose-200 hover:bg-rose-50 text-rose-600 font-bold text-xs px-4.5 py-2.5 rounded-xl transition disabled:opacity-50 flex items-center justify-center cursor-pointer"
                                                                                     >
                                                                                         Reject
                                                                                     </button>
-                                                                                </div>
+                                                                                </form>
                                                                             )}
                                                                         </div>
                                                                     )}
@@ -1927,29 +1942,33 @@ export default function PartnerDashboard() {
                                                                         <p className="text-2xl font-black text-[#000080] mt-1">₦{myBid.fare.toLocaleString()}</p>
                                                                         {myBid.vehicleDetails && <p className="text-[10px] text-gray-500 mt-0.5">{myBid.vehicleDetails}</p>}
                                                                     </div>
-                                                                    <div className="space-y-2">
+                                                                    <form 
+                                                                        onSubmit={(e) => handleSubmitBid(req._id, e)}
+                                                                        className="space-y-2"
+                                                                    >
                                                                         <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider">Update / Resubmit Bid (₦)</label>
                                                                         <div className="flex gap-2">
                                                                             <input
-                                                                                type="number"
+                                                                                type="text"
                                                                                 placeholder="New fare"
                                                                                 className="flex-1 px-3 py-2 border rounded-xl text-xs bg-gray-50 text-gray-900 focus:bg-white focus:border-[#004A99] outline-none transition"
                                                                                 value={bidFares[req._id] || ''}
                                                                                 onChange={(e) => setBidFares(prev => ({ ...prev, [req._id]: e.target.value }))}
                                                                             />
                                                                             <button
-                                                                                onClick={() => handleSubmitBid(req._id)}
+                                                                                type="submit"
                                                                                 disabled={submittingBidId === req._id}
                                                                                 className="bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs px-4 py-2 rounded-xl transition disabled:opacity-50 cursor-pointer"
                                                                             >
                                                                                 {submittingBidId === req._id ? '...' : 'Update'}
                                                                             </button>
                                                                         </div>
-                                                                    </div>
+                                                                    </form>
                                                                 </div>
                                                             ) : (
                                                                 <div className="space-y-3">
                                                                     <button
+                                                                        type="button"
                                                                         onClick={() => handleAcceptRideRequest(req._id)}
                                                                         disabled={isAcceptingRequestId === req._id}
                                                                         className="w-full bg-[#FFB81C] hover:bg-yellow-400 text-[#000080] font-black text-xs py-2.5 rounded-xl transition shadow-md disabled:opacity-50 cursor-pointer mb-1"
@@ -1961,12 +1980,15 @@ export default function PartnerDashboard() {
                                                                         <span className="flex-shrink mx-3 text-gray-400 text-[8px] font-bold uppercase tracking-wider">or bid custom</span>
                                                                         <div className="flex-grow border-t border-gray-200"></div>
                                                                     </div>
-                                                                    <div className="space-y-2">
+                                                                    <form 
+                                                                        onSubmit={(e) => handleSubmitBid(req._id, e)}
+                                                                        className="space-y-2"
+                                                                    >
                                                                         <div>
                                                                             <label className="block text-[9px] font-bold text-gray-500 uppercase tracking-wider mb-1">PROPOSED FARE (₦)</label>
                                                                             <input
-                                                                                type="number"
-                                                                                placeholder="e.g. 120000"
+                                                                                type="text"
+                                                                                placeholder="e.g. 120,000"
                                                                                 className="w-full px-3 py-2 border rounded-xl text-xs bg-gray-50 text-gray-900 focus:bg-white focus:border-[#004A99] outline-none transition font-semibold"
                                                                                 value={bidFares[req._id] || ''}
                                                                                 onChange={(e) => setBidFares(prev => ({ ...prev, [req._id]: e.target.value }))}
@@ -1983,13 +2005,13 @@ export default function PartnerDashboard() {
                                                                             />
                                                                         </div>
                                                                         <button
-                                                                            onClick={() => handleSubmitBid(req._id)}
+                                                                            type="submit"
                                                                             disabled={submittingBidId === req._id}
                                                                             className="w-full bg-[#004A99] hover:bg-blue-800 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-md disabled:opacity-50 cursor-pointer"
                                                                         >
                                                                             {submittingBidId === req._id ? 'Submitting Bid...' : 'Submit Bid Offer'}
                                                                         </button>
-                                                                    </div>
+                                                                    </form>
                                                                 </div>
                                                             )}
                                                         </div>
