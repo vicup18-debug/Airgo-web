@@ -33,7 +33,7 @@ export default function Navigation() {
           <Link href="/"><div className="text-2xl font-black text-white tracking-tight cursor-pointer">Airgo<span className="text-[#FFB81C]">.ng</span></div></Link>
           <div className="flex space-x-6 font-semibold text-sm items-center">
             <Link href="/" className={`${pathname === '/' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Hotels</Link>
-            <Link href="/cars" className={`${pathname === '/cars' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Airport Shuttle</Link>
+            <Link href="/taxi" className={`${pathname === '/taxi' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Taxi</Link>
             <Link href="/affiliate" className={`${pathname === '/affiliate' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Affiliates</Link>
             <Link href="/support" className={`${pathname === '/support' ? 'text-[#FFB81C] border-b-2 border-[#FFB81C]' : 'hover:text-[#FFB81C] transition'} pb-1`}>Support</Link>
           </div>

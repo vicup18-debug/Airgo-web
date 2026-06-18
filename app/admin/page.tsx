@@ -2027,14 +2027,14 @@ export default function SuperadminDashboard() {
                                         onChange={e => setNewCar({ ...newCar, vehicleCategory: e.target.value })}
                                     >
                                         <option value="car">Executive Car (Markup Model)</option>
-                                        <option value="shuttle">Airport Shuttle (Commission Model)</option>
+                                        <option value="shuttle">Taxi (Bidding Model)</option>
                                     </select>
                                 </div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newCar.name} onChange={e => setNewCar({ ...newCar, name: e.target.value })} /></div>
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Type (e.g. SUV, Sedan)</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newCar.type} onChange={e => setNewCar({ ...newCar, type: e.target.value })} /></div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
-                                        {newCar.vehicleCategory === 'shuttle' ? 'Retail Price (What the Customer Pays ₦)' : 'Net Price (Your Take-Home ₦)'}
+                                        {newCar.vehicleCategory === 'shuttle' ? 'Recommended Bid Price (₦)' : 'Net Price (Your Take-Home ₦)'}
                                     </label>
                                     <input 
                                         required 
@@ -2159,7 +2159,7 @@ export default function SuperadminDashboard() {
                                             onChange={e => setEditItemData({ ...editItemData, vehicleCategory: e.target.value })}
                                         >
                                             <option value="car">Executive Car (Markup Model)</option>
-                                            <option value="shuttle">Airport Shuttle (Commission Model)</option>
+                                            <option value="shuttle">Taxi (Bidding Model)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -2168,7 +2168,7 @@ export default function SuperadminDashboard() {
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
-                                        {selectedInventoryForEdit.listingType === 'car' && editItemData.vehicleCategory === 'shuttle' ? 'Retail Price (What the Customer Pays ₦)' : selectedInventoryForEdit.listingType === 'car' ? 'Net Price (Your Take-Home ₦)' : 'Net Price Per Night (₦)'}
+                                        {selectedInventoryForEdit.listingType === 'car' && editItemData.vehicleCategory === 'shuttle' ? 'Recommended Bid Price (₦)' : selectedInventoryForEdit.listingType === 'car' ? 'Net Price (Your Take-Home ₦)' : 'Net Price Per Night (₦)'}
                                     </label>
                                     <input 
                                         required 

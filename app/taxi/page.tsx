@@ -10,11 +10,11 @@ import CarBookingModal from '../../components/CarBookingModal';
 const FALLBACK_FLEET = [
     {
         _id: 'airgo_fleet_01',
-        name: 'Airport Shuttle Chauffeur',
-        type: 'Luxury Shuttle',
+        name: 'Taxi Chauffeur',
+        type: 'Luxury Sedan Taxi',
         price: 350000,
         capacity: '5',
-        features: 'Professional Chauffeur, Airport Transfer, Meet & Greet Service',
+        features: 'Professional Chauffeur, Local & Airport Transfer, Meet & Greet Service',
         image: 'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80',
         partnerId: 'airgo_direct',
         isFallback: true,
@@ -97,9 +97,9 @@ export default function CarsPage() {
             <div className="flex-grow">
                 <header className="bg-[#000080] pb-32 pt-12 px-6 rounded-b-[2.5rem] md:rounded-none relative text-center">
                     <div className="max-w-4xl mx-auto animate-fade-in">
-                        <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Airport Shuttle Service</h1>
+                        <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Taxi Service</h1>
                         <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto font-medium">
-                            Book a premium, hassle-free airport transfer. Enter details below to request bids from nearby verified drivers.
+                            Book a premium, hassle-free ride. Enter details below to request bids from nearby verified drivers.
                         </p>
                     </div>
                 </header>
@@ -136,7 +136,7 @@ export default function CarsPage() {
                             <svg className="w-5 h-5 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M19 7.5v9m-8-9v9m-8-6a3 3 0 013-3h12a3 3 0 013 3v8a3 3 0 01-3 3H6a3 3 0 01-3-3v-8zm2 3h14M8 14h8" />
                             </svg>
-                            <span className="text-xs font-black tracking-wider uppercase">VIP Airport Shuttle Concierge</span>
+                             <span className="text-xs font-black tracking-wider uppercase">VIP Taxi Concierge</span>
                         </div>
                         
                         <h3 className="font-black text-gray-900 text-3xl md:text-4xl mb-4">Request a Ride in Minutes</h3>

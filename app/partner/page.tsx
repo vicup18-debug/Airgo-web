@@ -1226,7 +1226,7 @@ export default function PartnerDashboard() {
                     <Link href="/" className="hover:opacity-80 transition block text-left">
                         <h2 className="text-2xl font-black tracking-tight">Airgo<span className="text-[#FFB81C]">.partner</span></h2>
                         <p className="text-[10px] text-blue-200 mt-1 uppercase tracking-widest font-bold">
-                            {isApartmentPartner ? 'Apartment Host' : isShuttlePartner ? 'Shuttle Operator' : isCarPartner ? 'Fleet Manager' : 'Hotelier'}
+                            {isApartmentPartner ? 'Apartment Host' : isShuttlePartner ? 'Taxi Operator / Driver' : isCarPartner ? 'Fleet Manager' : 'Hotelier'}
                         </p>
                     </Link>
                     <button className="md:hidden text-blue-200 text-xl" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
@@ -1248,7 +1248,7 @@ export default function PartnerDashboard() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21h10.5V3.75c0-.621-.504-1.125-1.125-1.125H7.875A1.125 1.125 0 006.75 3.75V21z" />
                             </svg>
                         )}
-                        <span>{isShuttlePartner ? 'My Shuttle Trips' : isCarPartner ? 'My Fleet' : isApartmentPartner ? 'My Apartments' : 'Room Categories'}</span>
+                        <span>{isShuttlePartner ? 'My Taxi Trips' : isCarPartner ? 'My Fleet' : isApartmentPartner ? 'My Apartments' : 'Room Categories'}</span>
                     </button>
                     <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'bookings' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
                         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -1296,9 +1296,9 @@ export default function PartnerDashboard() {
                 <header className="bg-white px-8 py-5 border-b border-gray-200 hidden md:flex items-center justify-between sticky top-0 z-10">
                     <h1 className="text-2xl font-black text-gray-900 capitalize">
                         {activeTab === 'overview' 
-                            ? (isShuttlePartner ? 'Airport Shuttle Panel' : isCarPartner ? 'Fleet Control Panel' : isApartmentPartner ? 'Apartment Host Panel' : 'Property Management Panel') 
+                            ? (isShuttlePartner ? 'Taxi Operator Panel' : isCarPartner ? 'Fleet Control Panel' : isApartmentPartner ? 'Apartment Host Panel' : 'Property Management Panel') 
                             : activeTab === 'inventory' 
-                                ? (isShuttlePartner ? 'Airport Shuttle Routes' : isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
+                                ? (isShuttlePartner ? 'My Taxi Trips / Routes' : isCarPartner ? 'My Fleet Matrix' : isApartmentPartner ? 'Apartments Catalog' : 'Room Categories') 
                                 : activeTab === 'profile' 
                                     ? 'My Profile Settings' 
                                     : activeTab === 'available-requests'
@@ -1365,7 +1365,7 @@ export default function PartnerDashboard() {
                                     <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50">
                                         <h2 className="text-lg font-bold text-gray-800">{isCarPartner ? 'My Fleet' : isApartmentPartner ? 'My Apartments' : 'Room Categories'}</h2>
                                         <button onClick={() => setIsModalOpen(true)} className="bg-[#004A99] text-white px-5 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-blue-800 transition">
-                                            + Configure {isShuttlePartner ? 'Shuttle Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment Unit' : 'Room Tier'}
+                                            + Configure {isShuttlePartner ? 'Taxi Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment Unit' : 'Room Tier'}
                                         </button>
                                     </div>
                                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1877,6 +1877,11 @@ export default function PartnerDashboard() {
                                                                 <p><span className="font-bold text-gray-800">Return:</span> {req.checkOut ? formatDisplayDate(req.checkOut, req.itemType) : 'N/A'}</p>
                                                             </div>
                                                             <p className="text-sm text-gray-600 font-medium"><span className="font-bold text-gray-800">Route:</span> {req.deliveryAddress?.replace('From: ', '').replace(' | To: ', ' ➔ ')}</p>
+                                                            <div className="mt-2 bg-purple-50 border border-purple-100 rounded-xl p-3 w-fit">
+                                                                <p className="text-xs font-bold text-purple-800">
+                                                                    Client Bid Price: <span className="text-base font-black text-purple-900">₦{Number(req.offeredPrice?.replace(/[^0-9.-]+/g,"") || req.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>
+                                                                </p>
+                                                            </div>
                                                         </div>
 
                                                         <div className="w-full md:w-80 bg-white border border-gray-200/80 p-5 rounded-2xl shadow-sm space-y-4 shrink-0 text-left">
@@ -2084,7 +2089,7 @@ export default function PartnerDashboard() {
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
-                            <h2 className="text-xl font-black text-[#004A99]">List New {isShuttlePartner ? 'Shuttle Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment' : 'Room Tier'}</h2>
+                            <h2 className="text-xl font-black text-[#004A99]">List New {isShuttlePartner ? 'Taxi Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment' : 'Room Tier'}</h2>
                             <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl font-bold">✕</button>
                         </div>
                         <form onSubmit={handleAddItem} className="p-6 space-y-4 overflow-y-auto flex-1">

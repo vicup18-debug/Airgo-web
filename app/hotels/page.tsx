@@ -91,8 +91,8 @@ export default function HotelsPage() {
                         </div>
                         <h2 className="text-2xl font-black text-gray-900 mb-2">Curating Premium Properties</h2>
                         <p className="text-gray-500 mb-6">We are currently onboarding exclusive hotel partners. The Hotel booking engine will be live shortly.</p>
-                        <Link href="/cars">
-                            <button className="bg-[#004A99] text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-blue-800 transition">Explore Luxury Fleet</button>
+                        <Link href="/taxi">
+                            <button className="bg-[#004A99] text-white px-6 py-3 rounded-xl font-bold shadow-md hover:bg-blue-800 transition">Explore Taxi Services</button>
                         </Link>
                     </div>
                 ) : (

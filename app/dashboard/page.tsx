@@ -847,9 +847,9 @@ export default function ClientDashboard() {
                                         Browse Hotels
                                     </button>
                                 </Link>
-                                <Link href="/cars">
+                                <Link href="/taxi">
                                     <button className="bg-white text-[#000080] border border-[#000080] px-6 py-3 rounded-xl font-bold shadow-sm hover:bg-gray-50 transition">
-                                        Browse Fleet
+                                        Request Taxi
                                     </button>
                                 </Link>
                             </div>

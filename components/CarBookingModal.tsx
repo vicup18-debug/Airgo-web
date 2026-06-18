@@ -617,7 +617,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                             </div>
 
                             {/* Service Configurations */}
-                            <div className="grid grid-cols-1 gap-3">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Travel Scope</label>
                                     <select 
@@ -628,6 +628,21 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                         <option value="Intra-City">Intra-City (₦0)</option>
                                         <option value="Inter-State">Inter-State (+₦35k/day)</option>
                                     </select>
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">YOUR PRICE BID (₦)</label>
+                                    <input 
+                                        required 
+                                        type="number" 
+                                        min="1"
+                                        placeholder="Proposed fare e.g. 15000"
+                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs" 
+                                        value={customOfferPrice} 
+                                        onChange={e => {
+                                            setCustomOfferPrice(e.target.value);
+                                            setIsCustomOffer(true);
+                                        }} 
+                                    />
                                 </div>
                             </div>
 
@@ -657,7 +672,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                         </p>
 
                         <p className="text-xs text-gray-500 max-w-sm mt-3 leading-relaxed">
-                            Bids from nearby airport shuttle drivers will appear live below. Select the best bid to secure your ride!
+                            Bids from nearby taxi drivers will appear live below. Select the best bid to secure your ride!
                         </p>
 
                         {/* Live Driver Bids List */}
