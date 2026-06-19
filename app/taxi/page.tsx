@@ -82,7 +82,7 @@ export default function CarsPage() {
             console.error("Nominatim search error", err);
         } finally {
             if (field === 'from') setIsSearchingFrom(false);
-            else setToSuggestions(false);
+            else setIsSearchingTo(false);
         }
     };
 
