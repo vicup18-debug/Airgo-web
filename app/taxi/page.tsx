@@ -36,6 +36,78 @@ export default function CarsPage() {
     const [shuttleTo, setShuttleTo] = useState('');
     const [shuttleDateTime, setShuttleDateTime] = useState('');
 
+    // Autocomplete search states
+    const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
+    const [toSuggestions, setToSuggestions] = useState<any[]>([]);
+    const [isSearchingFrom, setIsSearchingFrom] = useState(false);
+    const [isSearchingTo, setIsSearchingTo] = useState(false);
+    const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(null);
+    const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
+    const [pickupCity, setPickupCity] = useState('');
+
+    const searchTimeoutFrom = React.useRef<any>(null);
+    const searchTimeoutTo = React.useRef<any>(null);
+
+    const debouncedSearchFrom = (val: string) => {
+        if (searchTimeoutFrom.current) clearTimeout(searchTimeoutFrom.current);
+        searchTimeoutFrom.current = setTimeout(() => {
+            fetchLocationSuggestions(val, 'from');
+        }, 600);
+    };
+
+    const debouncedSearchTo = (val: string) => {
+        if (searchTimeoutTo.current) clearTimeout(searchTimeoutTo.current);
+        searchTimeoutTo.current = setTimeout(() => {
+            fetchLocationSuggestions(val, 'to');
+        }, 600);
+    };
+
+    const fetchLocationSuggestions = async (query: string, field: 'from' | 'to') => {
+        if (query.trim().length < 3) {
+            if (field === 'from') setFromSuggestions([]);
+            else setToSuggestions([]);
+            return;
+        }
+        if (field === 'from') setIsSearchingFrom(true);
+        else setIsSearchingTo(true);
+
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`);
+            if (res.ok) {
+                const data = await res.json();
+                if (field === 'from') setFromSuggestions(data);
+                else setToSuggestions(data);
+            }
+        } catch (err) {
+            console.error("Nominatim search error", err);
+        } finally {
+            if (field === 'from') setIsSearchingFrom(false);
+            else setToSuggestions(false);
+        }
+    };
+
+    const extractCityFromSuggestion = (item: any) => {
+        if (item.address) {
+            const addr = item.address;
+            const city = addr.city || addr.town || addr.village || addr.city_district || addr.suburb || addr.state;
+            if (city) return city;
+        }
+        const parts = item.display_name.split(',');
+        if (parts.length >= 2) {
+            const nameLower = item.display_name.toLowerCase();
+            if (nameLower.includes('abuja')) return 'Abuja';
+            if (nameLower.includes('lagos')) return 'Lagos';
+            if (nameLower.includes('port harcourt')) return 'Port Harcourt';
+            if (nameLower.includes('kano')) return 'Kano';
+            if (nameLower.includes('ibadan')) return 'Ibadan';
+            if (nameLower.includes('enugu')) return 'Enugu';
+            if (nameLower.includes('benin')) return 'Benin City';
+            if (nameLower.includes('kaduna')) return 'Kaduna';
+            return parts[parts.length - 2].trim();
+        }
+        return '';
+    };
+
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
 
@@ -105,16 +177,73 @@ export default function CarsPage() {
                 </header>
 
                 {/* FLOATING SEARCH BAR */}
-                <div className="max-w-3xl mx-auto px-4 -mt-24 relative z-10 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-300">
+                <div className="max-w-3xl mx-auto px-4 -mt-24 relative z-20 mb-12 animate-in fade-in slide-in-from-bottom-6 duration-300">
                     <div className="bg-white p-4 md:p-6 rounded-3xl shadow-xl border border-gray-100">
                         <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4 items-end">
-                            <div className="flex-[1.5] w-full text-left">
+                            <div className="flex-[1.5] w-full text-left relative z-30">
                                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">FROM (Pickup Location)</label>
-                                <input type="text" placeholder="e.g. Nnamdi Azikiwe Airport, Abuja" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" value={shuttleFrom} onChange={(e) => setShuttleFrom(e.target.value)} />
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Nnamdi Azikiwe Airport, Abuja" 
+                                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" 
+                                    value={shuttleFrom} 
+                                    onChange={(e) => {
+                                        setShuttleFrom(e.target.value);
+                                        debouncedSearchFrom(e.target.value);
+                                    }} 
+                                />
+                                {isSearchingFrom && <div className="absolute right-3 top-11 text-xs text-gray-400 animate-pulse">Searching...</div>}
+                                {fromSuggestions.length > 0 && (
+                                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-[60]">
+                                        {fromSuggestions.map((item: any) => (
+                                            <button
+                                                key={item.place_id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setShuttleFrom(item.display_name);
+                                                    setPickupCoords([parseFloat(item.lat), parseFloat(item.lon)]);
+                                                    setPickupCity(extractCityFromSuggestion(item));
+                                                    setFromSuggestions([]);
+                                                }}
+                                                className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
+                                            >
+                                                📍 {item.display_name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
-                            <div className="flex-[1.5] w-full text-left">
+                            <div className="flex-[1.5] w-full text-left relative z-20">
                                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">TO (Destination)</label>
-                                <input type="text" placeholder="e.g. Hilton Hotel, Maitama, Abuja" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" value={shuttleTo} onChange={(e) => setShuttleTo(e.target.value)} />
+                                <input 
+                                    type="text" 
+                                    placeholder="e.g. Hilton Hotel, Maitama, Abuja" 
+                                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" 
+                                    value={shuttleTo} 
+                                    onChange={(e) => {
+                                        setShuttleTo(e.target.value);
+                                        debouncedSearchTo(e.target.value);
+                                    }} 
+                                />
+                                {isSearchingTo && <div className="absolute right-3 top-11 text-xs text-gray-400 animate-pulse">Searching...</div>}
+                                {toSuggestions.length > 0 && (
+                                    <div className="absolute left-0 right-0 mt-1 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-[60]">
+                                        {toSuggestions.map((item: any) => (
+                                            <button
+                                                key={item.place_id}
+                                                type="button"
+                                                onClick={() => {
+                                                    setShuttleTo(item.display_name);
+                                                    setDestCoords([parseFloat(item.lat), parseFloat(item.lon)]);
+                                                    setToSuggestions([]);
+                                                }}
+                                                className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
+                                            >
+                                                📍 {item.display_name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                             <div className="flex-1 w-full text-left">
                                 <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Pickup Date & Time</label>
@@ -176,6 +305,9 @@ export default function CarsPage() {
                 initialCheckOut={shuttleDateTime}
                 initialFromAddress={shuttleFrom}
                 initialToAddress={shuttleTo}
+                initialPickupCoords={pickupCoords}
+                initialDestCoords={destCoords}
+                initialCity={pickupCity}
             />
 
             

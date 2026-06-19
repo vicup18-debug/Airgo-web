@@ -13,9 +13,12 @@ interface CarBookingModalProps {
     initialCheckOut?: string;
     initialFromAddress?: string;
     initialToAddress?: string;
+    initialPickupCoords?: [number, number] | null;
+    initialDestCoords?: [number, number] | null;
+    initialCity?: string;
 }
 
-export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, initialCheckOut, initialFromAddress, initialToAddress }: CarBookingModalProps) {
+export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, initialCheckOut, initialFromAddress, initialToAddress, initialPickupCoords, initialDestCoords, initialCity }: CarBookingModalProps) {
     const [step, setStep] = useState<1 | 2 | 3>(2);
     const [isProcessing, setIsProcessing] = useState(false);
     const router = useRouter();
@@ -42,6 +45,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const [leafletLoaded, setLeafletLoaded] = useState(false);
     const [pickupCoords, setPickupCoords] = useState<[number, number] | null>(null);
     const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
+    const [pickupCity, setPickupCity] = useState('');
     const [distance, setDistance] = useState<number>(0);
     const mapRef = useRef<any>(null);
     const markersRef = useRef<any[]>([]);
@@ -246,7 +250,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         else setIsSearchingTo(true);
 
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`);
             if (res.ok) {
                 const data = await res.json();
                 if (field === 'from') setFromSuggestions(data);
@@ -295,13 +299,14 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             setIsCustomOffer(false);
             setCustomOfferPrice('');
             setAppliedCoupon(null);
-            setPickupCoords(null);
-            setDestCoords(null);
+            setPickupCoords(initialPickupCoords || null);
+            setDestCoords(initialDestCoords || null);
+            setPickupCity(initialCity || '');
             setDistance(0);
             setMatchingBids([]);
             setStep(2);
         }
-    }, [isOpen, initialCheckIn, initialCheckOut, initialFromAddress, initialToAddress]);
+    }, [isOpen, initialCheckIn, initialCheckOut, initialFromAddress, initialToAddress, initialPickupCoords, initialDestCoords, initialCity]);
 
     if (!isOpen || !car) return null;
 
@@ -403,7 +408,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkOut: bookingDetails.checkOut || bookingDetails.checkIn,
                 distance: distance,
                 offeredPrice: Number(customOfferPrice).toLocaleString(),
-                travelScope: travelScope
+                travelScope: travelScope,
+                city: pickupCity
             };
 
             const response = await fetch(`${apiUrl}/api/ride-requests`, {
@@ -551,6 +557,23 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                                         setBookingDetails(prev => ({ ...prev, fromAddress: item.display_name }));
                                                         setPickupCoords([parseFloat(item.lat), parseFloat(item.lon)]);
                                                         setFromSuggestions([]);
+                                                        
+                                                        // Extract city from suggestion address details
+                                                        if (item.address) {
+                                                            const addr = item.address;
+                                                            const city = addr.city || addr.town || addr.village || addr.city_district || addr.suburb || addr.state;
+                                                            if (city) setPickupCity(city);
+                                                        } else {
+                                                            const parts = item.display_name.split(',');
+                                                            if (parts.length >= 2) {
+                                                                const nameLower = item.display_name.toLowerCase();
+                                                                let foundCity = parts[parts.length - 2].trim();
+                                                                if (nameLower.includes('abuja')) foundCity = 'Abuja';
+                                                                else if (nameLower.includes('lagos')) foundCity = 'Lagos';
+                                                                else if (nameLower.includes('port harcourt')) foundCity = 'Port Harcourt';
+                                                                setPickupCity(foundCity);
+                                                            }
+                                                        }
                                                     }}
                                                     className="w-full px-3 py-2 text-left text-[10px] text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-medium truncate"
                                                 >

@@ -298,7 +298,8 @@ export default function PartnerDashboard() {
         bankName: '',
         accountNumber: '',
         accountName: '',
-        bankCode: ''
+        bankCode: '',
+        city: ''
     });
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isResolvingAccount, setIsResolvingAccount] = useState(false);
@@ -607,8 +608,10 @@ export default function PartnerDashboard() {
         });
 
         socketInstance.on('connect', () => {
-            socketInstance.emit('join_drivers');
-            console.log("📡 WebSocket: Partner Dashboard connected and joined drivers general room");
+            const secureId = parsedUser.id || parsedUser.userId || parsedUser._id;
+            socketInstance.emit('join_drivers', { city: parsedUser.city });
+            socketInstance.emit('join_partner', { partnerId: secureId });
+            console.log(`📡 WebSocket: Partner Dashboard connected, joined city drivers_${parsedUser.city} and private partner_${secureId}`);
         });
 
         socketInstance.on('new_booking_request', (booking: any) => {
@@ -640,6 +643,15 @@ export default function PartnerDashboard() {
                 return prev;
             });
             fetchAvailableRequests();
+        });
+
+        socketInstance.on('payment_received', (booking: any) => {
+            console.log("📡 WebSocket: Real-time payment confirmation received", booking);
+            toast.success(`💳 Escrow Payment confirmed! Client ${booking.clientName} has paid ₦${booking.totalPrice} for ${booking.itemName}.`, {
+                duration: 8000
+            });
+            playNotificationSound();
+            fetchPartnerData(parsedUser, true);
         });
 
         return () => {
@@ -1325,7 +1337,8 @@ export default function PartnerDashboard() {
                             bankName: user.bankName || '',
                             accountNumber: user.accountNumber || '',
                             accountName: user.accountName || '',
-                            bankCode: user.bankCode || ''
+                            bankCode: user.bankCode || '',
+                            city: user.city || ''
                         });
                     }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'profile' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
                         <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -2067,6 +2080,24 @@ export default function PartnerDashboard() {
                                             <div>
                                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Physical Address</label>
                                                 <textarea required rows={3} className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white resize-none" value={profileData.businessAddress} onChange={e => setProfileData({ ...profileData, businessAddress: e.target.value })} />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Operating City</label>
+                                                <select
+                                                    required
+                                                    className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white outline-none cursor-pointer font-semibold text-xs"
+                                                    value={profileData.city || ''}
+                                                    onChange={e => setProfileData({ ...profileData, city: e.target.value })}
+                                                >
+                                                    <option value="">Select City</option>
+                                                    <option value="Abuja">Abuja</option>
+                                                    <option value="Lagos">Lagos</option>
+                                                    <option value="Port Harcourt">Port Harcourt</option>
+                                                    <option value="Kano">Kano</option>
+                                                    <option value="Ibadan">Ibadan</option>
+                                                    <option value="Enugu">Enugu</option>
+                                                </select>
                                             </div>
                                         </div>
 
