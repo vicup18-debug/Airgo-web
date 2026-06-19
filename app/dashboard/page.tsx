@@ -343,6 +343,7 @@ export default function ClientDashboard() {
 
     // Booking edit state
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
+    const [startingTripId, setStartingTripId] = useState<string | null>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editData, setEditData] = useState({
@@ -551,6 +552,38 @@ export default function ClientDashboard() {
             }
         } catch (err) {
             toast.error("Error connecting to server.");
+        }
+    };
+
+    const handleStartTrip = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to start this trip? Both the driver and Airgo will be notified.")) {
+            return;
+        }
+        setStartingTripId(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/start-trip`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Trip started successfully!");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchMyBookings(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to start trip.");
+            }
+        } catch (err) {
+            toast.error("Error connecting to server.");
+        } finally {
+            setStartingTripId(null);
         }
     };
 
@@ -1239,6 +1272,27 @@ export default function ClientDashboard() {
                                         </div>
 
                                         {/* Trip Start / End Confirmation Banners */}
+                                        {booking.itemType === 'car' && ['Paid', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
+                                            <div className="w-full p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
+                                                <div className="flex-1">
+                                                    <h4 className="text-sm font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
+                                                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                                                        Trip Ready to Start
+                                                    </h4>
+                                                    <p className="text-xs font-medium text-emerald-800 mt-1">
+                                                        You can start the trip now once you are with the driver.
+                                                    </p>
+                                                </div>
+                                                <button
+                                                    onClick={() => handleStartTrip(booking._id)}
+                                                    disabled={startingTripId === booking._id}
+                                                    className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0 cursor-pointer animate-fade-in"
+                                                >
+                                                    {startingTripId === booking._id ? 'Starting...' : 'Start Trip'}
+                                                </button>
+                                            </div>
+                                        )}
+
                                         {booking.itemType === 'car' && booking.status === 'Trip Start Pending' && (
                                             <div className="w-full p-4 rounded-xl border border-indigo-200 bg-indigo-50/70 text-indigo-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
                                                 <div className="flex-1">

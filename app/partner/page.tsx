@@ -304,6 +304,7 @@ export default function PartnerDashboard() {
     const [isSavingProfile, setIsSavingProfile] = useState(false);
     const [isResolvingAccount, setIsResolvingAccount] = useState(false);
     const [resolveError, setResolveError] = useState('');
+    const [endingTripId, setEndingTripId] = useState<string | null>(null);
 
     const handleAccountNumberChange = async (value: string) => {
         const cleanValue = value.replace(/\D/g, '');
@@ -1192,6 +1193,39 @@ export default function PartnerDashboard() {
         }
     };
 
+    const handleEndTrip = async (bookingId: string) => {
+        if (!window.confirm("Are you sure you want to end this trip? Both the client and Airgo will be notified.")) {
+            return;
+        }
+        setEndingTripId(bookingId);
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/end-trip`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await res.json();
+            if (res.ok) {
+                toast.success("Trip ended successfully!");
+                const userData = localStorage.getItem('airgo_user');
+                if (userData) {
+                    fetchPartnerData(JSON.parse(userData));
+                }
+            } else {
+                toast.error(data.message || "Failed to end trip.");
+            }
+        } catch (err: any) {
+            console.error("End trip error:", err);
+            toast.error(`Error connecting to server: ${err.message || err}`);
+        } finally {
+            setEndingTripId(null);
+        }
+    };
+
     const handleConfirmEndTrip = async (bookingId: string) => {
         if (!window.confirm("Are you sure you want to confirm that the trip has ended?")) {
             return;
@@ -1685,10 +1719,22 @@ export default function PartnerDashboard() {
                                                                                  </div>
                                                                              )}
                                                                              {booking.itemType === 'car' && booking.status === 'Trip Started' && (
-                                                                                 <div className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-3 py-2 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-emerald-200">
-                                                                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                                                                     Trip In Progress
-                                                                                 </div>
+                                                                                 <>
+                                                                                     <div className="text-[10px] font-black bg-emerald-100 text-emerald-800 px-3 py-2 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-emerald-200">
+                                                                                         <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                                                                         Trip In Progress
+                                                                                     </div>
+                                                                                     <button
+                                                                                         onClick={() => handleEndTrip(booking._id)}
+                                                                                         disabled={endingTripId === booking._id}
+                                                                                         className="text-[10px] font-black bg-red-600 hover:bg-red-700 text-white px-3 py-2 rounded-lg transition disabled:opacity-50 mt-1.5 flex items-center gap-1.5 w-full justify-center shadow-sm cursor-pointer"
+                                                                                     >
+                                                                                         <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                                                         </svg>
+                                                                                         {endingTripId === booking._id ? 'Ending...' : 'End Trip'}
+                                                                                     </button>
+                                                                                 </>
                                                                              )}
                                                                              {booking.itemType === 'car' && booking.status === 'Trip End Pending' && (
                                                                                  <button
