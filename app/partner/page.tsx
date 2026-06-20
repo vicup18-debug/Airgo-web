@@ -1718,7 +1718,7 @@ export default function PartnerDashboard() {
                                                                                  <>
                                                                                      <button
                                                                                          onClick={() => handleStartTrip(booking._id)}
-                                                                                         disabled={startingTripId === booking._id || booking.status === 'Accepted'}
+                                                                                         disabled={startingTripId === booking._id || ['Accepted', 'Pending Escrow'].includes(booking.status)}
                                                                                          className="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition disabled:opacity-50 mt-1.5 flex items-center gap-1.5 w-full justify-center shadow-sm cursor-pointer"
                                                                                      >
                                                                                          <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
@@ -1727,7 +1727,7 @@ export default function PartnerDashboard() {
                                                                                          </svg>
                                                                                          {startingTripId === booking._id ? 'Starting...' : 'Start Trip'}
                                                                                      </button>
-                                                                                     {booking.status === 'Accepted' && (
+                                                                                     {['Accepted', 'Pending Escrow'].includes(booking.status) && (
                                                                                          <div className="text-[10px] font-black bg-yellow-100 text-yellow-800 px-3 py-2.5 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-yellow-200 animate-pulse">
                                                                                              <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-ping"></span>
                                                                                              Waiting for Client to Fund Escrow...

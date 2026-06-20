@@ -1275,7 +1275,7 @@ export default function ClientDashboard() {
                                         </div>
 
                                         {/* Trip Start / End Confirmation Banners */}
-                                        {booking.itemType === 'car' && ['Paid', 'Paid - Escrow Secured', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
+                                        {booking.itemType === 'car' && ['Paid', 'Paid - Escrow Secured', 'Confirmed'].includes(booking.status) && (
                                             <div className="w-full p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
                                                 <div className="flex-1">
                                                     <h4 className="text-sm font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
