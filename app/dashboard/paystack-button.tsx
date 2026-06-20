@@ -8,9 +8,11 @@ interface PaystackPaymentButtonProps {
     booking: any;
     user: any;
     onSuccess: (bookingId: string, reference: string) => void;
+    onClose?: () => void;
+    autoTrigger?: boolean;
 }
 
-export default function PaystackPaymentButton({ booking, user, onSuccess }: PaystackPaymentButtonProps) {
+export default function PaystackPaymentButton({ booking, user, onSuccess, onClose, autoTrigger }: PaystackPaymentButtonProps) {
     const rawAmount = typeof booking.totalPrice === 'string'
         ? parseInt(booking.totalPrice.replace(/[^0-9]/g, ''))
         : booking.totalPrice;
@@ -29,6 +31,24 @@ export default function PaystackPaymentButton({ booking, user, onSuccess }: Pays
 
     const initializePayment = usePaystackPayment(config);
 
+    React.useEffect(() => {
+        if (autoTrigger) {
+            initializePayment({
+                onSuccess: (ref: any) => {
+                    onSuccess(booking._id, ref.reference);
+                },
+                onClose: () => {
+                    toast.error("Payment window closed.");
+                    if (onClose) onClose();
+                }
+            });
+        }
+    }, [autoTrigger, booking._id, initializePayment, onSuccess, onClose]);
+
+    if (autoTrigger) {
+        return null;
+    }
+
     return (
         <button
             onClick={() => {
@@ -38,6 +58,7 @@ export default function PaystackPaymentButton({ booking, user, onSuccess }: Pays
                     },
                     onClose: () => {
                         toast.error("Payment window closed.");
+                        if (onClose) onClose();
                     }
                 });
             }}

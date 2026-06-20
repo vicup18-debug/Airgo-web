@@ -321,7 +321,7 @@ export default function ClientDashboard() {
                     } else if (booking.status === 'Trip End Pending' && prevBooking.status !== 'Trip End Pending') {
                         shouldPlaySound = true;
                         toast.success(`🏁 Trip Ended: Driver completed the trip for ${booking.itemName}. Please confirm completion.`, { duration: 8000 });
-                    } else if (booking.status === 'Paid' && prevBooking.status !== 'Paid') {
+                    } else if ((booking.status === 'Paid' || booking.status === 'Paid - Escrow Secured') && prevBooking.status !== 'Paid' && prevBooking.status !== 'Paid - Escrow Secured') {
                         shouldPlaySound = true;
                         toast.success(`💳 Payment Confirmed: Escrow payment verified successfully for ${booking.itemName}!`, { duration: 6000 });
                     }
@@ -344,6 +344,7 @@ export default function ClientDashboard() {
     // Booking edit state
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
     const [startingTripId, setStartingTripId] = useState<string | null>(null);
+    const [activePaymentBooking, setActivePaymentBooking] = useState<any>(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isSavingEdit, setIsSavingEdit] = useState(false);
     const [editData, setEditData] = useState({
@@ -475,6 +476,7 @@ export default function ClientDashboard() {
             if (res.ok) {
                 if (action === 'Accept') {
                     toast.success("🎉 Counter-offer accepted! You can now proceed to payment.");
+                    setActivePaymentBooking(data.booking);
                 } else {
                     toast.success("Offer declined. Booking cancelled.");
                 }
@@ -514,6 +516,7 @@ export default function ClientDashboard() {
                     toast.success(`🎉 Your counter-bid of ₦${counterFare.toLocaleString()} has been sent to the driver for approval!`);
                 } else {
                     toast.success("🎉 Driver offer accepted successfully! Proceed to checkout.");
+                    setActivePaymentBooking(data.booking);
                 }
                 const userData = localStorage.getItem('airgo_user');
                 if (userData) {
@@ -771,7 +774,7 @@ export default function ClientDashboard() {
                     'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
-                    status: 'Paid',
+                    status: 'Paid - Escrow Secured',
                     paymentReference: reference
                 })
             });
@@ -1009,9 +1012,9 @@ export default function ClientDashboard() {
                                 </div>
                             )}
                             {myBookings.map((booking) => {
-                                const allowedInvoiceStatuses = ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'];
+                                const allowedInvoiceStatuses = ['Paid', 'Paid - Escrow Secured', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'];
                                 const canDownloadInvoice = allowedInvoiceStatuses.includes(booking.status);
-                                const isPaidCar = booking.itemType === 'car' && ['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status);
+                                const isPaidCar = booking.itemType === 'car' && ['Paid', 'Paid - Escrow Secured', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status);
 
                                 return (
                                     <div key={booking._id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex flex-col gap-4 hover:shadow-md transition">
@@ -1272,7 +1275,7 @@ export default function ClientDashboard() {
                                         </div>
 
                                         {/* Trip Start / End Confirmation Banners */}
-                                        {booking.itemType === 'car' && ['Paid', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
+                                        {booking.itemType === 'car' && ['Paid', 'Paid - Escrow Secured', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
                                             <div className="w-full p-4 rounded-xl border border-emerald-200 bg-emerald-50/70 text-emerald-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
                                                 <div className="flex-1">
                                                     <h4 className="text-sm font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
@@ -1765,6 +1768,21 @@ export default function ClientDashboard() {
                     bookingId={chatBookingId}
                     bookingName={chatBookingName}
                     currentUser={user}
+                />
+            )}
+
+            {activePaymentBooking && (
+                <PaystackPaymentButton
+                    booking={activePaymentBooking}
+                    user={user}
+                    onSuccess={(bookingId, reference) => {
+                        setActivePaymentBooking(null);
+                        handlePaymentSuccess(bookingId, reference);
+                    }}
+                    onClose={() => {
+                        setActivePaymentBooking(null);
+                    }}
+                    autoTrigger={true}
                 />
             )}
         </div>

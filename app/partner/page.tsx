@@ -655,6 +655,17 @@ export default function PartnerDashboard() {
             fetchPartnerData(parsedUser, true);
         });
 
+        socketInstance.on('booking_updated', (booking: any) => {
+            console.log("📡 WebSocket: Real-time booking update received", booking);
+            if (booking.status === 'Paid - Escrow Secured') {
+                toast.success(`💳 Escrow Secured! Client has funded the escrow for ${booking.itemName}.`, {
+                    duration: 8000
+                });
+                playNotificationSound();
+            }
+            fetchPartnerData(parsedUser, true);
+        });
+
         return () => {
             clearInterval(interval);
             socketInstance.disconnect();
@@ -1605,17 +1616,21 @@ export default function PartnerDashboard() {
                                                                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                                                                      booking.status === 'Pending Escrow' 
                                                                          ? 'bg-yellow-100 text-yellow-800' 
-                                                                         : booking.status === 'Approved for Disbursement'
-                                                                             ? 'bg-blue-100 text-blue-800'
-                                                                             : booking.status === 'Trip Start Pending'
-                                                                                 ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-                                                                                 : booking.status === 'Trip Started'
-                                                                                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                                                                                     : booking.status === 'Trip End Pending'
-                                                                                         ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                                                                         : booking.status === 'Completed'
-                                                                                             ? 'bg-gray-100 text-gray-800 border border-gray-200'
-                                                                                             : 'bg-green-100 text-green-800'
+                                                                         : booking.status === 'Accepted'
+                                                                             ? 'bg-yellow-100 text-yellow-800 border border-yellow-200 animate-pulse'
+                                                                             : booking.status === 'Paid - Escrow Secured'
+                                                                                 ? 'bg-green-100 text-green-800 border border-green-200'
+                                                                                 : booking.status === 'Approved for Disbursement'
+                                                                                     ? 'bg-blue-100 text-blue-800'
+                                                                                     : booking.status === 'Trip Start Pending'
+                                                                                         ? 'bg-indigo-100 text-indigo-800 border border-indigo-200'
+                                                                                         : booking.status === 'Trip Started'
+                                                                                             ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                                                                                             : booking.status === 'Trip End Pending'
+                                                                                                 ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                                                                                 : booking.status === 'Completed'
+                                                                                                     ? 'bg-gray-100 text-gray-800 border border-gray-200'
+                                                                                                     : 'bg-green-100 text-green-800'
                                                                  }`}>
                                                                      {booking.status}
                                                                  </span>
@@ -1699,18 +1714,32 @@ export default function PartnerDashboard() {
                                                                                      Chatroom
                                                                                  </button>
                                                                              )}
-                                                                             {booking.itemType === 'car' && ['Paid', 'Approved for Disbursement', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
-                                                                                 <button
-                                                                                     onClick={() => handleStartTrip(booking._id)}
-                                                                                     disabled={startingTripId === booking._id}
-                                                                                     className="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition disabled:opacity-50 mt-1.5 flex items-center gap-1.5 w-full justify-center shadow-sm cursor-pointer"
-                                                                                 >
-                                                                                     <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
-                                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-8.22-.07l-.02-.02a6 6 0 010-8.56L10.05 3V1h1.74v2l2.7 2.72a6 6 0 010 8.65z" />
-                                                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
-                                                                                     </svg>
-                                                                                     {startingTripId === booking._id ? 'Starting...' : 'Start Trip'}
-                                                                                 </button>
+                                                                             {booking.itemType === 'car' && ['Paid', 'Paid - Escrow Secured', 'Accepted', 'Approved for Disbursement', 'Confirmed', 'Pending Escrow'].includes(booking.status) && (
+                                                                                 <>
+                                                                                     <button
+                                                                                         onClick={() => handleStartTrip(booking._id)}
+                                                                                         disabled={startingTripId === booking._id || booking.status === 'Accepted'}
+                                                                                         className="text-[10px] font-black bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg transition disabled:opacity-50 mt-1.5 flex items-center gap-1.5 w-full justify-center shadow-sm cursor-pointer"
+                                                                                     >
+                                                                                         <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24">
+                                                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M15.59 14.37a6 6 0 01-8.22-.07l-.02-.02a6 6 0 010-8.56L10.05 3V1h1.74v2l2.7 2.72a6 6 0 010 8.65z" />
+                                                                                             <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" />
+                                                                                         </svg>
+                                                                                         {startingTripId === booking._id ? 'Starting...' : 'Start Trip'}
+                                                                                     </button>
+                                                                                     {booking.status === 'Accepted' && (
+                                                                                         <div className="text-[10px] font-black bg-yellow-100 text-yellow-800 px-3 py-2.5 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-yellow-200 animate-pulse">
+                                                                                             <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-ping"></span>
+                                                                                             Waiting for Client to Fund Escrow...
+                                                                                         </div>
+                                                                                     )}
+                                                                                     {booking.status === 'Paid - Escrow Secured' && (
+                                                                                         <div className="text-[10px] font-black bg-green-100 text-green-800 px-3 py-2.5 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-green-200">
+                                                                                             <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                                                                             Escrow Secured: Funds Locked
+                                                                                         </div>
+                                                                                     )}
+                                                                                 </>
                                                                              )}
                                                                              {booking.itemType === 'car' && booking.status === 'Trip Start Pending' && (
                                                                                  <div className="text-[10px] font-black bg-indigo-100 text-indigo-800 px-3 py-2 rounded-lg mt-1.5 flex items-center gap-1.5 w-full justify-center border border-indigo-200">
