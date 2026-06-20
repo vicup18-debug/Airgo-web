@@ -740,7 +740,7 @@ export default function ClientDashboard() {
 
         socketInstance.on('connect', () => {
             myBookings.forEach((booking: any) => {
-                if (['Pending Escrow', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status)) {
+                if (['Pending Escrow', 'Accepted', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status)) {
                     socketInstance.emit('join_booking', { bookingId: booking._id });
                     console.log(`📡 WebSocket: Dashboard joined room booking_${booking._id}`);
                 }
@@ -1136,7 +1136,7 @@ export default function ClientDashboard() {
                                                     </span>
                                                 ) : (
                                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
-                                                        booking.status === 'Pending Escrow' 
+                                                        (booking.status === 'Pending Escrow' || booking.status === 'Accepted') 
                                                             ? 'bg-yellow-100 text-yellow-800' 
                                                             : booking.status === 'Approved for Disbursement'
                                                                 ? 'bg-blue-100 text-blue-800'
@@ -1228,7 +1228,7 @@ export default function ClientDashboard() {
                                                             Chatroom
                                                         </button>
                                                     )}
-                                                    {booking.status === 'Pending Escrow' && (
+                                                    {(booking.status === 'Pending Escrow' || booking.status === 'Accepted') && (
                                                         <>
                                                             <button 
                                                                 onClick={() => { 
@@ -1264,7 +1264,7 @@ export default function ClientDashboard() {
                                                     )}
                                                 </div>
  
-                                                {booking.status === 'Pending Escrow' && (!booking.isOffer || booking.offerStatus === 'Accepted') && (
+                                                {(booking.status === 'Pending Escrow' || booking.status === 'Accepted') && (!booking.isOffer || booking.offerStatus === 'Accepted') && (
                                                     <PaystackPaymentButton 
                                                         booking={booking} 
                                                         user={user} 
