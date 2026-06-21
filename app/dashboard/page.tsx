@@ -786,7 +786,8 @@ export default function ClientDashboard() {
                     fetchMyBookings(JSON.parse(userData));
                 }
             } else {
-                toast.error("Failed to update status on server.");
+                const data = await res.json().catch(() => ({}));
+                toast.error(data.message || "Failed to update status on server.");
             }
         } catch (error) {
             console.error("Error confirming payment:", error);

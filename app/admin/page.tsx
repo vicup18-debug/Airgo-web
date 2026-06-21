@@ -236,7 +236,8 @@ export default function SuperadminDashboard() {
                     toast.success(`${actionLabel} Successful!`);
                     setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: nextStatus } : b));
                 } else {
-                    toast.error(`❌ Failed to update status.`);
+                    const data = await res.json().catch(() => ({}));
+                    toast.error(`❌ Failed to update status: ${data.message || 'Unknown error'}`);
                 }
             } catch (error) {
                 toast.error("❌ Error connecting to server.");
