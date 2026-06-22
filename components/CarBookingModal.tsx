@@ -666,19 +666,35 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 )}
 
                 {step === 3 && (
-                    <div className="p-10 text-center flex flex-col items-center overflow-y-auto flex-1 animate-in fade-in duration-300">
+                    <div className="p-10 text-center flex flex-col items-center overflow-y-auto flex-1 animate-in fade-in duration-300 relative">
+                        <button onClick={handleClose} className="absolute right-6 top-6 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold transition z-20">✕</button>
+
                         {/* Radar Animation */}
                         <div className="relative w-36 h-36 flex items-center justify-center mb-6">
-                            <div className="absolute inset-0 rounded-full bg-blue-100 border border-blue-200 animate-ping opacity-30" style={{ animationDuration: '3s' }}></div>
-                            <div className="absolute inset-4 rounded-full bg-blue-50 border border-blue-100 animate-ping opacity-50" style={{ animationDuration: '2s' }}></div>
+                            {radarCountdown > 0 ? (
+                                <>
+                                    <div className="absolute inset-0 rounded-full bg-blue-100 border border-blue-200 animate-ping opacity-30" style={{ animationDuration: '3s' }}></div>
+                                    <div className="absolute inset-4 rounded-full bg-blue-50 border border-blue-100 animate-ping opacity-50" style={{ animationDuration: '2s' }}></div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="absolute inset-0 rounded-full bg-gray-100 border border-gray-200 opacity-20"></div>
+                                    <div className="absolute inset-4 rounded-full bg-gray-50 border border-gray-100 opacity-30"></div>
+                                </>
+                            )}
                             <div className="w-16 h-16 bg-[#000080] rounded-full flex items-center justify-center text-white shadow-lg relative z-10">
-                                <svg className="w-7 h-7 text-white animate-pulse" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <svg className={`w-7 h-7 text-white ${radarCountdown > 0 ? 'animate-pulse' : ''}`} fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.02-1.072L3 9h18l.645 8.678A1.125 1.125 0 0120.625 18.75M9 9h1.5M12 9h1.5M15 9h1.5M2.25 9.75h19.5m-18 0l1.7-5.1a1.125 1.125 0 011.07-1.4h11.96a1.125 1.125 0 011.07 1.4l1.7 5.1" />
                                 </svg>
                             </div>
                         </div>
 
-                        <h2 className="text-2xl font-black text-gray-900 mb-1">Searching for Drivers</h2>
+                        <h2 className="text-2xl font-black text-gray-900 mb-1">
+                            {radarCountdown > 0 
+                                ? (sortedOffers.length > 0 ? "Bids Received" : "Searching for Drivers")
+                                : (sortedOffers.length > 0 ? "Search Completed" : "Request Timed Out")
+                            }
+                        </h2>
                         <p className="text-xs text-gray-400 font-bold uppercase tracking-wider">
                             {radarCountdown > 0 ? `Broadcasting Request (${radarCountdown}s)...` : 'Request Timeout'}
                         </p>
@@ -690,7 +706,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                         {/* Live Driver Bids List */}
                         <div className="w-full border-t border-gray-100 pt-6 mt-6 flex-1 flex flex-col gap-4 text-left">
                             <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                                <span className={`w-2 h-2 rounded-full bg-green-500 ${radarCountdown > 0 ? 'animate-pulse' : ''}`}></span>
                                 Live Offers ({sortedOffers.length})
                             </h4>
 
@@ -738,7 +754,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                             )}
                         </div>
 
-                        {radarCountdown === 0 && sortedOffers.length === 0 && (
+                        {radarCountdown === 0 && (
                             <button onClick={() => { handleClose(); router.push('/dashboard'); }} className="w-full bg-gray-900 text-white py-4 rounded-xl font-bold text-sm uppercase mt-6 transition hover:bg-black">
                                 Manage Request on Dashboard
                             </button>
