@@ -305,7 +305,7 @@ export default function JoinPartnerPage() {
                         <div className="flex items-start mt-6 bg-blue-50 p-4 rounded-xl border border-blue-100">
                             <input type="checkbox" id="terms" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-1 mr-3 w-5 h-5 accent-[#000080] cursor-pointer shrink-0" />
                             <label htmlFor="terms" className="text-xs text-blue-900 cursor-pointer leading-relaxed">
-                                I agree to the <span className="font-bold underline">Airgo Partnership Agreement</span> and <Link href="/escrow" className="font-black text-[#FFB81C] hover:underline">Escrow Policy</Link>. I certify that my business is legally registered, and I consent to a comprehensive review of my submitted identification and business documents.
+                                I agree to the <Link href="/partnership-agreement" className="font-black text-[#000080] hover:underline underline">Airgo Partnership Agreement</Link> and <Link href="/escrow" className="font-black text-[#FFB81C] hover:underline">Escrow Policy</Link>. I certify that my business is legally registered, and I consent to a comprehensive review of my submitted identification and business documents.
                             </label>
                         </div>
 

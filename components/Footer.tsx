@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getApiUrl } from '@/components/api';
 
 export default function Footer() {
   const [user, setUser] = useState<any>(null);
@@ -28,21 +29,29 @@ export default function Footer() {
     if (!newsletterEmail) return;
     setSubscribing(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+      const apiUrl = getApiUrl();
       const res = await fetch(`${apiUrl}/api/newsletter/subscribe`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: newsletterEmail })
       });
-      const data = await res.json();
+      
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        console.error("Failed to parse JSON response:", jsonErr);
+      }
+
       if (res.ok) {
         setNewsletterEmail('');
         alert(data.message || "Thank you for subscribing to Airgo VIP updates!");
       } else {
-        alert(data.message || "Subscription failed.");
+        alert(data.message || "Subscription failed. Please check your email or try again later.");
       }
     } catch (err) {
-      alert("Error connecting to subscription service.");
+      console.error("Subscription connection error:", err);
+      alert("Error connecting to subscription service. Please check your internet connection.");
     } finally {
       setSubscribing(false);
     }

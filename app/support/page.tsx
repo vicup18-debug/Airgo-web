@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import { getApiUrl } from '@/components/api';
 
 interface FAQ {
     question: string;
@@ -50,6 +51,9 @@ export default function SupportPage() {
     
     // Contact Form State
     const [formData, setFormData] = useState({ name: '', email: '', subject: 'Inquiry', message: '' });
+    const [isSending, setIsSending] = useState(false);
+    const [formSuccess, setFormSuccess] = useState('');
+    const [formError, setFormError] = useState('');
     
     // Chat Bot State
     const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string; time: string }>>([
@@ -102,11 +106,17 @@ export default function SupportPage() {
         e.preventDefault();
         if (!formData.name || !formData.email || !formData.message) {
             toast.error("Please fill out all required fields.");
+            setFormError("Please fill out all required fields.");
             return;
         }
+        
+        setIsSending(true);
+        setFormError('');
+        setFormSuccess('');
         const loadingToast = toast.loading("Sending your message...");
+        
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const apiUrl = getApiUrl();
             const res = await fetch(`${apiUrl}/api/auth/support`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -115,13 +125,19 @@ export default function SupportPage() {
 
             if (res.ok) {
                 toast.success("Message dispatched! A ticket has been generated and sent to our support team.", { id: loadingToast });
+                setFormSuccess("✅ Support message sent successfully! Our concierge team will get back to you shortly.");
                 setFormData({ name: '', email: '', subject: 'Inquiry', message: '' });
             } else {
                 const errData = await res.json();
-                toast.error(errData.message || "Failed to dispatch message.", { id: loadingToast });
+                const errMsg = errData.message || "Failed to dispatch message.";
+                toast.error(errMsg, { id: loadingToast });
+                setFormError(`⚠️ ${errMsg}`);
             }
         } catch (error) {
             toast.error("Network error. Please try again.", { id: loadingToast });
+            setFormError("⚠️ Network error. Please check your connection and try again.");
+        } finally {
+            setIsSending(false);
         }
     };
 
@@ -290,6 +306,20 @@ export default function SupportPage() {
                             {/* ✉️ TAB 3: CONTACT FORM */}
                             {activeTab === 'message' && (
                                 <form onSubmit={handleFormSubmit} className="space-y-5">
+                                    {/* 🔴 ERROR BANNER */}
+                                    {formError && (
+                                        <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-sm font-bold border border-red-100 animate-fade-in">
+                                            {formError}
+                                        </div>
+                                    )}
+
+                                    {/* 🟢 SUCCESS BANNER */}
+                                    {formSuccess && (
+                                        <div className="bg-green-50 text-green-700 p-3.5 rounded-xl text-sm font-bold border border-green-100 animate-fade-in">
+                                            {formSuccess}
+                                        </div>
+                                    )}
+
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Full Name</label>
@@ -341,8 +371,12 @@ export default function SupportPage() {
                                         />
                                     </div>
 
-                                    <button type="submit" className="w-full bg-[#004A99] hover:bg-blue-800 text-white font-black text-sm py-3.5 rounded-xl shadow-md transition-all">
-                                        Send Direct Support Message
+                                    <button 
+                                        disabled={isSending}
+                                        type="submit" 
+                                        className={`w-full text-white font-black text-sm py-3.5 rounded-xl shadow-md transition-all ${isSending ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#004A99] hover:bg-blue-800'}`}
+                                    >
+                                        {isSending ? 'Sending Support Message...' : 'Send Direct Support Message'}
                                     </button>
                                 </form>
                             )}
