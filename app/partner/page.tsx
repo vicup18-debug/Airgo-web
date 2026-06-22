@@ -1037,7 +1037,7 @@ export default function PartnerDashboard() {
     };
 
     const calculateTotalRevenue = () => {
-        return myBookings.filter(b => b.status !== 'Cancelled' && b.status !== 'Archived').reduce((sum, b) => {
+        return myBookings.filter(b => b.status === 'Completed').reduce((sum, b) => {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
             return sum + (num || 0);
         }, 0).toLocaleString();
