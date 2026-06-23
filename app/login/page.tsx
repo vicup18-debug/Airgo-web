@@ -91,6 +91,8 @@ export default function LoginPage() {
                 router.push('/admin');
             } else if (data.role === 'partner') {
                 router.push('/partner');
+            } else if (data.role === 'driver') {
+                router.push('/driver');
             } else {
                 router.push('/'); // Client Homepage (taken to hotel booking page)
             }
@@ -134,6 +136,7 @@ export default function LoginPage() {
 
             if (data.role === 'admin') router.push('/admin');
             else if (data.role === 'partner') router.push('/partner');
+            else if (data.role === 'driver') router.push('/driver');
             else router.push('/');
 
         } catch (err: any) {

@@ -543,14 +543,14 @@ export default function PartnerDashboard() {
     const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
 
     const [newItem, setNewItem] = useState<any>({
-        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
+        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
     });
 
     // EDIT INVENTORY MODAL STATE
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: ''
+        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
     });
 
 
@@ -610,29 +610,14 @@ export default function PartnerDashboard() {
 
         socketInstance.on('connect', () => {
             const secureId = parsedUser.id || parsedUser.userId || parsedUser._id;
-            socketInstance.emit('join_drivers', { city: parsedUser.city });
+            // Fleet managers do not join the live drivers room
             socketInstance.emit('join_partner', { partnerId: secureId });
-            console.log(`📡 WebSocket: Partner Dashboard connected, joined city drivers_${parsedUser.city} and private partner_${secureId}`);
+            console.log(`📡 WebSocket: Partner Dashboard connected, joined private partner_${secureId}`);
         });
 
+        // Fleet managers do not process live booking requests directly
         socketInstance.on('new_booking_request', (booking: any) => {
-            console.log("📡 WebSocket: Real-time dispatch request received", booking);
-            
-            // Only show alert if driver is a car/shuttle partner
-            const isCarPartner = parsedUser.partnerType?.toLowerCase().includes('car') || 
-                                 parsedUser.partnerType === 'shuttle' || 
-                                 parsedUser.partnerType === 'airport-shuttle';
-            if (isCarPartner) {
-                // Ensure they haven't already bid on it
-                const myUserId = parsedUser.id || parsedUser.userId || parsedUser._id;
-                const hasBid = booking.driverOffers?.some((o: any) => o.driverId === myUserId);
-                if (!hasBid) {
-                    setIncomingDispatch(booking);
-                    setDispatchCountdown(30);
-                    playNotificationSound();
-                    fetchAvailableRequests();
-                }
-            }
+            console.log("📡 WebSocket: Real-time dispatch request ignored for Fleet Manager", booking);
         });
 
         socketInstance.on('booking_claimed', (data: any) => {
@@ -880,7 +865,11 @@ export default function PartnerDashboard() {
                 partnerId: secureId, 
                 vehicleNumber: newItem.vehicleNumber, 
                 location: newItem.location, 
-                state: newItem.state
+                state: newItem.state,
+                driverName: newItem.driverName,
+                driverEmail: newItem.driverEmail,
+                driverPhone: newItem.driverPhone,
+                driverPassword: newItem.driverPassword
             } : {
                 partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
@@ -896,7 +885,7 @@ export default function PartnerDashboard() {
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
-                setNewItem({ name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '' });
+                setNewItem({ name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -925,7 +914,11 @@ export default function PartnerDashboard() {
             vehicleNumber: item.vehicleNumber || '',
             location: item.location || '',
             state: item.state || '',
-            description: item.description || ''
+            description: item.description || '',
+            driverName: item.driverName || '',
+            driverPhone: item.driverPhone || '',
+            driverEmail: item.driverEmail || '',
+            driverPassword: ''
         });
         setIsEditInventoryModalOpen(true);
     };
@@ -953,7 +946,11 @@ export default function PartnerDashboard() {
                 previewImage: editItemData.previewImage,
                 vehicleNumber: editItemData.vehicleNumber,
                 location: editItemData.location,
-                state: editItemData.state
+                state: editItemData.state,
+                driverName: editItemData.driverName,
+                driverEmail: editItemData.driverEmail,
+                driverPhone: editItemData.driverPhone,
+                driverPassword: editItemData.driverPassword
             } : {
                 hotelAddress: editItemData.hotelAddress,
                 name: editItemData.name,
@@ -1361,7 +1358,7 @@ export default function PartnerDashboard() {
                         </svg>
                         Reservations
                     </button>
-                    {isCarPartner && (
+                    {false && isCarPartner && (
                         <button onClick={() => { setActiveTab('available-requests'); setIsMobileMenuOpen(false); }} className={`w-full text-left px-4 py-3 rounded-xl font-bold transition flex items-center gap-3 ${activeTab === 'available-requests' ? 'bg-[#FFB81C] text-[#004A99]' : 'hover:bg-blue-800 text-white'}`}>
                             <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -2302,6 +2299,16 @@ export default function PartnerDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Plate / Vehicle Number</label><input required type="text" placeholder="e.g. ABJ-888-GW" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.vehicleNumber} onChange={e => setNewItem({ ...newItem, vehicleNumber: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.location} onChange={e => setNewItem({ ...newItem, location: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.state} onChange={e => setNewItem({ ...newItem, state: e.target.value })} /></div>
+                                    
+                                    <div className="col-span-2 border-t pt-3 mt-1">
+                                        <h4 className="text-sm font-black text-[#000080] mb-2">Driver Profile Assignment</h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Name *</label><input required type="text" placeholder="e.g. John Doe" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={newItem.driverName || ''} onChange={e => setNewItem({ ...newItem, driverName: e.target.value })} /></div>
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Phone *</label><input required type="text" placeholder="e.g. +2348012345678" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={newItem.driverPhone || ''} onChange={e => setNewItem({ ...newItem, driverPhone: e.target.value })} /></div>
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Email (Unique Username) *</label><input required type="email" placeholder="e.g. john@airgo.ng" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={newItem.driverEmail || ''} onChange={e => setNewItem({ ...newItem, driverEmail: e.target.value })} /></div>
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Login Password *</label><input required type="password" placeholder="••••••••" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={newItem.driverPassword || ''} onChange={e => setNewItem({ ...newItem, driverPassword: e.target.value })} /></div>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
@@ -2408,6 +2415,16 @@ export default function PartnerDashboard() {
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Location (City/Area)</label><input required type="text" placeholder="e.g. Maitama" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.location} onChange={e => setEditItemData({ ...editItemData, location: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.state} onChange={e => setEditItemData({ ...editItemData, state: e.target.value })} /></div>
                                     <div className="col-span-2"><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Description</label><textarea className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.description || ''} onChange={e => setEditItemData({ ...editItemData, description: e.target.value })} /></div>
+                                    
+                                    <div className="col-span-2 border-t pt-3 mt-1">
+                                        <h4 className="text-sm font-black text-[#000080] mb-2">Driver Profile Assignment</h4>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Name *</label><input required type="text" placeholder="e.g. John Doe" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={editItemData.driverName || ''} onChange={e => setEditItemData({ ...editItemData, driverName: e.target.value })} /></div>
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Phone *</label><input required type="text" placeholder="e.g. +2348012345678" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={editItemData.driverPhone || ''} onChange={e => setEditItemData({ ...editItemData, driverPhone: e.target.value })} /></div>
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Email (Unique Username) *</label><input required type="email" placeholder="e.g. john@airgo.ng" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={editItemData.driverEmail || ''} onChange={e => setEditItemData({ ...editItemData, driverEmail: e.target.value })} /></div>
+                                            <div><label className="block text-xs font-bold text-gray-700 uppercase mb-1">Driver Login Password (leave blank to keep current)</label><input type="password" placeholder="••••••••" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white text-sm" value={editItemData.driverPassword || ''} onChange={e => setEditItemData({ ...editItemData, driverPassword: e.target.value })} /></div>
+                                        </div>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
