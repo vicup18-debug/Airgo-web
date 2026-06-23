@@ -199,6 +199,17 @@ export default function DriverDashboard() {
             silentRefresh();
         });
 
+        // Real-time auto-cancellation of unpaid bookings
+        socket.on('booking_cancelled', (data: any) => {
+            setMyBookings(prev => prev.filter(b => b._id !== data.bookingId));
+            silentRefresh();
+            toast.error("An accepted trip request was cancelled due to unpaid escrow.", {
+                duration: 5000,
+                position: 'top-center',
+                icon: '⏰'
+            });
+        });
+
         return () => {
             socket.disconnect();
         };
