@@ -161,6 +161,7 @@ export default function DriverDashboard() {
             console.log("📡 Driver Portal Connected to WebSocket!");
             socket.emit('join_drivers', { city: user.city || 'Abuja' });
             socket.emit('join_partner', { partnerId: myUserId });
+            socket.emit('join_driver', { driverId: myUserId });
         });
 
         // Live dispatch broadcast
@@ -214,6 +215,56 @@ export default function DriverDashboard() {
             socket.disconnect();
         };
     }, [user, myUserId]);
+
+    // 🟢 Driver Telemetry Position Watcher
+    useEffect(() => {
+        if (!myUserId) return;
+
+        let watchId: any;
+
+        if ("geolocation" in navigator) {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+
+            const successCallback = async (position: any) => {
+                const { latitude, longitude } = position.coords;
+                console.log(`Telemetry update: lat=${latitude}, lon=${longitude}`);
+                try {
+                    await fetch(`${apiUrl}/api/driver/location`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            longitude,
+                            latitude
+                        })
+                    });
+                } catch (err) {
+                    console.error("Error sending telemetry ping:", err);
+                }
+            };
+
+            const errorCallback = (error: any) => {
+                console.warn("Geolocation watch error:", error.message);
+            };
+
+            watchId = navigator.geolocation.watchPosition(successCallback, errorCallback, {
+                enableHighAccuracy: true,
+                maximumAge: 10000,
+                timeout: 5000
+            });
+        } else {
+            console.warn("Geolocation not supported by this browser.");
+        }
+
+        return () => {
+            if (watchId !== undefined) {
+                navigator.geolocation.clearWatch(watchId);
+            }
+        };
+    }, [myUserId]);
 
     // Telemetry animation simulator
     useEffect(() => {

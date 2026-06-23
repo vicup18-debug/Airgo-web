@@ -409,7 +409,11 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 distance: distance,
                 offeredPrice: Number(customOfferPrice).toLocaleString(),
                 travelScope: travelScope,
-                city: pickupCity
+                city: pickupCity,
+                pickupCoords: pickupCoords ? {
+                    type: 'Point',
+                    coordinates: [pickupCoords[1], pickupCoords[0]] // [longitude, latitude]
+                } : null
             };
 
             const response = await fetch(`${apiUrl}/api/ride-requests`, {
