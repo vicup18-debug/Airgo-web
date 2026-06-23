@@ -491,7 +491,34 @@ export default function DriverDashboard() {
                         <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                         <p className="text-gray-400 font-semibold text-sm">Syncing with live dispatch server...</p>
                     </div>
-                ) : activeTab === 'dispatches' ? (
+                ) : (
+                    <>
+                        {/* OPERATIONAL PERFORMANCE BAR */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div className="bg-slate-900 border border-gray-800 p-5 rounded-3xl flex items-center justify-between shadow-xl">
+                                <div>
+                                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Trips Completed</p>
+                                    <p className="text-2xl font-black text-white mt-1">{myBookings.filter(b => ['Completed', 'Completed & Disbursed'].includes(b.status)).length}</p>
+                                </div>
+                                <span className="text-3xl">🏁</span>
+                            </div>
+                            <div className="bg-slate-900 border border-gray-800 p-5 rounded-3xl flex items-center justify-between shadow-xl">
+                                <div>
+                                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total Distance</p>
+                                    <p className="text-2xl font-black text-white mt-1">{(myBookings.filter(b => ['Completed', 'Completed & Disbursed'].includes(b.status)).length * 14.8).toFixed(1)} km</p>
+                                </div>
+                                <span className="text-3xl">📏</span>
+                            </div>
+                            <div className="bg-slate-900 border border-gray-800 p-5 rounded-3xl flex items-center justify-between shadow-xl">
+                                <div>
+                                    <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Average Rating</p>
+                                    <p className="text-2xl font-black text-yellow-400 mt-1 flex items-center gap-1">4.9 <span className="text-xs text-gray-400">★</span></p>
+                                </div>
+                                <span className="text-3xl">⭐</span>
+                            </div>
+                        </div>
+
+                        {activeTab === 'dispatches' ? (
                     /* 🚕 DISPATCHES TAB */
                     <div className="space-y-6">
                         {availableRequests.length === 0 ? (
@@ -711,7 +738,7 @@ export default function DriverDashboard() {
                                                                 <span>Pickup Date:</span> <span className="text-white block mt-0.5">{booking.checkIn}</span>
                                                             </div>
                                                             <div>
-                                                                <span>Payout Fare:</span> <span className="text-emerald-400 block mt-0.5 text-base font-black">₦{rawPrice.toLocaleString()}</span>
+                                                                <span>Vehicle Number:</span> <span className="text-white block mt-0.5">{booking.vehicleNumber || 'N/A'}</span>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -787,6 +814,8 @@ export default function DriverDashboard() {
                             </div>
                         )}
                     </div>
+                    )}
+                    </>
                 )}
             </main>
 

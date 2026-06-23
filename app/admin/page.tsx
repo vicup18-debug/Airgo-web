@@ -1077,7 +1077,10 @@ export default function SuperadminDashboard() {
                                                     <th className="p-4 font-bold border-b">Booking Ref / Asset</th>
                                                     <th className="p-4 font-bold border-b">Client Info</th>
                                                     <th className="p-4 font-bold border-b">Timeframe</th>
+                                                    <th className="p-4 font-bold border-b">Asset Owner</th>
+                                                    <th className="p-4 font-bold border-b">Operator</th>
                                                     <th className="p-4 font-bold border-b">Status</th>
+                                                    <th className="p-4 font-bold border-b text-right">Airgo Margin</th>
                                                     <th className="p-4 font-bold border-b text-right">Price</th>
                                                     <th className="p-4 font-bold border-b text-center">Actions</th>
                                                 </tr>
@@ -1100,7 +1103,7 @@ export default function SuperadminDashboard() {
                                                         );
                                                     }).length === 0 ? (
                                                     <tr>
-                                                        <td colSpan={6} className="p-12 text-center text-gray-500 bg-white">
+                                                        <td colSpan={9} className="p-12 text-center text-gray-500 bg-white">
                                                             <div className="text-4xl mb-2">📅</div>
                                                             <p className="font-bold">No bookings found matching filter criteria.</p>
                                                         </td>
@@ -1139,6 +1142,12 @@ export default function SuperadminDashboard() {
                                                                 <p className="text-xs text-red-700 mt-0.5 font-bold">Check-out: {formatDisplayDate(booking.checkOut, booking.itemType)}</p>
                                                             </td>
                                                             <td className="p-4">
+                                                                <p className="text-xs font-bold text-gray-900">{booking.partnerName || (booking.partnerId ? `ID: ${booking.partnerId.substring(0, 8)}...` : 'N/A')}</p>
+                                                            </td>
+                                                            <td className="p-4">
+                                                                <p className="text-xs font-bold text-gray-900">{booking.driverName || (booking.driverId ? `ID: ${booking.driverId.substring(0, 8)}...` : 'N/A')}</p>
+                                                            </td>
+                                                            <td className="p-4">
                                                                 <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                                                     booking.status === 'Pending Escrow' 
                                                                         ? 'bg-yellow-100 text-yellow-800' 
@@ -1151,6 +1160,7 @@ export default function SuperadminDashboard() {
                                                                     {booking.status}
                                                                 </span>
                                                             </td>
+                                                            <td className="p-4 text-right font-bold text-gray-600">₦{booking.commissionAmount?.toLocaleString() || '0'}</td>
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
                                                                  <div className="flex items-center justify-center gap-2">
@@ -1166,7 +1176,7 @@ export default function SuperadminDashboard() {
                                                         </tr>
                                                         {expandedEscrowId === booking._id && (
                                                             <tr className="bg-gray-50 border-b border-gray-200">
-                                                                <td colSpan={6} className="p-6">
+                                                                <td colSpan={9} className="p-6">
                                                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Detailed Client Info</p>

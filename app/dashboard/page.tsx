@@ -1332,7 +1332,7 @@ export default function ClientDashboard() {
                                                     onClick={() => handleEndTrip(booking._id)}
                                                     className="w-full sm:w-auto bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4.5 py-2.5 rounded-xl shadow-sm transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5 shrink-0"
                                                 >
-                                                    End Trip
+                                                    Confirm Drop-off
                                                 </button>
                                             </div>
                                         )}
