@@ -22,7 +22,7 @@ export default function Navigation() {
   }, [pathname]);
 
   // 🟢 SAFETY SWITCH: Hide global nav on dashboards and auth pages
-  const hiddenRoutes = ['/admin', '/partner', '/dashboard', '/login', '/register', '/join'];
+  const hiddenRoutes = ['/admin', '/partner', '/driver', '/dashboard', '/login', '/register', '/join'];
   if (hiddenRoutes.some(route => pathname.startsWith(route))) return null;
 
   return (

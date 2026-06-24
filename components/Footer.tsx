@@ -58,7 +58,7 @@ export default function Footer() {
   };
 
   // 🟢 SAFETY SWITCH: Hides the footer on admin panels, dashboards, and auth screens so layouts don't break!
-  const hiddenRoutes = ['/admin', '/partner', '/dashboard', '/login', '/register', '/join'];
+  const hiddenRoutes = ['/admin', '/partner', '/driver', '/dashboard', '/login', '/register', '/join'];
   if (hiddenRoutes.some(route => pathname.startsWith(route))) return null;
 
   return (

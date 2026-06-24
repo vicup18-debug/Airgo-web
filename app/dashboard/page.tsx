@@ -1121,7 +1121,11 @@ export default function ClientDashboard() {
                                                 ) : (
                                                     <p className="text-2xl font-black text-gray-900">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || booking.totalPrice || 0).toLocaleString()}</p>
                                                 )}
-                                                {booking.isOffer ? (
+                                                {booking.status === 'Cancelled' ? (
+                                                    <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200">
+                                                        Cancelled
+                                                    </span>
+                                                ) : booking.isOffer ? (
                                                     <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${
                                                         booking.offerStatus === 'Pending Partner' 
                                                             ? 'bg-amber-100 text-amber-800 border border-amber-200' 
@@ -1350,7 +1354,7 @@ export default function ClientDashboard() {
                                         )}
 
                                         {/* Custom Price Offer Banner & Actions */}
-                                        {booking.isOffer && (
+                                        {booking.isOffer && booking.status !== 'Cancelled' && (
                                             <div className={`w-full p-4 rounded-xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left ${
                                                 booking.offerStatus === 'Pending Partner' 
                                                     ? 'bg-amber-50/70 border-amber-200 text-amber-900' 
