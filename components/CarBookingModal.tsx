@@ -63,6 +63,12 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const [matchingBids, setMatchingBids] = useState<any[]>([]);
     const [radarCountdown, setRadarCountdown] = useState(60);
 
+    // Counter-offer inline input state
+    // counterInputs  — maps driverId -> raw string typed by user
+    // counterActiveId — which bid card currently has the counter input open
+    const [counterInputs, setCounterInputs] = useState<Record<string, string>>({});
+    const [counterActiveId, setCounterActiveId] = useState<string | null>(null);
+
     // Haversine formula for distance in km
     const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
         const R = 6371; // earth radius in km
@@ -346,10 +352,21 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            
+
+            // Build payload — always include driverId.
+            // counterFare must be a positive integer; strip any residual formatting
+            // just in case the call-site passes a pre-formatted string-coerced value.
             const payload: any = { driverId };
-            if (counterFare) {
-                payload.counterFare = counterFare;
+            if (counterFare !== undefined && counterFare !== null) {
+                const sanitized = Number(
+                    String(counterFare).replace(/[^0-9.]/g, '')
+                );
+                if (!isNaN(sanitized) && sanitized > 0) {
+                    payload.counterFare = sanitized;
+                } else {
+                    toast.error('Invalid counter amount. Please enter a number greater than 0.');
+                    return;
+                }
             }
 
             const res = await fetch(`${apiUrl}/api/ride-requests/${createdBookingId}/select-driver`, {
@@ -362,18 +379,22 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             });
 
             if (res.ok) {
-                if (counterFare) {
-                    toast.success(`🎉 Your counter-offer of ₦${counterFare.toLocaleString()} has been sent!`);
+                if (payload.counterFare) {
+                    toast.success(`🎉 Counter-offer of ₦${Number(payload.counterFare).toLocaleString()} sent to driver!`);
                 } else {
-                    toast.success("🎉 Bid accepted successfully! Redirecting to checkout...");
+                    toast.success('🎉 Bid accepted! Redirecting to checkout...');
                 }
+                // Reset counter UI state
+                setCounterActiveId(null);
+                setCounterInputs({});
                 handleClose();
                 router.push('/dashboard');
             } else {
-                toast.error("Failed to accept fare offer.");
+                const errData = await res.json().catch(() => ({}));
+                toast.error(errData.message || 'Failed to submit selection.');
             }
         } catch (err) {
-            toast.error("Connection error selecting driver.");
+            toast.error('Connection error. Please check your network and try again.');
         }
     };
 
@@ -746,21 +767,76 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                                     <p className="text-base font-black text-[#000080]">₦{bid.fare.toLocaleString()}</p>
                                                 </div>
                                                 <div className="flex gap-2">
-                                                    <button onClick={() => handleSelectDriver(bid.driverId)} className="flex-1 sm:flex-initial bg-[#000080] hover:bg-blue-900 text-white font-bold text-[10px] px-3.5 py-2 rounded-lg transition shadow-sm cursor-pointer whitespace-nowrap">
+                                                    {/* Accept driver's quoted fare directly */}
+                                                    <button
+                                                        onClick={() => handleSelectDriver(bid.driverId)}
+                                                        className="flex-1 sm:flex-initial bg-[#000080] hover:bg-blue-900 text-white font-bold text-[10px] px-3.5 py-2 rounded-lg transition shadow-sm cursor-pointer whitespace-nowrap"
+                                                    >
                                                         Accept
                                                     </button>
-                                                    <button onClick={() => {
-                                                        const counterVal = prompt(`Enter counter price for ${bid.driverName} (₦):`, bid.fare.toString());
-                                                        if (counterVal) {
-                                                            const numVal = parseInt(counterVal.replace(/[^0-9]/g, ''));
-                                                            if (!isNaN(numVal) && numVal > 0) {
-                                                                handleSelectDriver(bid.driverId, numVal);
-                                                            }
+
+                                                    {/* Toggle inline counter-offer input */}
+                                                    <button
+                                                        onClick={() =>
+                                                            setCounterActiveId(prev =>
+                                                                prev === bid.driverId ? null : bid.driverId
+                                                            )
                                                         }
-                                                    }} className="flex-1 sm:flex-initial bg-white border border-[#000080] text-[#000080] hover:bg-blue-50 font-bold text-[10px] px-3 py-2 rounded-lg transition cursor-pointer whitespace-nowrap">
+                                                        className="flex-1 sm:flex-initial bg-white border border-[#000080] text-[#000080] hover:bg-blue-50 font-bold text-[10px] px-3 py-2 rounded-lg transition cursor-pointer whitespace-nowrap"
+                                                    >
                                                         Counter
                                                     </button>
                                                 </div>
+
+                                                {/* Inline counter-offer input — only visible when this bid is active */}
+                                                {counterActiveId === bid.driverId && (
+                                                    <form
+                                                        onSubmit={(e) => {
+                                                            e.preventDefault();
+                                                            const raw = (counterInputs[bid.driverId] || '').replace(/[^0-9.]/g, '');
+                                                            const parsed = Number(raw);
+                                                            if (!raw || isNaN(parsed) || parsed <= 0) {
+                                                                toast.error('Please enter a valid counter amount greater than ₦0.');
+                                                                return;
+                                                            }
+                                                            handleSelectDriver(bid.driverId, parsed);
+                                                        }}
+                                                        className="flex gap-2 mt-2 items-center"
+                                                    >
+                                                        <div className="relative flex-1">
+                                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500 pointer-events-none">₦</span>
+                                                            <input
+                                                                type="number"
+                                                                min="1"
+                                                                step="1"
+                                                                inputMode="numeric"
+                                                                placeholder={bid.fare.toString()}
+                                                                value={counterInputs[bid.driverId] || ''}
+                                                                onChange={(e) =>
+                                                                    setCounterInputs(prev => ({
+                                                                        ...prev,
+                                                                        [bid.driverId]: e.target.value
+                                                                    }))
+                                                                }
+                                                                className="w-full pl-6 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080] focus:border-transparent"
+                                                                autoFocus
+                                                            />
+                                                        </div>
+                                                        <button
+                                                            type="submit"
+                                                            className="bg-[#000080] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg hover:bg-blue-900 transition whitespace-nowrap cursor-pointer"
+                                                        >
+                                                            Send
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setCounterActiveId(null)}
+                                                            className="text-gray-400 hover:text-gray-600 text-[10px] font-bold px-2 py-1.5 transition cursor-pointer"
+                                                        >
+                                                            ✕
+                                                        </button>
+                                                    </form>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
