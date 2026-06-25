@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { io, Socket } from 'socket.io-client';
@@ -78,6 +78,69 @@ export default function DriverDashboard() {
             fetchDriverData(secureId);
         }
     }, [router]);
+
+    // 🟢 Register Firebase Cloud Messaging for Background Push Alerts
+    const setupPushNotifications = useCallback(async () => {
+        try {
+            if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
+                return;
+            }
+
+            // Fetch config from backend to check if Firebase is configured
+            const configRes = await fetch('/api/firebase-config');
+            if (!configRes.ok) return;
+            const firebaseConfig = await configRes.json();
+
+            if (!firebaseConfig.apiKey || !firebaseConfig.messagingSenderId) {
+                console.log("FCM: Credentials not set up yet. Skipping FCM registration.");
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log("FCM: Notification permission denied.");
+                return;
+            }
+
+            // Register background service worker
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            
+            // Load Firebase client SDK dynamically
+            const { initializeApp } = await import('firebase/app');
+            const { getMessaging, getToken } = await import('firebase/messaging');
+
+            const app = initializeApp(firebaseConfig);
+            const messaging = getMessaging(app);
+
+            const fcmToken = await getToken(messaging, {
+                serviceWorkerRegistration: registration,
+                vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || ''
+            });
+
+            if (fcmToken) {
+                const token = localStorage.getItem('airgo_token');
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                
+                await fetch(`${apiUrl}/api/driver/fcm-token`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ fcmToken })
+                });
+                console.log("🔥 FCM token registered and synced with server:", fcmToken);
+            }
+        } catch (err) {
+            console.error("❌ FCM registration failed:", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (myUserId) {
+            setupPushNotifications();
+        }
+    }, [myUserId, setupPushNotifications]);
 
     // 🟢 2. Fetch Driver & Assigned Vehicle Details
     const fetchDriverData = async (driverId: string) => {
