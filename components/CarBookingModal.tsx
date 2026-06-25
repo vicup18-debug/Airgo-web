@@ -199,9 +199,19 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
         socketInstance.on('booking_updated', (booking: any) => {
             if (booking.offerStatus === 'Accepted') {
-                toast.success("🎉 Offer accepted! Redirecting to checkout.");
+                // Driver accepted the client's direct fare — proceed to payment
+                toast.success("🎉 Fare accepted! Redirecting to checkout.");
                 handleClose();
                 router.push('/dashboard');
+            } else if (booking.offerStatus === 'Pending Partner') {
+                // Client fired a counter-offer — redirect to dashboard to await driver's
+                // Accept / Reject / Counter response. The Paystack button stays hidden
+                // there until offerStatus becomes 'Accepted'.
+                toast.success("📨 Counter-offer sent! Waiting for driver's response on your dashboard.");
+                handleClose();
+                router.push('/dashboard');
+            } else if (booking.offerStatus === 'Rejected' || booking.status === 'Cancelled') {
+                toast.error("❌ The offer was declined. You can try selecting another driver.");
             }
         });
 
