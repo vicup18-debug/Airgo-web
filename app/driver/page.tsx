@@ -79,6 +79,51 @@ export default function DriverDashboard() {
         }
     }, [router]);
 
+    // 🟢 1b. Auto-refresh available dispatches & bookings every 5 seconds
+    useEffect(() => {
+        if (!myUserId) return;
+        const interval = setInterval(() => {
+            silentRefresh();
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [myUserId]);
+
+    // 🟢 1c. Parse incoming VoIP call credentials from URL on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const incomingCallBookingId = params.get('incomingCallBookingId');
+            const callerName = params.get('callerName');
+            const offerStr = params.get('offer');
+
+            if (incomingCallBookingId && offerStr) {
+                try {
+                    const parsedOffer = JSON.parse(decodeURIComponent(offerStr));
+                    setChatBookingId(incomingCallBookingId);
+                    setChatBookingName(callerName ? decodeURIComponent(callerName) : 'Client Call');
+                    setChatInitialOffer({
+                        bookingId: incomingCallBookingId,
+                        bookingName: callerName ? decodeURIComponent(callerName) : 'Client Call',
+                        callerName: callerName ? decodeURIComponent(callerName) : 'Client',
+                        offer: parsedOffer
+                    });
+                    setIsChatOpen(true);
+                    
+                    // Clear the query parameters immediately
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('incomingCallBookingId');
+                    url.searchParams.delete('callerName');
+                    url.searchParams.delete('offer');
+                    window.history.replaceState({}, '', url.toString());
+                    
+                    console.log("🔔 Driver Portal: parsed incoming VoIP call credentials from URL successfully.");
+                } catch (e) {
+                    console.error("Error parsing VoIP call credentials from URL query parameters:", e);
+                }
+            }
+        }
+    }, [router]);
+
     // 🟢 Register Firebase Cloud Messaging for Background Push Alerts
     const setupPushNotifications = useCallback(async () => {
         try {

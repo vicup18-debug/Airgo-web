@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -724,6 +724,105 @@ export default function ClientDashboard() {
             fetchMyBookings(parsedUser, true);
         }, 30000);
         return () => clearInterval(interval);
+    }, [router]);
+
+    // 🟢 Register Firebase Cloud Messaging for Background Push Alerts
+    const setupPushNotifications = useCallback(async () => {
+        try {
+            if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
+                return;
+            }
+
+            // Fetch config from backend to check if Firebase is configured
+            const configRes = await fetch('/api/firebase-config');
+            if (!configRes.ok) return;
+            const firebaseConfig = await configRes.json();
+
+            if (!firebaseConfig.apiKey || !firebaseConfig.messagingSenderId) {
+                console.log("FCM: Credentials not set up yet. Skipping FCM registration.");
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                console.log("FCM: Notification permission denied.");
+                return;
+            }
+
+            // Register background service worker
+            const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+            
+            // Load Firebase client SDK dynamically
+            const { initializeApp } = await import('firebase/app');
+            const { getMessaging, getToken } = await import('firebase/messaging');
+
+            const app = initializeApp(firebaseConfig);
+            const messaging = getMessaging(app);
+
+            const fcmToken = await getToken(messaging, {
+                serviceWorkerRegistration: registration,
+                vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || ''
+            });
+
+            if (fcmToken) {
+                const token = localStorage.getItem('airgo_token');
+                const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                
+                await fetch(`${apiUrl}/api/driver/fcm-token`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ fcmToken })
+                });
+                console.log("🔥 Passenger FCM token registered and synced with server:", fcmToken);
+            }
+        } catch (err) {
+            console.error("❌ Passenger FCM registration failed:", err);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (user) {
+            setupPushNotifications();
+        }
+    }, [user, setupPushNotifications]);
+
+    // 🟢 Parse incoming VoIP call credentials from URL on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const incomingCallBookingId = params.get('incomingCallBookingId');
+            const callerName = params.get('callerName');
+            const offerStr = params.get('offer');
+
+            if (incomingCallBookingId && offerStr) {
+                try {
+                    const parsedOffer = JSON.parse(decodeURIComponent(offerStr));
+                    setChatBookingId(incomingCallBookingId);
+                    setChatBookingName(callerName ? decodeURIComponent(callerName) : 'Driver Call');
+                    setChatInitialOffer({
+                        bookingId: incomingCallBookingId,
+                        bookingName: callerName ? decodeURIComponent(callerName) : 'Driver Call',
+                        callerName: callerName ? decodeURIComponent(callerName) : 'Driver',
+                        offer: parsedOffer
+                    });
+                    setIsChatOpen(true);
+                    
+                    // Clear the query parameters immediately
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('incomingCallBookingId');
+                    url.searchParams.delete('callerName');
+                    url.searchParams.delete('offer');
+                    window.history.replaceState({}, '', url.toString());
+                    
+                    console.log("🔔 Client Dashboard: parsed incoming VoIP call credentials from URL successfully.");
+                } catch (e) {
+                    console.error("Error parsing VoIP call credentials from URL query parameters:", e);
+                }
+            }
+        }
     }, [router]);
 
     // Sync socket rooms with active bookings for real-time dashboard updates
