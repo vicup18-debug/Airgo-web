@@ -42,6 +42,7 @@ export default function DriverDashboard() {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatBookingId, setChatBookingId] = useState('');
     const [chatBookingName, setChatBookingName] = useState('');
+    const [chatInitialOffer, setChatInitialOffer] = useState<any>(null);
 
     // Telemetry simulator states
     const [simulatedSpeed, setSimulatedSpeed] = useState(0);
@@ -209,6 +210,14 @@ export default function DriverDashboard() {
                 position: 'top-center',
                 icon: '⏰'
             });
+        });
+
+        socket.on('incoming_call_alert', (data: any) => {
+            console.log("📞 Incoming call alert received globally on driver portal:", data);
+            setChatBookingId(data.bookingId);
+            setChatBookingName(data.bookingName);
+            setChatInitialOffer(data);
+            setIsChatOpen(true);
         });
 
         return () => {
@@ -889,6 +898,7 @@ export default function DriverDashboard() {
                         setIsChatOpen(false);
                         setChatBookingId('');
                         setChatBookingName('');
+                        setChatInitialOffer(null);
                     }}
                     bookingId={chatBookingId}
                     bookingName={chatBookingName}
@@ -897,6 +907,7 @@ export default function DriverDashboard() {
                         name: user?.name || 'Driver',
                         role: 'partner' // Act as partner role for chat compatibility
                     }}
+                    initialOffer={chatInitialOffer}
                 />
             )}
         </div>

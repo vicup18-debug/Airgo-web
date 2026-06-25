@@ -340,6 +340,7 @@ export default function ClientDashboard() {
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatBookingId, setChatBookingId] = useState('');
     const [chatBookingName, setChatBookingName] = useState('');
+    const [chatInitialOffer, setChatInitialOffer] = useState<any>(null);
 
     // Booking edit state
     const [selectedBooking, setSelectedBooking] = useState<any>(null);
@@ -755,6 +756,14 @@ export default function ClientDashboard() {
         socketInstance.on('booking_updated', (data: any) => {
             console.log("📡 WebSocket: Live booking status update received", data);
             fetchMyBookings(parsedUser, true);
+        });
+
+        socketInstance.on('incoming_call_alert', (data: any) => {
+            console.log("📞 Incoming call alert received globally on client dashboard:", data);
+            setChatBookingId(data.bookingId);
+            setChatBookingName(data.bookingName);
+            setChatInitialOffer(data);
+            setIsChatOpen(true);
         });
 
         return () => {
@@ -1769,10 +1778,12 @@ export default function ClientDashboard() {
                         setIsChatOpen(false);
                         setChatBookingId('');
                         setChatBookingName('');
+                        setChatInitialOffer(null);
                     }}
                     bookingId={chatBookingId}
                     bookingName={chatBookingName}
                     currentUser={user}
+                    initialOffer={chatInitialOffer}
                 />
             )}
 

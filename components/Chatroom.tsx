@@ -26,9 +26,13 @@ interface ChatroomProps {
         name: string;
         role: 'client' | 'partner' | 'admin';
     };
+    initialOffer?: {
+        callerName: string;
+        offer: any;
+    } | null;
 }
 
-export default function Chatroom({ isOpen, onClose, bookingId, bookingName, currentUser }: ChatroomProps) {
+export default function Chatroom({ isOpen, onClose, bookingId, bookingName, currentUser, initialOffer }: ChatroomProps) {
     const [messages, setMessages] = useState<Message[]>([]);
     const [newMessage, setNewMessage] = useState('');
     const [isConnected, setIsConnected] = useState(false);
@@ -239,6 +243,15 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
         const secs = sec % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     };
+
+    // Handle initial call offer if passed globally
+    useEffect(() => {
+        if (initialOffer) {
+            setCallerName(initialOffer.callerName || 'Partner');
+            setCallState('incoming');
+            incomingOfferRef.current = initialOffer.offer;
+        }
+    }, [initialOffer]);
 
     // Initialize messages and socket connection
     useEffect(() => {
