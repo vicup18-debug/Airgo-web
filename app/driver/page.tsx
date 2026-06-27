@@ -35,6 +35,10 @@ export default function DriverDashboard() {
     const [submittingBidId, setSubmittingBidId] = useState<string | null>(null);
     const [isAcceptingId, setIsAcceptingId] = useState<string | null>(null);
 
+    // Counter-offer response states (driver responding to client's counter)
+    const [counterOfferInputs, setCounterOfferInputs] = useState<Record<string, string>>({});
+    const [isRespondingCounterId, setIsRespondingCounterId] = useState<string | null>(null);
+
     // Trip action states
     const [isUpdatingTripId, setIsUpdatingTripId] = useState<string | null>(null);
 
@@ -500,6 +504,66 @@ export default function DriverDashboard() {
         }
     };
 
+    // 🟢 Driver responds to a client's counter-offer on an existing booking
+    // action = 'Accept' | 'Decline' | 'Counter'
+    const handleCounterOfferResponse = async (
+        bookingId: string,
+        action: 'Accept' | 'Decline' | 'Counter',
+        clientOfferedPrice: number
+    ) => {
+        setIsRespondingCounterId(bookingId);
+        const token = localStorage.getItem('airgo_token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+
+        try {
+            let payload: any = {};
+
+            if (action === 'Accept') {
+                payload = { offerStatus: 'Accepted', totalPrice: String(clientOfferedPrice) };
+            } else if (action === 'Decline') {
+                payload = { offerStatus: 'Rejected' };
+            } else {
+                // Driver counter-counter: send a new price back to the client
+                const raw = parseInt((counterOfferInputs[bookingId] || '').replace(/[^0-9]/g, ''), 10);
+                if (!raw || raw <= 0) {
+                    toast.error('Enter a valid counter amount first.');
+                    setIsRespondingCounterId(null);
+                    return;
+                }
+                // offerStatus 'Pending Client' means the ball is now in the client's court
+                payload = { offerStatus: 'Pending Client', counterPrice: String(raw), totalPrice: String(raw) };
+            }
+
+            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (res.ok) {
+                if (action === 'Accept') {
+                    toast.success('✅ Counter-offer accepted! Awaiting client payment.');
+                } else if (action === 'Decline') {
+                    toast.success('❌ Counter-offer declined. Booking cancelled.');
+                } else {
+                    toast.success('💬 Counter sent back to passenger!');
+                }
+                setCounterOfferInputs(prev => { const n = { ...prev }; delete n[bookingId]; return n; });
+                silentRefresh();
+            } else {
+                toast.error(data.message || 'Failed to respond to counter-offer.');
+            }
+        } catch (err) {
+            toast.error('Network error. Could not respond.');
+        } finally {
+            setIsRespondingCounterId(null);
+        }
+    };
+
     // 🟢 5. Trip Management Operations
     const handleStartTrip = async (bookingId: string) => {
         setIsUpdatingTripId(bookingId);
@@ -941,6 +1005,68 @@ export default function DriverDashboard() {
                                                             <span>Origin Address</span>
                                                             <span>Simulating Ride Status (45% Complete)</span>
                                                             <span>Destination Address</span>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* ── Passenger Counter-Offer Response Panel ── */}
+                                                {booking.isOffer && booking.offerStatus === 'Pending Partner' && (
+                                                    <div className="mt-6 bg-amber-950/40 border border-amber-500/30 rounded-2xl p-5">
+                                                        <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">
+                                                            ⚡ Passenger Counter-Offer
+                                                        </p>
+                                                        <p className="text-2xl font-black text-white mt-1">
+                                                            ₦{parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, '')).toLocaleString()}
+                                                        </p>
+                                                        <p className="text-xs text-gray-400 mt-1 mb-4">
+                                                            The passenger countered your bid. Accept, decline, or send a new offer.
+                                                        </p>
+
+                                                        {/* Accept & Decline */}
+                                                        <div className="flex gap-2 flex-wrap mb-3">
+                                                            <button
+                                                                disabled={isRespondingCounterId === booking._id}
+                                                                onClick={() => handleCounterOfferResponse(
+                                                                    booking._id,
+                                                                    'Accept',
+                                                                    parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, ''))
+                                                                )}
+                                                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow disabled:opacity-50"
+                                                            >
+                                                                {isRespondingCounterId === booking._id ? '...' : '✅ Accept Offer'}
+                                                            </button>
+                                                            <button
+                                                                disabled={isRespondingCounterId === booking._id}
+                                                                onClick={() => handleCounterOfferResponse(booking._id, 'Decline', 0)}
+                                                                className="flex-1 bg-red-700 hover:bg-red-800 text-white py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow disabled:opacity-50"
+                                                            >
+                                                                {isRespondingCounterId === booking._id ? '...' : '❌ Decline'}
+                                                            </button>
+                                                        </div>
+
+                                                        {/* Counter input */}
+                                                        <div className="flex gap-2">
+                                                            <div className="relative flex-1">
+                                                                <span className="absolute left-3 top-2.5 text-xs font-bold text-gray-400">₦</span>
+                                                                <input
+                                                                    type="number"
+                                                                    placeholder="Your counter price..."
+                                                                    className="w-full pl-7 pr-3 py-2.5 text-sm rounded-xl border border-gray-700 bg-slate-900 text-white font-bold focus:outline-none focus:border-amber-500"
+                                                                    value={counterOfferInputs[booking._id] || ''}
+                                                                    onChange={e => setCounterOfferInputs(prev => ({ ...prev, [booking._id]: e.target.value }))}
+                                                                />
+                                                            </div>
+                                                            <button
+                                                                disabled={isRespondingCounterId === booking._id}
+                                                                onClick={() => handleCounterOfferResponse(
+                                                                    booking._id,
+                                                                    'Counter',
+                                                                    parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, ''))
+                                                                )}
+                                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-black transition shadow disabled:opacity-50"
+                                                            >
+                                                                {isRespondingCounterId === booking._id ? '...' : '💬 Counter'}
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 )}
