@@ -6,6 +6,7 @@ import toast from 'react-hot-toast';
 import { io, Socket } from 'socket.io-client';
 import Chatroom from '../../components/Chatroom';
 import Link from 'next/link';
+import { getDriverBidLockReason } from '../../lib/bidGuards';
 
 interface DriverCar {
     _id: string;
@@ -436,6 +437,12 @@ export default function DriverDashboard() {
     };
 
     const submitBidOffer = async (reqId: string, basePrice: number, isBookingBased = false) => {
+        const lockReason = getDriverBidLockReason(myBookings, availableRequests, myUserId, reqId);
+        if (lockReason) {
+            toast.error(lockReason);
+            return;
+        }
+
         const inputVal = bidFares[reqId];
         const fare = inputVal ? parseInt(inputVal, 10) : basePrice;
 
@@ -476,6 +483,12 @@ export default function DriverDashboard() {
     };
 
     const acceptClientOffer = async (reqId: string) => {
+        const lockReason = getDriverBidLockReason(myBookings, availableRequests, myUserId, reqId);
+        if (lockReason) {
+            toast.error(lockReason);
+            return;
+        }
+
         setIsAcceptingId(reqId);
         const token = localStorage.getItem('airgo_token');
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
@@ -840,14 +853,8 @@ export default function DriverDashboard() {
                                     const hasSubmittedBid = req.driverOffers?.some((o: any) => o.driverId === myUserId);
                                     const myBid = req.driverOffers?.find((o: any) => o.driverId === myUserId);
                                     const rawPrice = parseFloat(req.offeredPrice?.replace(/[^0-9.-]+/g, "")) || 0;
-                                    // Block new bids if driver already has an active negotiation or confirmed trip
-                                    const hasActiveNegotiation = myBookings.some(b =>
-                                        b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')
-                                    );
-                                    const hasActiveTrip = myBookings.some(b =>
-                                        ['Paid - Escrow Secured', 'Trip Started', 'Trip Start Pending', 'Paid'].includes(b.status)
-                                    );
-                                    const isBidLocked = hasActiveNegotiation || hasActiveTrip;
+                                    const bidLockReason = getDriverBidLockReason(myBookings, availableRequests, myUserId, req._id);
+                                    const isBidLocked = Boolean(bidLockReason);
 
                                     return (
                                         <div 
@@ -899,7 +906,12 @@ export default function DriverDashboard() {
                                             </div>
 
                                             <div className="mt-6 pt-4 border-t border-gray-800">
-                                                {hasSubmittedBid ? (
+                                                {hasSubmittedBid && isBidLocked ? (
+                                                    <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4 text-center">
+                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">⛔ Cannot Bid Right Now</p>
+                                                        <p className="text-xs text-gray-400">{bidLockReason}</p>
+                                                    </div>
+                                                ) : hasSubmittedBid ? (
                                                     <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-2xl flex items-center justify-between">
                                                         <div>
                                                             <p className="text-[10px] text-blue-400 font-black uppercase tracking-wider">Your Active Bid Offer</p>
@@ -925,14 +937,10 @@ export default function DriverDashboard() {
                                                         </div>
                                                     </div>
                                                 ) : isBidLocked ? (
-                                                    // Driver has an active negotiation or paid trip — block new bids
+                                                    // Driver has an active negotiation, ongoing trip, or active bid elsewhere
                                                     <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4 text-center">
                                                         <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">⛔ Cannot Bid Right Now</p>
-                                                        <p className="text-xs text-gray-400">
-                                                            {hasActiveNegotiation
-                                                                ? 'You have an active price negotiation. Resolve it first before bidding on new rides.'
-                                                                : 'You have an active trip in progress. Complete it before accepting new dispatches.'}
-                                                        </p>
+                                                        <p className="text-xs text-gray-400">{bidLockReason}</p>
                                                     </div>
                                                 ) : (
                                                     <div className="space-y-4">

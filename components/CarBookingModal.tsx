@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import { io } from 'socket.io-client';
+import { getClientBidLockReason } from '../lib/bidGuards';
 
 interface CarBookingModalProps {
     isOpen: boolean;
@@ -68,6 +69,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     // counterActiveId — which bid card currently has the counter input open
     const [counterInputs, setCounterInputs] = useState<Record<string, string>>({});
     const [counterActiveId, setCounterActiveId] = useState<string | null>(null);
+    const [bidBlockReason, setBidBlockReason] = useState<string | null>(null);
 
     // Haversine formula for distance in km
     const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -177,6 +179,44 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             setDistance(0);
         }
     }, [leafletLoaded, pickupCoords, destCoords, step, isOpen]);
+
+    useEffect(() => {
+        if (!isOpen) {
+            setBidBlockReason(null);
+            return;
+        }
+
+        const token = localStorage.getItem('airgo_token');
+        const storedUser = localStorage.getItem('airgo_user');
+        if (!token || !storedUser) return;
+
+        const parsedUser = JSON.parse(storedUser);
+        const userId = parsedUser.id || parsedUser.userId || parsedUser._id;
+        if (!userId) return;
+
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+
+        const checkBidEligibility = async () => {
+            try {
+                const [bookingsRes, requestsRes] = await Promise.all([
+                    fetch(`${apiUrl}/api/bookings/user/${userId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    }),
+                    fetch(`${apiUrl}/api/ride-requests/user/${userId}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    })
+                ]);
+
+                const bookings = bookingsRes.ok ? await bookingsRes.json() : [];
+                const rideRequests = requestsRes.ok ? await requestsRes.json() : [];
+                setBidBlockReason(getClientBidLockReason(bookings, rideRequests));
+            } catch (err) {
+                console.error('Failed to check ride bid eligibility:', err);
+            }
+        };
+
+        checkBidEligibility();
+    }, [isOpen]);
 
     // Handle WebSocket real-time bid updates
     useEffect(() => {
@@ -420,6 +460,11 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             return;
         }
 
+        if (bidBlockReason) {
+            toast.error(bidBlockReason);
+            return;
+        }
+
         setIsProcessing(true);
 
         try {
@@ -540,6 +585,12 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                         </div>
 
                         <form onSubmit={handleSendRequest} className="space-y-4">
+                            {bidBlockReason && (
+                                <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-left">
+                                    <p className="text-xs font-black text-red-700 uppercase tracking-widest mb-1">Cannot Request a New Ride</p>
+                                    <p className="text-xs text-red-600">{bidBlockReason}</p>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">FULL NAME</label>
                                 <input required type="text" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" value={bookingDetails.name} onChange={e => setBookingDetails({ ...bookingDetails, name: e.target.value })} />
@@ -693,8 +744,8 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                             </div>
 
-                            <button type="submit" disabled={isProcessing} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition shadow-lg mt-4 ${isProcessing ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
-                                {isProcessing ? 'Creating Escrow...' : 'Send Request to Drivers'}
+                            <button type="submit" disabled={isProcessing || Boolean(bidBlockReason)} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition shadow-lg mt-4 ${isProcessing || bidBlockReason ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
+                                {isProcessing ? 'Creating Escrow...' : bidBlockReason ? 'Ride Request Blocked' : 'Send Request to Drivers'}
                             </button>
                         </form>
                     </div>
