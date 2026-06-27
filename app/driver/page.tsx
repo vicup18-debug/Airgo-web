@@ -764,6 +764,68 @@ export default function DriverDashboard() {
                         {activeTab === 'dispatches' ? (
                     /* 🚕 DISPATCHES TAB */
                     <div className="space-y-6">
+
+                        {/* ⚡ Active Negotiations — bookings awaiting driver response to a counter */}
+                        {myBookings.filter(b => b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')).map(booking => {
+                            const clientPrice = parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, ''));
+                            const isPendingPartner = booking.offerStatus === 'Pending Partner';
+                            return (
+                                <div key={booking._id} className="bg-amber-950/40 border-2 border-amber-500/50 rounded-3xl p-5 shadow-xl animate-pulse-slow">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-xs font-black text-amber-400 uppercase tracking-widest">
+                                            {isPendingPartner ? '⚡ Counter-Offer From Passenger — Your Response Required' : '💬 You Countered — Awaiting Passenger'}
+                                        </span>
+                                        <span className="text-xs text-gray-400">{booking.itemName}</span>
+                                    </div>
+                                    <p className="text-3xl font-black text-white mb-1">₦{clientPrice.toLocaleString()}</p>
+                                    <p className="text-xs text-gray-400 mb-4">{booking.deliveryAddress}</p>
+
+                                    {isPendingPartner && (
+                                        <>
+                                            <div className="flex gap-2 flex-wrap mb-3">
+                                                <button
+                                                    disabled={isRespondingCounterId === booking._id}
+                                                    onClick={() => handleCounterOfferResponse(booking._id, 'Accept', clientPrice)}
+                                                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-black uppercase tracking-wide transition disabled:opacity-50"
+                                                >
+                                                    {isRespondingCounterId === booking._id ? '...' : '✅ Accept ₦' + clientPrice.toLocaleString()}
+                                                </button>
+                                                <button
+                                                    disabled={isRespondingCounterId === booking._id}
+                                                    onClick={() => handleCounterOfferResponse(booking._id, 'Decline', 0)}
+                                                    className="flex-1 bg-red-700 hover:bg-red-800 text-white py-2.5 rounded-xl text-xs font-black uppercase tracking-wide transition disabled:opacity-50"
+                                                >
+                                                    {isRespondingCounterId === booking._id ? '...' : '❌ Decline'}
+                                                </button>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <div className="relative flex-1">
+                                                    <span className="absolute left-3 top-2.5 text-xs font-bold text-gray-400">₦</span>
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Your counter amount..."
+                                                        className="w-full pl-7 pr-3 py-2.5 text-sm rounded-xl border border-gray-700 bg-slate-900 text-white font-bold focus:outline-none focus:border-amber-500"
+                                                        value={counterOfferInputs[booking._id] || ''}
+                                                        onChange={e => setCounterOfferInputs(prev => ({ ...prev, [booking._id]: e.target.value }))}
+                                                    />
+                                                </div>
+                                                <button
+                                                    disabled={isRespondingCounterId === booking._id}
+                                                    onClick={() => handleCounterOfferResponse(booking._id, 'Counter', clientPrice)}
+                                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-black transition disabled:opacity-50"
+                                                >
+                                                    {isRespondingCounterId === booking._id ? '...' : '💬 Counter'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                    {!isPendingPartner && (
+                                        <p className="text-xs text-amber-300 font-semibold">Waiting for passenger to respond to your counter...</p>
+                                    )}
+                                </div>
+                            );
+                        })}
+
                         {availableRequests.length === 0 ? (
                             <div className="text-center py-16 bg-slate-900/50 border border-gray-800 rounded-3xl p-8 shadow-inner">
                                 <span className="text-5xl">📡</span>
@@ -778,6 +840,14 @@ export default function DriverDashboard() {
                                     const hasSubmittedBid = req.driverOffers?.some((o: any) => o.driverId === myUserId);
                                     const myBid = req.driverOffers?.find((o: any) => o.driverId === myUserId);
                                     const rawPrice = parseFloat(req.offeredPrice?.replace(/[^0-9.-]+/g, "")) || 0;
+                                    // Block new bids if driver already has an active negotiation or confirmed trip
+                                    const hasActiveNegotiation = myBookings.some(b =>
+                                        b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')
+                                    );
+                                    const hasActiveTrip = myBookings.some(b =>
+                                        ['Paid - Escrow Secured', 'Trip Started', 'Trip Start Pending', 'Paid'].includes(b.status)
+                                    );
+                                    const isBidLocked = hasActiveNegotiation || hasActiveTrip;
 
                                     return (
                                         <div 
@@ -854,6 +924,16 @@ export default function DriverDashboard() {
                                                             </button>
                                                         </div>
                                                     </div>
+                                                ) : isBidLocked ? (
+                                                    // Driver has an active negotiation or paid trip — block new bids
+                                                    <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4 text-center">
+                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">⛔ Cannot Bid Right Now</p>
+                                                        <p className="text-xs text-gray-400">
+                                                            {hasActiveNegotiation
+                                                                ? 'You have an active price negotiation. Resolve it first before bidding on new rides.'
+                                                                : 'You have an active trip in progress. Complete it before accepting new dispatches.'}
+                                                        </p>
+                                                    </div>
                                                 ) : (
                                                     <div className="space-y-4">
                                                         {/* Indrive Counter bidding interface */}
@@ -895,7 +975,7 @@ export default function DriverDashboard() {
                                                                 </div>
                                                                 
                                                                 <button
-                                                                    disabled={submittingBidId === req._id}
+                                                                    disabled={submittingBidId === req._id || isBidLocked}
                                                                     onClick={() => submitBidOffer(req._id, rawPrice)}
                                                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-black tracking-tight transition disabled:opacity-50 shadow-md"
                                                                 >
@@ -906,7 +986,7 @@ export default function DriverDashboard() {
 
                                                         {/* Direct Accept button */}
                                                         <button 
-                                                            disabled={isAcceptingId === req._id}
+                                                            disabled={isAcceptingId === req._id || isBidLocked}
                                                             onClick={() => acceptClientOffer(req._id)}
                                                             className="w-full bg-[#000080] hover:bg-blue-900 text-white py-3 rounded-xl text-xs font-black tracking-wider uppercase transition shadow-lg disabled:opacity-50"
                                                         >
@@ -924,7 +1004,11 @@ export default function DriverDashboard() {
                 ) : (
                     /* 🧳 ACTIVE TRIPS TAB */
                     <div className="space-y-6">
-                        {myBookings.filter(b => ['Pending Escrow', 'Accepted', 'Paid - Escrow Secured', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending', 'Completed'].includes(b.status)).length === 0 ? (
+                        {myBookings.filter(b => {
+                            // Exclude bookings still in price negotiation — those show in Dispatches tab
+                            if (b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')) return false;
+                            return ['Pending Escrow', 'Accepted', 'Paid - Escrow Secured', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending', 'Completed'].includes(b.status);
+                        }).length === 0 ? (
                             <div className="text-center py-16 bg-slate-900/50 border border-gray-800 rounded-3xl p-8 shadow-inner">
                                 <span className="text-5xl">🚗</span>
                                 <h3 className="text-lg font-extrabold text-white mt-4">No active trips found</h3>
@@ -935,7 +1019,10 @@ export default function DriverDashboard() {
                         ) : (
                             <div className="space-y-6">
                                 {myBookings
-                                    .filter(b => ['Pending Escrow', 'Accepted', 'Paid - Escrow Secured', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending', 'Completed'].includes(b.status))
+                                    .filter(b => {
+                                        if (b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')) return false;
+                                        return ['Pending Escrow', 'Accepted', 'Paid - Escrow Secured', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending', 'Completed'].includes(b.status);
+                                    })
                                     .map((booking) => {
                                         const rawPrice = parseFloat(booking.totalPrice?.replace(/[^0-9.-]+/g, "")) || 0;
                                         const isTripActive = booking.status === 'Trip Started';

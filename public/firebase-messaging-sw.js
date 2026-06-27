@@ -34,29 +34,36 @@ fetch('/api/firebase-config')
             const notificationTitle = data.title || getDefaultTitle(type);
             const notificationBody  = data.body  || getDefaultBody(type);
 
-            const isIncomingCall = type === 'incoming_call';
+            // Driver-action events: must be persistent so the driver sees them on
+            // the lock screen. requireInteraction keeps the banner until dismissed.
+            const isDriverActionRequired = [
+                'incoming_call',
+                'client_counter',    // passenger countered the driver's bid
+                'driver_selected',   // passenger selected this driver (confirm/pay step)
+                'payment_secured',   // escrow paid — driver needs to prepare
+                'new_driver_bid',    // (shown to client, but keep persistent for clarity)
+            ].includes(type);
 
             const notificationOptions = {
                 body: notificationBody,
                 icon: '/icon.png',
                 badge: '/icon.png',
-                data: data
+                data: data,
+                tag: type || 'airgo-notification',
+                renotify: true,
             };
 
-            if (isIncomingCall) {
-                // Persistent, re-notifying — mimics a ringing phone
+            if (isDriverActionRequired) {
+                // Persistent — stays on lock screen until tapped or dismissed
                 notificationOptions.requireInteraction = true;
-                notificationOptions.tag = 'incoming-call';
-                notificationOptions.renotify = true;
                 notificationOptions.vibrate = [
                     500, 110, 500, 110, 450, 110, 200, 110,
-                    170, 40, 450, 110, 200, 110, 170, 40, 350
+                    170, 40,  450, 110, 200, 110, 170, 40, 350
                 ];
             } else {
-                // Standard notification — short pulse vibration
+                // Informational — short pulse, auto-dismisses
+                notificationOptions.requireInteraction = false;
                 notificationOptions.vibrate = [200, 100, 200];
-                notificationOptions.tag = type || 'airgo-notification';
-                notificationOptions.renotify = true;
             }
 
             self.registration.showNotification(notificationTitle, notificationOptions);
