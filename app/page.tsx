@@ -319,7 +319,10 @@ export default function HotelHomepage() {
       {/* MAIN CONTENT AREA */}
       <div className="flex-grow">
         {/* HEADER */}
-        <header className="bg-[#000080] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative">
+        <header className="bg-[#000080] pt-12 pb-48 px-6 rounded-b-[2.5rem] md:rounded-none relative overflow-hidden">
+          {/* Ambient orbs matching mobile design */}
+          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-[#FFB81C]/8 blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-52 h-52 rounded-full bg-white/5 blur-2xl pointer-events-none" />
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-3xl md:text-5xl font-black text-white mb-4">Find Your Perfect Stay</h1>
             <p className="text-sm md:text-lg text-blue-100 max-w-2xl mx-auto mb-8">Secure luxury hotel suites and premium executive lodgings across Nigeria with Airgo Escrow Protection.</p>
@@ -349,41 +352,11 @@ export default function HotelHomepage() {
             </div>
           </div>
           
-          {/* TRUST BAR */}
-          <div className="mt-10 bg-[#000060] rounded-2xl p-4 md:p-6 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099]">
-            <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Verified Partners</span>
-              <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Strictly vetted luxury properties and verified chauffeurs.</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Escrow-Protected</span>
-              <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Your funds are held securely until service is completely delivered.</span>
-            </div>
-            <div className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
-              <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">24/7 Support</span>
-              <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Always available for VIP assistance and priority booking support.</span>
-            </div>
-          </div>
         </header>
  
         {/* SEARCH BOX & CALENDAR PICKER */}
-        <div className="max-w-3xl mx-auto px-4 -mt-24 relative z-20">
-          <div className="bg-white p-4 md:p-6 rounded-3xl shadow-2xl border border-gray-100 animate-in fade-in slide-in-from-bottom-6 duration-300">
+        <div className="max-w-3xl mx-auto px-4 -mt-24 relative z-20 animate-slide-up">
+          <div className="bg-white p-4 md:p-6 rounded-3xl shadow-navy-lg ring-1 ring-gray-100 animate-in fade-in slide-in-from-bottom-6 duration-300">
             {activeTab === 'stays' ? (
               <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4">
                 <div className="flex-[2]">
@@ -467,24 +440,32 @@ export default function HotelHomepage() {
                 </div>
               </form>
             ) : (
-              <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4 items-end">
-                <div className="flex-[1.5] w-full text-left">
-                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">FROM (Pickup Location)</label>
-                  <input type="text" placeholder="e.g. Nnamdi Azikiwe Airport, Abuja" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" value={shuttleFrom} onChange={(e) => setShuttleFrom(e.target.value)} />
+              <form onSubmit={(e) => e.preventDefault()} className="flex flex-col w-full text-left">
+                <label className="block text-[10px] font-black text-gray-800 uppercase tracking-wider mb-4 px-2">WHERE DO YOU WANT TO GO?</label>
+                
+                <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
+                  <svg className="w-5 h-5 text-[#FFB81C] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <input type="text" placeholder="Pickup location..." className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400" value={shuttleFrom} onChange={(e) => setShuttleFrom(e.target.value)} />
                 </div>
-                <div className="flex-[1.5] w-full text-left">
-                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">TO (Destination)</label>
-                  <input type="text" placeholder="e.g. Hilton Hotel, Maitama, Abuja" className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" value={shuttleTo} onChange={(e) => setShuttleTo(e.target.value)} />
+                
+                <div className="h-px bg-gray-100 my-1 mx-2" />
+                
+                <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
+                  <svg className="w-5 h-5 text-[#FFB81C] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+                  <input type="text" placeholder="Destination..." className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400" value={shuttleTo} onChange={(e) => setShuttleTo(e.target.value)} />
                 </div>
-                <div className="flex-1 w-full text-left">
-                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Pickup Date & Time</label>
-                  <input type="datetime-local" min={new Date().toISOString().substring(0, 16)} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium text-sm" value={shuttleDateTime} onChange={(e) => setShuttleDateTime(e.target.value)} />
+
+                <div className="h-px bg-gray-100 my-1 mx-2" />
+
+                <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
+                  <svg className="w-5 h-5 text-[#000080] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <input type="datetime-local" min={new Date().toISOString().substring(0, 16)} className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400 cursor-pointer" value={shuttleDateTime} onChange={(e) => setShuttleDateTime(e.target.value)} />
                 </div>
-                <div className="flex-shrink-0 w-full md:w-auto">
-                  <button type="button" onClick={handleBookShuttle} className="w-full md:w-auto bg-[#FFB81C] text-[#000080] px-8 py-4.5 rounded-2xl font-black text-sm uppercase tracking-wide hover:bg-yellow-400 transition shadow-lg cursor-pointer">
-                    Request Ride
-                  </button>
-                </div>
+
+                <button type="button" onClick={handleBookShuttle} disabled={!shuttleFrom || !shuttleTo || !shuttleDateTime} className="w-full mt-4 bg-[#FFB81C] disabled:bg-gray-200 disabled:text-gray-400 text-[#000080] px-6 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-yellow-400 transition shadow-md cursor-pointer flex justify-center items-center gap-2">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  Search Ride
+                </button>
               </form>
             )}
           </div>
@@ -529,16 +510,20 @@ export default function HotelHomepage() {
                         <div className="h-64 overflow-hidden relative">
                           <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
                           {!available ? (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center backdrop-blur-[2px]">
-                              <span className="bg-red-600 text-white font-black px-6 py-3 rounded-xl text-sm uppercase tracking-widest transform -rotate-12 shadow-2xl border border-white/20">Sold Out</span>
+                            <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center backdrop-blur-[2px]">
+                              <div className="bg-red-600 text-white font-black text-sm px-4 py-2 rounded-lg -rotate-12 tracking-widest shadow-2xl border border-white/20">SOLD OUT</div>
                             </div>
                           ) : (
                             item.discountPercentage > 0 && (
-                              <div className="absolute top-4 right-4 bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full shadow-md animate-pulse">
+                              <div className="absolute top-3 right-3 bg-red-500 text-white font-bold text-xs px-2.5 py-1 rounded-lg shadow-lg animate-pulse">
                                 {item.discountPercentage}% OFF
                               </div>
                             )
                           )}
+                          {/* ESCROW PROTECTED pill */}
+                          <div className="absolute bottom-2 left-2 bg-[#000080] text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
+                            <span>🛡️</span> ESCROW PROTECTED
+                          </div>
                         </div>
 
                         <div className="p-6 flex-grow flex flex-col justify-between">
@@ -633,6 +618,37 @@ export default function HotelHomepage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* TRUST BAR AT BOTTOM */}
+        <div className="bg-[#000060] rounded-2xl p-4 md:p-6 max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6 shadow-md border border-[#000099] mb-12">
+          <Link href="/partner" className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Verified Partners</span>
+            <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Strictly vetted luxury properties and verified chauffeurs.</span>
+          </Link>
+          <Link href="/support" className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">Escrow-Protected</span>
+            <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Your funds are held securely until service is completely delivered.</span>
+          </Link>
+          <a href="tel:+2347078344409" className="flex flex-col items-center text-center p-4 rounded-xl transition-all duration-300 transform hover:-translate-y-1 hover:bg-white/5 cursor-pointer group">
+            <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
+              <svg className="w-6 h-6 text-[#FFB81C]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+            </div>
+            <span className="font-bold text-white text-base group-hover:text-[#FFB81C] transition-colors">24/7 Support</span>
+            <span className="text-xs text-blue-200 mt-1 group-hover:text-white transition-colors">Always available for VIP assistance and priority booking support.</span>
+          </a>
         </div>
       </div>
 

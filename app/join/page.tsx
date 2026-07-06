@@ -241,21 +241,37 @@ export default function JoinPartnerPage() {
                             <>
                                 {/* PARTNER TYPE & BUSINESS NAME */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Partner Type</label>
-                                <select
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none"
-                                    value={formData.partnerType}
-                                    onChange={(e) => {
-                                        setFormData({ ...formData, partnerType: e.target.value, cacNumber: '' });
-                                        setVerificationFile(null); // Reset file if they switch types
-                                    }}
-                                >
-                                    <option value="car">Car Rental</option>
-                                    <option value="shuttle">Taxi</option>
-                                    <option value="hotel">Hotel</option>
-                                    <option value="apartment">Apartment / Host</option>
-                                </select>
+                            <div className="md:col-span-2">
+                                <label className="block text-[10px] font-black text-gray-500 uppercase tracking-wider mb-3">Select Partner Type</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { id: 'car', icon: 'M13 10V3L4 14h7v7l9-11h-7z', title: 'Car Rental', desc: 'Chauffeur fleets' },
+                                        { id: 'shuttle', icon: 'M12 19l9 2-9-18-9 18 9-2zm0 0v-8', title: 'Taxi / Escort', desc: 'VIP Transport' },
+                                        { id: 'hotel', icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', title: 'Premium Hotel', desc: 'Verified rooms' },
+                                        { id: 'apartment', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6', title: 'Luxury Apt', desc: 'Private stays' }
+                                    ].map((type) => (
+                                        <div 
+                                            key={type.id}
+                                            onClick={() => {
+                                                setFormData({ ...formData, partnerType: type.id, cacNumber: '' });
+                                                setVerificationFile(null);
+                                            }}
+                                            className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex flex-col items-center justify-center text-center gap-2 ${
+                                                formData.partnerType === type.id 
+                                                    ? 'border-[#FFB81C] bg-yellow-50/50 shadow-md transform scale-[1.02]' 
+                                                    : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                        >
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${formData.partnerType === type.id ? 'bg-[#FFB81C] text-[#000080]' : 'bg-gray-100 text-gray-500'}`}>
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d={type.icon} /></svg>
+                                            </div>
+                                            <div>
+                                                <div className={`text-sm font-black ${formData.partnerType === type.id ? 'text-[#000080]' : 'text-gray-700'}`}>{type.title}</div>
+                                                <div className="text-[10px] text-gray-400 font-bold mt-0.5">{type.desc}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Name</label>

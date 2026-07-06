@@ -147,18 +147,21 @@ export default function SupportPage() {
     });
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
+        <div className="min-h-screen bg-[#F8F9FA] font-sans flex flex-col pb-[72px] md:pb-0">
             <main className="flex-grow max-w-6xl mx-auto py-6 md:py-12 px-4 md:px-6 w-full">
                 
-                {/* 🌟 HEADER HEADER ACCENT */}
-                <div className="text-center max-w-3xl mx-auto mb-6 md:mb-12">
-                    <span className="bg-[#EBF5FF] text-[#004A99] px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm">
+                {/* HERO HEADER */}
+                <div className="relative bg-[#000080] rounded-3xl overflow-hidden px-8 py-14 md:py-16 text-center mb-6 md:mb-12 shadow-navy-lg">
+                    {/* Ambient orbs */}
+                    <div className="absolute top-0 right-0 w-48 h-48 rounded-full bg-[#FFB81C]/8 blur-3xl pointer-events-none" />
+                    <div className="absolute bottom-0 left-0 w-40 h-40 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+                    <span className="relative z-10 bg-white/10 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-sm border border-white/20">
                         Concierge Assistance
                     </span>
-                    <h1 className="text-3xl md:text-5xl font-black text-gray-900 mt-4 tracking-tight">
+                    <h1 className="relative z-10 text-3xl md:text-5xl font-black text-white mt-4 tracking-tight">
                         How can we help you today?
                     </h1>
-                    <p className="text-gray-500 mt-3 text-sm md:text-base">
+                    <p className="relative z-10 text-blue-100 mt-3 text-sm md:text-base">
                         Get prompt assistance for your stays, fleet rentals, escrow transactions, and affiliate earnings.
                     </p>
                 </div>
@@ -168,7 +171,7 @@ export default function SupportPage() {
                     
                     {/* 📞 LEFT PANEL: CONTACT CHANNELS */}
                     <div className="lg:col-span-4 space-y-6">
-                        <div className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-sm">
+                        <div className="bg-white p-6 rounded-3xl shadow-navy border border-gray-100">
                             <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4">Official Channels</h3>
                             
                             <div className="space-y-4">
@@ -199,7 +202,7 @@ export default function SupportPage() {
                     </div>
 
                     {/* ⚙️ RIGHT PANEL: SMART CUSTOMER TABS */}
-                    <div className="lg:col-span-8 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[400px] md:min-h-[500px]">
+                    <div className="lg:col-span-8 bg-white rounded-3xl shadow-navy border border-gray-100 overflow-hidden flex flex-col min-h-[400px] md:min-h-[500px]">
                         
                         {/* 🌟 TAB SELECTOR */}
                         <div className="flex overflow-x-auto sm:overflow-x-visible border-b border-gray-100 bg-gray-50/80 shrink-0 scrollbar-none">
