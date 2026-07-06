@@ -361,6 +361,13 @@ export default function ClientDashboard() {
     // Profile edit state
     const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
     const [isSavingProfile, setIsSavingProfile] = useState(false);
+    
+    useEffect(() => {
+        if (typeof window !== 'undefined' && window.location.pathname === '/profile') {
+            setIsProfileModalOpen(true);
+        }
+    }, []);
+    
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
