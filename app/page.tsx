@@ -67,8 +67,42 @@ export default function HotelHomepage() {
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
   const [clientData, setClientData] = useState({ name: '', email: '', phone: '' });
+  const [isLocating, setIsLocating] = useState(false);
 
   const router = useRouter();
+
+  const handleUseCurrentLocation = (target: 'stays' | 'taxi' = 'stays') => {
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            const cityOrState = data.address?.city || data.address?.state || data.address?.town || 'Current Location';
+            if (target === 'stays') {
+              setLocation(cityOrState);
+            } else {
+              setShuttleFrom(cityOrState);
+            }
+          } catch (error) {
+            console.error("Error fetching location details", error);
+            toast.error("Could not fetch city name from location.");
+          } finally {
+            setIsLocating(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error", error);
+          toast.error("Location access denied or unavailable.");
+          setIsLocating(false);
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by your browser.");
+    }
+  };
 
   const handleBookShuttle = () => {
     if (!shuttleFrom.trim() || !shuttleTo.trim() || !shuttleDateTime) {
@@ -360,7 +394,13 @@ export default function HotelHomepage() {
             {activeTab === 'stays' ? (
               <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4">
                 <div className="flex-[2]">
-                  <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Hotel, City or Region</label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-black text-gray-500 uppercase tracking-wide">Hotel, City or Region</label>
+                    <button type="button" onClick={() => handleUseCurrentLocation('stays')} disabled={isLocating} className="flex items-center gap-1 text-[10px] font-bold text-[#000080] bg-blue-50 px-2 py-1 rounded-md hover:bg-blue-100 transition disabled:opacity-50">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      {isLocating ? 'Locating...' : 'Use Current Location'}
+                    </button>
+                  </div>
                   <input type="text" placeholder="Abuja, Lagos, Hilton..." className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={location} onChange={(e) => setLocation(e.target.value)} />
                 </div>
                 <div className="flex-1">
@@ -441,7 +481,13 @@ export default function HotelHomepage() {
               </form>
             ) : (
               <form onSubmit={(e) => e.preventDefault()} className="flex flex-col w-full text-left">
-                <label className="block text-[10px] font-black text-gray-800 uppercase tracking-wider mb-4 px-2">WHERE DO YOU WANT TO GO?</label>
+                <div className="flex items-center justify-between mb-4 px-2">
+                  <label className="block text-[10px] font-black text-gray-800 uppercase tracking-wider">WHERE DO YOU WANT TO GO?</label>
+                  <button type="button" onClick={() => handleUseCurrentLocation('taxi')} disabled={isLocating} className="flex items-center gap-1 text-[10px] font-bold text-[#000080] bg-blue-50 px-2 py-1 rounded-md hover:bg-blue-100 transition disabled:opacity-50">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    {isLocating ? 'Locating...' : 'Use Current Location'}
+                  </button>
+                </div>
                 
                 <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
                   <svg className="w-5 h-5 text-[#FFB81C] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
