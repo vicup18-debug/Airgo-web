@@ -111,6 +111,37 @@ export default function CarsPage() {
     const [user, setUser] = useState<any>(null);
     const router = useRouter();
 
+    const handleUseCurrentLocation = () => {
+        if (navigator.geolocation) {
+            toast.loading("Finding location...", { id: "location-toast" });
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    const { latitude, longitude } = position.coords;
+                    setPickupCoords([latitude, longitude]);
+                    setShuttleFrom("Current Location");
+                    try {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        if (res.ok) {
+                            const data = await res.json();
+                            if (data.display_name) {
+                                setShuttleFrom(data.display_name);
+                                setPickupCity(extractCityFromSuggestion(data));
+                            }
+                        }
+                    } catch (err) {
+                        console.error("Reverse geocode error", err);
+                    }
+                    toast.success("Location found!", { id: "location-toast" });
+                },
+                (error) => {
+                    toast.error("Could not get your location. Please allow location access.", { id: "location-toast" });
+                }
+            );
+        } else {
+            toast.error("Geolocation is not supported by your browser.");
+        }
+    };
+
     const handleBookShuttle = () => {
         if (!shuttleFrom.trim() || !shuttleTo.trim() || !shuttleDateTime) {
             toast.error("Please fill in all route and timing details for your shuttle.");
@@ -181,7 +212,16 @@ export default function CarsPage() {
                     <div className="bg-white p-4 md:p-6 rounded-3xl shadow-xl border border-gray-100">
                         <form onSubmit={(e) => e.preventDefault()} className="flex flex-col md:flex-row gap-4 items-end">
                             <div className="flex-[1.5] w-full text-left relative z-30">
-                                <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">FROM (Pickup Location)</label>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-black text-gray-500 uppercase tracking-wide">FROM (Pickup Location)</label>
+                                    <button 
+                                        type="button" 
+                                        onClick={handleUseCurrentLocation}
+                                        className="text-[10px] bg-blue-100 text-[#000080] px-2 py-1 rounded font-bold hover:bg-blue-200 transition flex items-center gap-1"
+                                    >
+                                        📍 Use Current Location
+                                    </button>
+                                </div>
                                 <input 
                                     type="text" 
                                     placeholder="e.g. Nnamdi Azikiwe Airport, Abuja" 

@@ -2310,40 +2310,49 @@ export default function PartnerDashboard() {
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
+                            ) : isApartmentPartner ? (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bedrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bathrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                    </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Listing Description (Rooms, Parlour, Kitchen details) *</label>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Details (Layout, Kitchen, etc.) *</label>
                                         <textarea required placeholder="Describe layout details e.g., how many rooms, parlour, kitchen, etc." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white h-24 resize-none" value={newItem.description || ''} onChange={e => setNewItem({ ...newItem, description: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            readOnly
-                                            placeholder="Select amenities from list below..."
-                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none"
-                                            value={newItem.amenities}
-                                        />
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Amenities</label>
+                                        <input type="text" required readOnly placeholder="Select amenities from list below..." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none" value={newItem.amenities} />
                                         <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
                                             {AMENITIES_LIST.map((amenity) => {
                                                 const isSelected = newItem.amenities ? newItem.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
                                                 return (
-                                                    <button
-                                                        type="button"
-                                                        key={amenity}
-                                                        onClick={() => togglePartnerAmenity(amenity, false)}
-                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                                                            isSelected 
-                                                                ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' 
-                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                                                        }`}
-                                                    >
-                                                        {amenity}
-                                                    </button>
+                                                    <button type="button" key={amenity} onClick={() => togglePartnerAmenity(amenity, false)} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${isSelected ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{amenity}</button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Star Rating *</label><input required type="number" min="1" max="5" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Room Description (Bed size, Views, etc.) *</label>
+                                        <textarea required placeholder="Describe room details e.g., King bed, ocean view, etc." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white h-24 resize-none" value={newItem.description || ''} onChange={e => setNewItem({ ...newItem, description: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Amenities</label>
+                                        <input type="text" required readOnly placeholder="Select amenities from list below..." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none" value={newItem.amenities} />
+                                        <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
+                                            {AMENITIES_LIST.map((amenity) => {
+                                                const isSelected = newItem.amenities ? newItem.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
+                                                return (
+                                                    <button type="button" key={amenity} onClick={() => togglePartnerAmenity(amenity, false)} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${isSelected ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{amenity}</button>
                                                 );
                                             })}
                                         </div>
@@ -2426,40 +2435,49 @@ export default function PartnerDashboard() {
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
+                            ) : isApartmentPartner ? (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bedrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bathrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                    </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Listing Description (Rooms, Parlour, Kitchen details) *</label>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Details (Layout, Kitchen, etc.) *</label>
                                         <textarea required placeholder="Describe layout details e.g., how many rooms, parlour, kitchen, etc." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white h-24 resize-none" value={editItemData.description || ''} onChange={e => setEditItemData({ ...editItemData, description: e.target.value })} />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
-                                        <input 
-                                            type="text" 
-                                            required 
-                                            readOnly
-                                            placeholder="Select amenities from list below..."
-                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none"
-                                            value={editItemData.amenities}
-                                        />
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Amenities</label>
+                                        <input type="text" required readOnly placeholder="Select amenities from list below..." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none" value={editItemData.amenities} />
                                         <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
                                             {AMENITIES_LIST.map((amenity) => {
                                                 const isSelected = editItemData.amenities ? editItemData.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
                                                 return (
-                                                    <button
-                                                        type="button"
-                                                        key={amenity}
-                                                        onClick={() => togglePartnerAmenity(amenity, true)}
-                                                        className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${
-                                                            isSelected 
-                                                                ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' 
-                                                                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
-                                                        }`}
-                                                    >
-                                                        {amenity}
-                                                    </button>
+                                                    <button type="button" key={amenity} onClick={() => togglePartnerAmenity(amenity, true)} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${isSelected ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{amenity}</button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Star Rating *</label><input required type="number" min="1" max="5" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Room Description (Bed size, Views, etc.) *</label>
+                                        <textarea required placeholder="Describe room details e.g., King bed, ocean view, etc." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white h-24 resize-none" value={editItemData.description || ''} onChange={e => setEditItemData({ ...editItemData, description: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Amenities</label>
+                                        <input type="text" required readOnly placeholder="Select amenities from list below..." className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-gray-50/50 mb-2 focus:outline-none" value={editItemData.amenities} />
+                                        <div className="flex flex-wrap gap-2 bg-gray-50 p-3 rounded-2xl border border-gray-200/50 max-h-40 overflow-y-auto">
+                                            {AMENITIES_LIST.map((amenity) => {
+                                                const isSelected = editItemData.amenities ? editItemData.amenities.split(',').map((s: string) => s.trim()).filter(Boolean).includes(amenity) : false;
+                                                return (
+                                                    <button type="button" key={amenity} onClick={() => togglePartnerAmenity(amenity, true)} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition cursor-pointer ${isSelected ? 'bg-[#004A99] text-white border-[#004A99] shadow-sm' : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'}`}>{amenity}</button>
                                                 );
                                             })}
                                         </div>
