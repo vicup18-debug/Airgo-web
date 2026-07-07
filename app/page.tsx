@@ -63,6 +63,52 @@ export default function HotelHomepage() {
   const [shuttleTo, setShuttleTo] = useState('');
   const [shuttleDateTime, setShuttleDateTime] = useState('');
 
+  // Autocomplete search states
+  const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
+  const [toSuggestions, setToSuggestions] = useState<any[]>([]);
+  const [isSearchingFrom, setIsSearchingFrom] = useState(false);
+  const [isSearchingTo, setIsSearchingTo] = useState(false);
+  const searchTimeoutFrom = React.useRef<any>(null);
+  const searchTimeoutTo = React.useRef<any>(null);
+
+  const debouncedSearchFrom = (val: string) => {
+      if (searchTimeoutFrom.current) clearTimeout(searchTimeoutFrom.current);
+      searchTimeoutFrom.current = setTimeout(() => {
+          fetchLocationSuggestions(val, 'from');
+      }, 600);
+  };
+
+  const debouncedSearchTo = (val: string) => {
+      if (searchTimeoutTo.current) clearTimeout(searchTimeoutTo.current);
+      searchTimeoutTo.current = setTimeout(() => {
+          fetchLocationSuggestions(val, 'to');
+      }, 600);
+  };
+
+  const fetchLocationSuggestions = async (query: string, field: 'from' | 'to') => {
+      if (query.trim().length < 3) {
+          if (field === 'from') setFromSuggestions([]);
+          else setToSuggestions([]);
+          return;
+      }
+      if (field === 'from') setIsSearchingFrom(true);
+      else setIsSearchingTo(true);
+
+      try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`);
+          if (res.ok) {
+              const data = await res.json();
+              if (field === 'from') setFromSuggestions(data);
+              else setToSuggestions(data);
+          }
+      } catch (err) {
+          console.error("Nominatim search error", err);
+      } finally {
+          if (field === 'from') setIsSearchingFrom(false);
+          else setIsSearchingTo(false);
+      }
+  };
+
   // BOOKING MODAL STATES
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isBooking, setIsBooking] = useState(false);
@@ -491,14 +537,50 @@ export default function HotelHomepage() {
                 
                 <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
                   <svg className="w-5 h-5 text-[#FFB81C] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  <input type="text" placeholder="Pickup location..." className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400" value={shuttleFrom} onChange={(e) => setShuttleFrom(e.target.value)} />
+                  <input type="text" placeholder="Pickup location..." className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400" value={shuttleFrom} onChange={(e) => { setShuttleFrom(e.target.value); debouncedSearchFrom(e.target.value); }} />
+                  {isSearchingFrom && <div className="absolute right-3 top-3 text-xs text-gray-400 animate-pulse">Searching...</div>}
+                  {fromSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-12 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-[60]">
+                          {fromSuggestions.map((item: any) => (
+                              <button
+                                  key={item.place_id}
+                                  type="button"
+                                  onClick={() => {
+                                      setShuttleFrom(item.display_name);
+                                      setFromSuggestions([]);
+                                  }}
+                                  className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
+                              >
+                                  📍 {item.display_name}
+                              </button>
+                          ))}
+                      </div>
+                  )}
                 </div>
                 
                 <div className="h-px bg-gray-100 my-1 mx-2" />
                 
                 <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
                   <svg className="w-5 h-5 text-[#FFB81C] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                  <input type="text" placeholder="Destination..." className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400" value={shuttleTo} onChange={(e) => setShuttleTo(e.target.value)} />
+                  <input type="text" placeholder="Destination..." className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400" value={shuttleTo} onChange={(e) => { setShuttleTo(e.target.value); debouncedSearchTo(e.target.value); }} />
+                  {isSearchingTo && <div className="absolute right-3 top-3 text-xs text-gray-400 animate-pulse">Searching...</div>}
+                  {toSuggestions.length > 0 && (
+                      <div className="absolute left-0 right-0 top-12 bg-white border border-gray-100 rounded-2xl shadow-xl max-h-60 overflow-y-auto z-[60]">
+                          {toSuggestions.map((item: any) => (
+                              <button
+                                  key={item.place_id}
+                                  type="button"
+                                  onClick={() => {
+                                      setShuttleTo(item.display_name);
+                                      setToSuggestions([]);
+                                  }}
+                                  className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
+                              >
+                                  📍 {item.display_name}
+                              </button>
+                          ))}
+                      </div>
+                  )}
                 </div>
 
                 <div className="h-px bg-gray-100 my-1 mx-2" />
