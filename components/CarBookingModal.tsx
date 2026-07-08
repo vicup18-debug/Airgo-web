@@ -455,19 +455,48 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             return;
         }
 
-        if (!pickupCoords || !destCoords) {
-            toast.error("Please search and select valid addresses from the autocomplete dropdowns.");
-            return;
-        }
-
-        if (bidBlockReason) {
-            toast.error(bidBlockReason);
-            return;
-        }
+        let finalPickupCoords = pickupCoords;
+        let finalDestCoords = destCoords;
 
         setIsProcessing(true);
 
         try {
+            if (!finalPickupCoords && bookingDetails.fromAddress) {
+                toast.loading("Locating pickup address...", { id: "geocode-pickup" });
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.fromAddress)}&countrycodes=ng&limit=1`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) finalPickupCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    }
+                } catch(e) {}
+                toast.dismiss("geocode-pickup");
+            }
+
+            if (!finalDestCoords && bookingDetails.toAddress) {
+                toast.loading("Locating destination address...", { id: "geocode-dest" });
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.toAddress)}&countrycodes=ng&limit=1`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.length > 0) finalDestCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+                    }
+                } catch(e) {}
+                toast.dismiss("geocode-dest");
+            }
+
+            if (bidBlockReason) {
+                toast.error(bidBlockReason);
+                setIsProcessing(false);
+                return;
+            }
+
+            if (!finalPickupCoords || !finalDestCoords) {
+                toast.error("Could not locate the exact addresses. Please search and select from the dropdowns.");
+                setIsProcessing(false);
+                return;
+            }
+
             const finalUserId = parsedUser ? parsedUser.id || parsedUser.userId || parsedUser._id : '';
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const referredBy = localStorage.getItem('airgo_ref') || '';
@@ -486,9 +515,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 offeredPrice: Number(customOfferPrice).toLocaleString(),
                 travelScope: travelScope,
                 city: pickupCity,
-                pickupCoords: pickupCoords ? {
+                pickupCoords: finalPickupCoords ? {
                     type: 'Point',
-                    coordinates: [pickupCoords[1], pickupCoords[0]] // [longitude, latitude]
+                    coordinates: [finalPickupCoords[1], finalPickupCoords[0]] // [longitude, latitude]
                 } : null
             };
 
