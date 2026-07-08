@@ -71,16 +71,38 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const [counterActiveId, setCounterActiveId] = useState<string | null>(null);
     const [bidBlockReason, setBidBlockReason] = useState<string | null>(null);
 
-    // Haversine formula for distance in km
-    const calculateHaversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-        const R = 6371; // earth radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return parseFloat((R * c).toFixed(1));
+    // Calculate route using OSRM and draw on map
+    const fetchOSRMRoute = async (map: any, start: [number, number], end: [number, number]) => {
+        try {
+            // OSRM requires lon,lat
+            const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=simplified&geometries=geojson`);
+            const data = await res.json();
+            if (data && data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                const distanceKm = parseFloat((route.distance / 1000).toFixed(1));
+                setDistance(distanceKm);
+
+                // Draw route on map
+                const coordinates = route.geometry.coordinates;
+                const latLngs = coordinates.map((coord: number[]) => [coord[1], coord[0]]); // flip back to lat,lon
+
+                if (routeLineRef.current) {
+                    map.removeLayer(routeLineRef.current);
+                }
+
+                const L = (window as any).L;
+                routeLineRef.current = L.polyline(latLngs, {
+                    color: '#000080',
+                    weight: 5,
+                    opacity: 0.85
+                }).addTo(map);
+
+                const bounds = L.latLngBounds(latLngs);
+                map.fitBounds(bounds, { padding: [30, 30] });
+            }
+        } catch (e) {
+            console.error("OSRM routing failed", e);
+        }
     };
 
     // Load Leaflet resources dynamically
@@ -158,19 +180,16 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         markersRef.current = newMarkers;
 
         if (pickupCoords && destCoords) {
-            const routeLine = L.polyline([pickupCoords, destCoords], {
-                color: '#000080',
+            // Draw a temporary straight line while fetching route
+            routeLineRef.current = L.polyline([pickupCoords, destCoords], {
+                color: '#aaa',
                 weight: 4,
-                opacity: 0.85,
                 dashArray: '5, 10'
             }).addTo(map);
-            routeLineRef.current = routeLine;
-
             const bounds = L.latLngBounds([pickupCoords, destCoords]);
             map.fitBounds(bounds, { padding: [30, 30] });
 
-            const dist = calculateHaversineDistance(pickupCoords[0], pickupCoords[1], destCoords[0], destCoords[1]);
-            setDistance(dist);
+            fetchOSRMRoute(map, pickupCoords, destCoords);
         } else if (pickupCoords) {
             map.setView(pickupCoords, 14);
             setDistance(0);
