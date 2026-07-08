@@ -115,6 +115,8 @@ export default function Footer() {
               <li><Link href="/affiliate" className="hover:text-[#FFB81C] transition">Affiliate Program</Link></li>
               <li><Link href="/privacy" className="hover:text-white transition">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-white transition">Terms & Conditions</Link></li>
+              <li><Link href="/partner-dispute" className="hover:text-white transition">Partner Dispute</Link></li>
+              <li><Link href="/cookie-policy" className="hover:text-white transition">Cookie Policy</Link></li>
               <li><a href="mailto:Info@airgo.ng" className="hover:text-white transition">General Inquiry: Info@airgo.ng</a></li>
             </ul>
           </div>
