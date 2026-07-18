@@ -1501,6 +1501,7 @@ export default function SuperadminDashboard() {
 
                             {/* PARTNER APPROVALS TAB */}
                             {activeTab === 'approvals' && (
+                                <>
                                 <div className="bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
                                     <div className="p-6 border-b border-gray-100 bg-gray-50 flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                                         <h2 className="text-lg font-black text-gray-900">Partner Registrations</h2>
@@ -1677,6 +1678,7 @@ export default function SuperadminDashboard() {
                                         )}
                                     </div>
                                 </div>
+                                </>
                             )}
 
                             {/* FLEET MANAGEMENT TAB */}
