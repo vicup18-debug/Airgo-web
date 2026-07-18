@@ -97,6 +97,8 @@ export default function SuperadminDashboard() {
     const [cars, setCars] = useState<any[]>([]);
     const [rooms, setRooms] = useState<any[]>([]);
     const [affiliates, setAffiliates] = useState<any[]>([]);
+    const [unapprovedRooms, setUnapprovedRooms] = useState<any[]>([]);
+    const [unapprovedCars, setUnapprovedCars] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // EXPANDABLE ESCROW STATE
@@ -187,13 +189,15 @@ export default function SuperadminDashboard() {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-            const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes, activeChatsRes] = await Promise.all([
+            const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes, activeChatsRes, unappRoomsRes, unappCarsRes] = await Promise.all([
                 fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/auth/partners`),
                 fetch(`${apiUrl}/api/cars`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/rooms`),
                 fetch(`${apiUrl}/api/affiliates`),
-                fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${apiUrl}/api/rooms/unapproved`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${apiUrl}/api/cars/unapproved`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
             if (bookingsRes.status === 401) {
@@ -210,6 +214,8 @@ export default function SuperadminDashboard() {
             if (roomsRes.ok) setRooms(await roomsRes.json());
             if (affiliatesRes.ok) setAffiliates(await affiliatesRes.json());
             if (activeChatsRes && activeChatsRes.ok) setActiveChatrooms(await activeChatsRes.json());
+            if (unappRoomsRes.ok) setUnapprovedRooms(await unappRoomsRes.json());
+            if (unappCarsRes.ok) setUnapprovedCars(await unappCarsRes.json());
         } catch (error) {
             console.error("Error fetching system data:", error);
         } finally {
@@ -367,6 +373,54 @@ export default function SuperadminDashboard() {
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isDeleted: false } : p));
             }
         } catch (error) { toast.error("❌ Error connecting to server."); }
+    };
+
+    const handleApproveItem = async (type: 'rooms' | 'cars', itemId: string) => {
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/${type}/approve/${itemId}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                toast.success("Item Approved Successfully!");
+                if (type === 'rooms') {
+                    setUnapprovedRooms(prev => prev.filter(item => item._id !== itemId));
+                } else {
+                    setUnapprovedCars(prev => prev.filter(item => item._id !== itemId));
+                }
+                fetchAllSystemData(true);
+            } else {
+                toast.error("Failed to approve item");
+            }
+        } catch (err) {
+            toast.error("Error approving item");
+        }
+    };
+
+    const handleRejectItem = async (type: 'rooms' | 'cars', itemId: string) => {
+        if (!window.confirm("Are you sure you want to permanently delete/reject this submission?")) return;
+        try {
+            const token = localStorage.getItem('airgo_token');
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const res = await fetch(`${apiUrl}/api/${type}/reject/${itemId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                toast.success("Item Rejected & Deleted!");
+                if (type === 'rooms') {
+                    setUnapprovedRooms(prev => prev.filter(item => item._id !== itemId));
+                } else {
+                    setUnapprovedCars(prev => prev.filter(item => item._id !== itemId));
+                }
+            } else {
+                toast.error("Failed to reject item");
+            }
+        } catch (err) {
+            toast.error("Error rejecting item");
+        }
     };
 
     const handleEditListingClick = (item: any, type: 'room' | 'car') => {
@@ -1579,6 +1633,48 @@ export default function SuperadminDashboard() {
                                                 ))}
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                                
+                                {/* ITEM APPROVALS SECTION */}
+                                <div className="mt-8 bg-white rounded-3xl shadow-sm border border-gray-200 overflow-hidden">
+                                    <div className="p-6 border-b border-gray-100 bg-gray-50">
+                                        <h2 className="text-lg font-black text-gray-900">Inventory Pending QA Review</h2>
+                                    </div>
+                                    <div className="p-6">
+                                        <h3 className="font-bold mb-4 text-[#000080]">Rooms / Apartments</h3>
+                                        {unapprovedRooms.length === 0 ? <p className="text-sm text-gray-500 mb-6">No rooms pending approval.</p> : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                                                {unapprovedRooms.map(room => (
+                                                    <div key={room._id} className="border border-gray-200 bg-gray-50 p-4 rounded-xl">
+                                                        <img src={room.image || 'https://via.placeholder.com/150'} alt={room.name} className="w-full h-32 object-cover rounded-lg mb-2" />
+                                                        <h4 className="font-bold text-gray-900">{room.name}</h4>
+                                                        <p className="text-xs text-gray-600 mb-2">Partner ID: {room.partnerId}</p>
+                                                        <div className="flex gap-2 mt-3">
+                                                            <button onClick={() => handleApproveItem('rooms', room._id)} className="bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex-1">Approve</button>
+                                                            <button onClick={() => handleRejectItem('rooms', room._id)} className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex-1">Reject</button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        <h3 className="font-bold mb-4 text-[#000080] border-t border-gray-100 pt-6">Cars / Shuttles</h3>
+                                        {unapprovedCars.length === 0 ? <p className="text-sm text-gray-500">No cars pending approval.</p> : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {unapprovedCars.map(car => (
+                                                    <div key={car._id} className="border border-gray-200 bg-gray-50 p-4 rounded-xl">
+                                                        <img src={car.image || 'https://via.placeholder.com/150'} alt={car.name} className="w-full h-32 object-cover rounded-lg mb-2" />
+                                                        <h4 className="font-bold text-gray-900">{car.name}</h4>
+                                                        <p className="text-xs text-gray-600 mb-2">Partner ID: {car.partnerId}</p>
+                                                        <div className="flex gap-2 mt-3">
+                                                            <button onClick={() => handleApproveItem('cars', car._id)} className="bg-green-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex-1">Approve</button>
+                                                            <button onClick={() => handleRejectItem('cars', car._id)} className="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg flex-1">Reject</button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             )}

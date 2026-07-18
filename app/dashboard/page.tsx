@@ -714,6 +714,7 @@ export default function ClientDashboard() {
 
         if (parsedUser.role === 'admin') return router.push('/admin');
         if (parsedUser.role === 'partner') return router.push('/partner');
+        if (parsedUser.role === 'driver') return router.push('/driver');
 
         setUser(parsedUser);
         fetchMyBookings(parsedUser);

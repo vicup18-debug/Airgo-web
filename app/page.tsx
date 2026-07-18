@@ -95,14 +95,14 @@ export default function HotelHomepage() {
       else setIsSearchingTo(true);
 
       try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`);
+          const res = await fetch(`/api/location?type=search&q=${encodeURIComponent(query)}`);
           if (res.ok) {
               const data = await res.json();
               if (field === 'from') setFromSuggestions(data);
               else setToSuggestions(data);
           }
       } catch (err) {
-          console.error("Nominatim search error", err);
+          console.error("Location search error", err);
       } finally {
           if (field === 'from') setIsSearchingFrom(false);
           else setIsSearchingTo(false);
@@ -124,7 +124,7 @@ export default function HotelHomepage() {
         async (position) => {
           try {
             const { latitude, longitude } = position.coords;
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const response = await fetch(`/api/location?type=reverse&lat=${latitude}&lon=${longitude}`);
             const data = await response.json();
             const cityOrState = data.address?.city || data.address?.state || data.address?.town || 'Current Location';
             if (target === 'stays') {

@@ -72,14 +72,14 @@ export default function CarsPage() {
         else setIsSearchingTo(true);
 
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`);
+            const res = await fetch(`/api/location?type=search&q=${encodeURIComponent(query)}`);
             if (res.ok) {
                 const data = await res.json();
                 if (field === 'from') setFromSuggestions(data);
                 else setToSuggestions(data);
             }
         } catch (err) {
-            console.error("Nominatim search error", err);
+            console.error("Location search error", err);
         } finally {
             if (field === 'from') setIsSearchingFrom(false);
             else setIsSearchingTo(false);
@@ -120,7 +120,7 @@ export default function CarsPage() {
                     setPickupCoords([latitude, longitude]);
                     setShuttleFrom("Current Location");
                     try {
-                        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                        const res = await fetch(`/api/location?type=reverse&lat=${latitude}&lon=${longitude}`);
                         if (res.ok) {
                             const data = await res.json();
                             if (data.display_name) {
