@@ -1580,7 +1580,7 @@ export default function SuperadminDashboard() {
                                                         <tr onClick={() => setExpandedPartnerId(expandedPartnerId === partner._id ? null : partner._id)} className={`transition cursor-pointer ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-blue-50'}`}>
                                                             <td className="p-4">
                                                                 <p className="font-bold text-gray-900">{partner.name}</p>
-                                                                <p className="text-[10px] uppercase font-black text-blue-600">{partner.partnerType === 'car' ? '🚘 Fleet' : (partner.partnerType === 'shuttle' || partner.partnerType === 'airport-shuttle') ? '🚐 Shuttle' : partner.partnerType === 'hotel' ? '🏨 Hotel' : partner.partnerType === 'apartment' ? '🏢 Apartment' : 'Partner'}</p>
+                                                                <p className="text-[10px] uppercase font-black text-blue-600">{partner.role === 'driver' ? '🚕 Driver' : partner.partnerType === 'car' ? '🚘 Fleet' : (partner.partnerType === 'shuttle' || partner.partnerType === 'airport-shuttle') ? '🚐 Shuttle' : partner.partnerType === 'hotel' ? '🏨 Hotel' : partner.partnerType === 'apartment' ? '🏢 Apartment' : 'Partner'}</p>
                                                                 <p className="text-[10px] text-[#000080] font-bold uppercase mt-1">Tap for details ▼</p>
                                                             </td>
                                                             <td className="p-4 text-gray-600 font-medium">{partner.businessName || 'N/A'}</td>
