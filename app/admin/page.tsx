@@ -1048,7 +1048,7 @@ export default function SuperadminDashboard() {
                     </h1>
                     <div className="flex items-center gap-4">
                         <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">Superadmin</span>
-                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-black shadow-inner">{user.name.charAt(0)}</div>
+                        <div className="w-10 h-10 bg-gray-900 rounded-full flex items-center justify-center text-white font-black shadow-inner">{user?.name?.charAt(0) || 'A'}</div>
                     </div>
                 </header>
 
@@ -1548,7 +1548,7 @@ export default function SuperadminDashboard() {
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {partners
-                                                    .filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted)
+                                                    .filter(p => p.role !== 'driver' && (partnerFilter === 'active' ? !p.isDeleted : p.isDeleted))
                                                     .filter(p => {
                                                         if (!partnerSearchQuery) return true;
                                                         const q = partnerSearchQuery.toLowerCase();
@@ -1563,7 +1563,7 @@ export default function SuperadminDashboard() {
                                                     }).length === 0 ? (
                                                     <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found matching criteria.</td></tr>
                                                 ) : partners
-                                                    .filter(p => partnerFilter === 'active' ? !p.isDeleted : p.isDeleted)
+                                                    .filter(p => p.role !== 'driver' && (partnerFilter === 'active' ? !p.isDeleted : p.isDeleted))
                                                     .filter(p => {
                                                         if (!partnerSearchQuery) return true;
                                                         const q = partnerSearchQuery.toLowerCase();
@@ -1627,6 +1627,29 @@ export default function SuperadminDashboard() {
                                                                             {!partner.cacCertificateUrl && !partner.driversLicenseUrl && <p className="text-xs text-gray-500">No documents uploaded</p>}
                                                                         </div>
                                                                     </div>
+                                                                    {/* ASSIGNED DRIVERS SECTION */}
+                                                                    {partners.filter(d => d.role === 'driver' && d.partnerId === partner._id).length > 0 && (
+                                                                        <div className="mt-6 border-t border-gray-200 pt-4">
+                                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-2">Assigned Drivers</p>
+                                                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                                                                {partners.filter(d => d.role === 'driver' && d.partnerId === partner._id).map(driver => (
+                                                                                    <div key={driver._id} className="bg-white p-3 rounded-xl border border-gray-100 shadow-sm flex flex-col">
+                                                                                        <p className="font-bold text-gray-900 text-sm">{driver.name}</p>
+                                                                                        <p className="text-xs text-gray-600 truncate">{driver.email}</p>
+                                                                                        <p className="text-xs text-gray-500 mb-2">{driver.phoneNumber || 'No phone'}</p>
+                                                                                        <div className="mt-auto flex items-center justify-between">
+                                                                                            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase ${driver.isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                                                                                                {driver.isApproved ? 'Approved' : 'Pending'}
+                                                                                            </span>
+                                                                                            {!driver.isApproved && (
+                                                                                                <button onClick={() => handleApprovePartner(driver._id)} className="bg-[#000080] text-white px-2 py-1 rounded-md text-[10px] font-bold hover:scale-105 transition">Approve</button>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                ))}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
                                                                 </td>
                                                             </tr>
                                                         )}
