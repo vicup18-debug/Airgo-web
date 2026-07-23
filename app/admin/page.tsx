@@ -1548,7 +1548,7 @@ export default function SuperadminDashboard() {
                                             </thead>
                                             <tbody className="divide-y divide-gray-100">
                                                 {partners
-                                                    .filter(p => p.role !== 'driver' && (partnerFilter === 'active' ? !p.isDeleted : p.isDeleted))
+                                                    .filter(p => (partnerFilter === 'active' ? !p.isDeleted : p.isDeleted))
                                                     .filter(p => {
                                                         if (!partnerSearchQuery) return true;
                                                         const q = partnerSearchQuery.toLowerCase();
@@ -1563,7 +1563,7 @@ export default function SuperadminDashboard() {
                                                     }).length === 0 ? (
                                                     <tr><td colSpan={5} className="p-8 text-center text-gray-500">No partners found matching criteria.</td></tr>
                                                 ) : partners
-                                                    .filter(p => p.role !== 'driver' && (partnerFilter === 'active' ? !p.isDeleted : p.isDeleted))
+                                                    .filter(p => (partnerFilter === 'active' ? !p.isDeleted : p.isDeleted))
                                                     .filter(p => {
                                                         if (!partnerSearchQuery) return true;
                                                         const q = partnerSearchQuery.toLowerCase();
