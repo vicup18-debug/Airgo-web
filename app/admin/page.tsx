@@ -193,10 +193,10 @@ export default function SuperadminDashboard() {
                 fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/auth/partners`),
                 fetch(`${apiUrl}/api/cars`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${apiUrl}/api/rooms`),
+                fetch(`${apiUrl}/api/rooms/all-admin`),
                 fetch(`${apiUrl}/api/affiliates`),
                 fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${apiUrl}/api/rooms/unapproved`, { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch(`${apiUrl}/api/rooms/unapproved/all`, { headers: { 'Authorization': `Bearer ${token}` } }),
                 fetch(`${apiUrl}/api/cars/unapproved`, { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
