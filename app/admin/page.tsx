@@ -379,7 +379,7 @@ export default function SuperadminDashboard() {
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/${type}/approve/${itemId}`, {
+            const res = await fetch(`${apiUrl}/api/${type}/${itemId}/approve`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -404,7 +404,7 @@ export default function SuperadminDashboard() {
         try {
             const token = localStorage.getItem('airgo_token');
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/${type}/reject/${itemId}`, {
+            const res = await fetch(`${apiUrl}/api/${type}/${itemId}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
