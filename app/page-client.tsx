@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import HotelBookingModal from './hotels/bookings-modal';
 import CarBookingModal from '../components/CarBookingModal';
+import AnimatedSplash from '../components/AnimatedSplash';
 
 // 🟢 PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
 const FALLBACK_ROOMS = [
@@ -396,6 +397,8 @@ export default function HotelHomepage() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans pb-[72px] md:pb-0 flex flex-col">
+      {showSplash && <AnimatedSplash onComplete={() => setShowSplash(false)} />}
+      
       {/* MAIN CONTENT AREA */}
       <div className="flex-grow">
         {/* HEADER */}
