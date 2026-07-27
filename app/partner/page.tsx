@@ -871,7 +871,7 @@ export default function PartnerDashboard() {
                 driverPhone: newItem.driverPhone,
                 driverPassword: newItem.driverPassword
             } : {
-                partnerId: secureId, hotelName: user.businessName || user.name, hotelAddress: newItem.hotelAddress, name: newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
+                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? newItem.name : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, name: user.partnerType === 'apartment' ? 'Entire Apartment' : newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
             const response = await fetch(`${apiUrl}${endpoint}`, {
@@ -953,7 +953,8 @@ export default function PartnerDashboard() {
                 driverPassword: editItemData.driverPassword
             } : {
                 hotelAddress: editItemData.hotelAddress,
-                name: editItemData.name,
+                hotelName: user.partnerType === 'apartment' ? editItemData.name : (user.businessName || user.name),
+                name: user.partnerType === 'apartment' ? 'Entire Apartment' : editItemData.name,
                 netPrice: Number(editItemData.netPrice),
                 totalAllocated: Number(editItemData.totalAllocated),
                 amenities: editItemData.amenities,
@@ -2497,7 +2498,7 @@ export default function PartnerDashboard() {
                                         
                                         return (
                                             <div key={idx} className="relative group rounded-xl overflow-hidden border border-gray-200 bg-white">
-                                                <img src={imgUrl} className="w-full h-20 object-cover" />
+                                                <img src={imgUrl} alt="Uploaded image" className="w-full h-20 object-cover" />
                                                 
                                                 <div className="p-1 space-y-1 bg-gray-50 border-t flex flex-col">
                                                     <button 

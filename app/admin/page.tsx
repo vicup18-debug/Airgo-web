@@ -176,11 +176,25 @@ export default function SuperadminDashboard() {
         setUser(parsedUser);
         fetchAllSystemData();
 
+        // Global socket for admin notifications
+        const socket = io(process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com', {
+            transports: ['websocket', 'polling']
+        });
+        
+        socket.on('new_room_approval_request', (data: any) => {
+            const type = data.partnerType === 'apartment' ? 'Apartment' : 'Room';
+            toast.success(`New ${type} Requires Approval: ${data.name}`, { duration: 6000, icon: '🔔' });
+            fetchAllSystemData(true);
+        });
+
         // 30s background silent auto-refresh
         const interval = setInterval(() => {
             fetchAllSystemData(true);
         }, 30000);
-        return () => clearInterval(interval);
+        return () => {
+            clearInterval(interval);
+            socket.disconnect();
+        };
     }, [router]);
 
     const fetchAllSystemData = async (silent = false) => {
