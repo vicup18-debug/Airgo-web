@@ -668,11 +668,13 @@ export default function HotelHomepage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
                               <span className="truncate">
-                                {item.location 
-                                  ? (item.location.split(',').length >= 2 
-                                    ? item.location.split(',').slice(-2).map((s: string) => s.trim()).join(', ') 
-                                    : item.location) 
-                                  : 'Nigeria'}
+                                {item.location ? (
+                                  item.location.split(',').length === 3 
+                                    ? `(${item.location.split(',')[0].trim()}) ${item.location.split(',')[1].trim()}, ${item.location.split(',')[2].trim()}`
+                                    : item.location.split(',').length > 1 
+                                      ? `${item.location.split(',')[0].trim()}, ${item.location.split(',').pop().trim()}` 
+                                      : item.location
+                                ) : 'Nigeria'}
                               </span>
                             </p>
                             

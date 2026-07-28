@@ -68,7 +68,7 @@ export default function AnimatedSplash({ onComplete }: { onComplete: () => void 
         pointerEvents: containerFade ? 'none' : 'auto',
       }}
     >
-      <div style={logoStyle} className="relative w-[220px] h-[220px]">
+      <div style={logoStyle} className="relative w-[150px] h-[150px] md:w-[220px] md:h-[220px]">
         <Image 
           src="/icon.png" 
           alt="Airgo Logo"

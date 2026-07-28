@@ -874,9 +874,13 @@ export default function PartnerDashboard() {
                 partnerId: secureId, hotelName: user.partnerType === 'apartment' ? newItem.name : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, name: user.partnerType === 'apartment' ? 'Entire Apartment' : newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
+            const token = localStorage.getItem('airgo_token');
             const response = await fetch(`${apiUrl}${endpoint}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
