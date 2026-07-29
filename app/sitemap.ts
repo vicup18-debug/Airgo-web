@@ -24,7 +24,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch dynamic hotels for SEO
   let dynamicHotels: MetadataRoute.Sitemap = [];
   try {
-    const res = await fetch('https://airgo-backend.onrender.com/api/hotels', { next: { revalidate: 3600 } });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    
+    const res = await fetch('https://airgo-backend.onrender.com/api/hotels', { 
+      next: { revalidate: 3600 },
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+
     if (res.ok) {
       const hotels = await res.json();
       dynamicHotels = hotels.map((hotel: any) => ({
