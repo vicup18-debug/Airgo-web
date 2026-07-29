@@ -366,9 +366,11 @@ export default function HotelHomepage() {
 
   const filteredRooms = groupedHotels.filter((hotel) => {
     // 1. Location match
-    const matchesLocation = !location ||
-      hotel.name?.toLowerCase().includes(location.toLowerCase()) ||
-      hotel.location?.toLowerCase().includes(location.toLowerCase());
+    const searchWords = location ? location.toLowerCase().split(/[\s,]+/).filter(Boolean) : [];
+    const matchesLocation = searchWords.length === 0 || searchWords.every(word => 
+      hotel.name?.toLowerCase().includes(word) ||
+      hotel.location?.toLowerCase().includes(word)
+    );
 
     // 2. Stay type match
     const matchesStayType = stayType === 'all' || 
@@ -380,9 +382,11 @@ export default function HotelHomepage() {
 
   const filteredCars = liveCars.filter((car) => {
     // 1. Location/State match
-    const matchesLocation = !location ||
-      car.location?.toLowerCase().includes(location.toLowerCase()) ||
-      car.state?.toLowerCase().includes(location.toLowerCase());
+    const searchWords = location ? location.toLowerCase().split(/[\s,]+/).filter(Boolean) : [];
+    const matchesLocation = searchWords.length === 0 || searchWords.every(word => 
+      car.location?.toLowerCase().includes(word) ||
+      car.state?.toLowerCase().includes(word)
+    );
 
     // 2. Availability match (using dates)
     const matchesAvailability = isItemAvailable(car, true);
