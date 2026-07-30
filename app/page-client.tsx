@@ -367,10 +367,18 @@ export default function HotelHomepage() {
   const filteredRooms = groupedHotels.filter((hotel) => {
     // 1. Location match
     const searchWords = location ? location.toLowerCase().split(/[\s,]+/).filter(Boolean) : [];
-    const matchesLocation = searchWords.length === 0 || searchWords.every(word => 
-      hotel.name?.toLowerCase().includes(word) ||
-      hotel.location?.toLowerCase().includes(word)
-    );
+    
+    let matchesLocation = true;
+    if (searchWords.length > 0) {
+      const matchesName = searchWords.every(word => hotel.name?.toLowerCase().includes(word));
+      
+      const ignoreWords = ['state', 'local', 'government', 'lga', 'nigeria', 'country', 'area', 'council'];
+      const significantWords = searchWords.filter(w => !ignoreWords.includes(w) && isNaN(Number(w)) && w.length > 2);
+      const wordsToMatch = significantWords.length > 0 ? significantWords : searchWords;
+      
+      const matchesLocString = wordsToMatch.some(word => hotel.location?.toLowerCase().includes(word));
+      matchesLocation = matchesName || matchesLocString;
+    }
 
     // 2. Stay type match
     const matchesStayType = stayType === 'all' || 
@@ -383,10 +391,18 @@ export default function HotelHomepage() {
   const filteredCars = liveCars.filter((car) => {
     // 1. Location/State match
     const searchWords = location ? location.toLowerCase().split(/[\s,]+/).filter(Boolean) : [];
-    const matchesLocation = searchWords.length === 0 || searchWords.every(word => 
-      car.location?.toLowerCase().includes(word) ||
-      car.state?.toLowerCase().includes(word)
-    );
+    
+    let matchesLocation = true;
+    if (searchWords.length > 0) {
+      const ignoreWords = ['state', 'local', 'government', 'lga', 'nigeria', 'country', 'area', 'council'];
+      const significantWords = searchWords.filter(w => !ignoreWords.includes(w) && isNaN(Number(w)) && w.length > 2);
+      const wordsToMatch = significantWords.length > 0 ? significantWords : searchWords;
+      
+      matchesLocation = wordsToMatch.some(word => 
+        car.location?.toLowerCase().includes(word) ||
+        car.state?.toLowerCase().includes(word)
+      );
+    }
 
     // 2. Availability match (using dates)
     const matchesAvailability = isItemAvailable(car, true);
