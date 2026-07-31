@@ -543,14 +543,14 @@ export default function PartnerDashboard() {
     const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
 
     const [newItem, setNewItem] = useState<any>({
-        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
+        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
     });
 
     // EDIT INVENTORY MODAL STATE
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
+        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
     });
 
 
@@ -871,7 +871,7 @@ export default function PartnerDashboard() {
                 driverPhone: newItem.driverPhone,
                 driverPassword: newItem.driverPassword
             } : {
-                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? newItem.name : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, name: user.partnerType === 'apartment' ? 'Entire Apartment' : newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
+                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? newItem.name : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, city: newItem.city, state: newItem.state, name: user.partnerType === 'apartment' ? 'Entire Apartment' : newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
             const token = localStorage.getItem('airgo_token');
@@ -889,7 +889,7 @@ export default function PartnerDashboard() {
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
-                setNewItem({ name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '' });
+                setNewItem({ name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '' });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -2317,7 +2317,11 @@ export default function PartnerDashboard() {
                                 </div>
                             ) : isApartmentPartner ? (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.city} onChange={e => setNewItem({ ...newItem, city: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State *</label><input required type="text" placeholder="e.g. FCT" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.state} onChange={e => setNewItem({ ...newItem, state: e.target.value })} /></div>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bedrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bathrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
@@ -2341,7 +2345,11 @@ export default function PartnerDashboard() {
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St, Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.city} onChange={e => setNewItem({ ...newItem, city: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State *</label><input required type="text" placeholder="e.g. FCT" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.state} onChange={e => setNewItem({ ...newItem, state: e.target.value })} /></div>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Star Rating *</label><input required type="number" min="1" max="5" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
@@ -2444,6 +2452,10 @@ export default function PartnerDashboard() {
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
                                     <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.city} onChange={e => setEditItemData({ ...editItemData, city: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.state} onChange={e => setEditItemData({ ...editItemData, state: e.target.value })} /></div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bedrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bathrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
                                     </div>
@@ -2467,6 +2479,10 @@ export default function PartnerDashboard() {
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Hotel Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.city} onChange={e => setEditItemData({ ...editItemData, city: e.target.value })} /></div>
+                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.state} onChange={e => setEditItemData({ ...editItemData, state: e.target.value })} /></div>
+                                    </div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Star Rating *</label><input required type="number" min="1" max="5" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.capacity} onChange={e => setEditItemData({ ...editItemData, capacity: e.target.value })} /></div>

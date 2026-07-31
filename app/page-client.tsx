@@ -327,6 +327,8 @@ export default function HotelHomepage() {
           _id: room._id,
           name: room.hotelName,
           location: room.hotelAddress || 'Nigeria',
+          city: room.city,
+          state: room.state,
           image: room.image,
           partnerId: room.partnerId,
           pricePerNight: room.pricePerNight, // starting price
@@ -472,13 +474,13 @@ export default function HotelHomepage() {
                   </div>
                   <input type="text" placeholder="Abuja, Lagos, Hilton..." className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={location} onChange={(e) => setLocation(e.target.value)} />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Check In</label>
-                  <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+                  <input type="date" min={new Date().toISOString().split('T')[0]} className="w-full max-w-full min-w-0 appearance-none px-4 md:px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
                 </div>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Check Out</label>
-                  <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+                  <input type="date" min={checkIn || new Date().toISOString().split('T')[0]} className="w-full max-w-full min-w-0 appearance-none px-4 md:px-5 py-4 rounded-2xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] focus:ring-2 focus:ring-[#000080]/20 outline-none transition-all font-medium" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
                 </div>
                 <div className="flex-1">
                   <label className="block text-xs font-black text-gray-500 uppercase tracking-wide mb-2">Stay Type</label>
