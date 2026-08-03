@@ -1460,16 +1460,18 @@ export default function PartnerDashboard() {
                                                 <p className="text-4xl md:text-5xl font-black mb-2">₦{calculateTotalRevenue()}</p>
                                                 <p className="text-xs text-blue-300">Total gross revenue from {isApartmentPartner ? 'apartment' : 'hotel'} reservation escrow bookings.</p>
                                             </div>
-                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between min-h-[140px]">
+                                            <div className={`bg-white p-6 rounded-3xl shadow-sm border border-gray-200 flex flex-col justify-between min-h-[140px] ${isApartmentPartner ? 'md:col-span-2' : ''}`}>
                                                 <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{isApartmentPartner ? 'My Apartments' : 'Room Categories'}</p>
                                                 <p className="text-4xl font-black text-gray-900">{myInventory.length}</p>
                                                 <p className="text-[10px] text-gray-400 mt-2 font-bold">Active {isApartmentPartner ? 'apartment listings' : 'room tiers'} listed</p>
                                             </div>
-                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 md:col-span-1 flex flex-col justify-between min-h-[140px]">
-                                                <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">{isApartmentPartner ? 'Units Available Today' : 'Available Rooms Today'}</p>
-                                                <p className="text-4xl font-black text-[#004A99]">{totalAvailableRoomsToday} / {totalAllocatedRooms}</p>
-                                                <p className="text-[10px] text-gray-400 mt-2 font-bold">Currently unbooked units for today</p>
-                                            </div>
+                                            {!isApartmentPartner && (
+                                                <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-200 md:col-span-1 flex flex-col justify-between min-h-[140px]">
+                                                    <p className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Available Rooms Today</p>
+                                                    <p className="text-4xl font-black text-[#004A99]">{totalAvailableRoomsToday} / {totalAllocatedRooms}</p>
+                                                    <p className="text-[10px] text-gray-400 mt-2 font-bold">Currently unbooked units for today</p>
+                                                </div>
+                                            )}
                                         </>
                                     )}
                                 </div>
