@@ -487,9 +487,13 @@ export default function SuperadminDashboard() {
                 amenities: editItemData.amenities
             };
 
+            const token = localStorage.getItem('airgo_token');
             const response = await fetch(`${apiUrl}${endpoint}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
@@ -645,9 +649,13 @@ export default function SuperadminDashboard() {
         if (!window.confirm(`Are you sure you want to update this affiliate's status to ${status}?`)) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const token = localStorage.getItem('airgo_token');
             const res = await fetch(`${apiUrl}/api/affiliates/${id}/status`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({ status })
             });
             if (res.ok) {
@@ -665,8 +673,10 @@ export default function SuperadminDashboard() {
         if (!window.confirm("Are you sure you have paid this affiliate and want to mark their commissions as settled/disbursed?")) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const token = localStorage.getItem('airgo_token');
             const res = await fetch(`${apiUrl}/api/affiliates/${id}/disburse`, {
-                method: 'POST'
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 toast.success("Affiliate commissions marked as disbursed!");
@@ -684,8 +694,10 @@ export default function SuperadminDashboard() {
         if (!window.confirm(`Are you sure you want to ${actionLabel} this affiliate account?`)) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const token = localStorage.getItem('airgo_token');
             const res = await fetch(`${apiUrl}/api/affiliates/${id}/toggle-active`, {
-                method: 'PUT'
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 toast.success(`Affiliate account has been ${currentActive !== false ? 'Deactivated' : 'Reactivated'} successfully!`);
@@ -702,8 +714,10 @@ export default function SuperadminDashboard() {
         if (!window.confirm("Are you sure you want to permanently delete this affiliate application? This cannot be undone.")) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const token = localStorage.getItem('airgo_token');
             const res = await fetch(`${apiUrl}/api/affiliates/${id}`, {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (res.ok) {
                 toast.success("Affiliate application deleted successfully!");
@@ -745,9 +759,13 @@ export default function SuperadminDashboard() {
                 partnerId: 'airgo_direct'
             };
 
+            const token = localStorage.getItem('airgo_token');
             const response = await fetch(`${apiUrl}/api/cars`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(payload)
             });
 
@@ -768,9 +786,13 @@ export default function SuperadminDashboard() {
         try {
             const finalImageUrl = roomImageFile ? await handleUploadToCloudinary(roomImageFile) : '';
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+            const token = localStorage.getItem('airgo_token');
             const response = await fetch(`${apiUrl}/api/rooms`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify({
                     partnerId: 'airgo_direct',
                     hotelName: newRoom.hotelName,
@@ -800,7 +822,11 @@ export default function SuperadminDashboard() {
         if (!window.confirm(`Are you sure you want to remove this listing?`)) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const response = await fetch(`${apiUrl}/api/${type}/${id}`, { method: 'DELETE' });
+            const token = localStorage.getItem('airgo_token');
+            const response = await fetch(`${apiUrl}/api/${type}/${id}`, { 
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
             if (response.ok) fetchAllSystemData();
         } catch (error) { console.error("Error deleting item:", error); }
     };
