@@ -1986,9 +1986,11 @@ export default function SuperadminDashboard() {
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
                                                         <p className="font-bold text-[#000080]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">/ night</span></p>
                                                         <div className="flex items-center gap-2">
-                                                            <span className="text-xs bg-blue-50 text-[#000080] font-bold px-2 py-1 rounded">
-                                                                Pool: {Math.max(0, (room.totalAllocated || 0) - (room.bookedDates?.find((b: any) => b.date === new Date().toISOString().split('T')[0])?.count || 0))} / {room.totalAllocated}
-                                                            </span>
+                                                            {room.name !== 'Entire Apartment' && room.partnerType !== 'apartment' && (
+                                                                <span className="text-xs bg-blue-50 text-[#000080] font-bold px-2 py-1 rounded">
+                                                                    Pool: {Math.max(0, (room.totalAllocated || 0) - (room.bookedDates?.find((b: any) => b.date === new Date().toISOString().split('T')[0])?.count || 0))} / {room.totalAllocated}
+                                                                </span>
+                                                            )}
                                                             <button onClick={() => handleEditListingClick(room, 'room')} className="text-blue-600 hover:text-blue-800 text-xs font-bold bg-blue-50 px-2 py-1 rounded">Edit</button>
                                                             <button onClick={() => handleDelete('rooms', room._id)} className="text-red-500 hover:text-red-700 text-xs font-bold bg-red-50 px-2 py-1 rounded">Delete</button>
                                                         </div>
@@ -2242,7 +2244,9 @@ export default function SuperadminDashboard() {
                                     <input required type="number" min="0" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.netPrice} onChange={e => setNewRoom({ ...newRoom, netPrice: e.target.value })} />
                                     <span className="text-[10px] text-gray-400 font-medium block mt-1">Airgo will automatically apply a standard platform markup to determine the final retail price for clients.</span>
                                 </div>
-                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
+                                {newRoom.name !== 'Entire Apartment' && (
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Matrix Pool Allocation</label><input required type="number" min="1" placeholder="e.g. 5" className="w-full px-4 py-2 border rounded-xl text-gray-900" value={newRoom.totalAllocated} onChange={e => setNewRoom({ ...newRoom, totalAllocated: e.target.value })} /></div>
+                                )}
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
@@ -2352,7 +2356,9 @@ export default function SuperadminDashboard() {
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
+                                {editItemData.name !== 'Entire Apartment' && editItemData.partnerType !== 'apartment' && (
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Units Allocated to Airgo Pool *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.totalAllocated} onChange={e => setEditItemData({ ...editItemData, totalAllocated: e.target.value })} /></div>
+                                )}
                                     <div>
                                         <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Luxury Amenities</label>
                                         <input 
