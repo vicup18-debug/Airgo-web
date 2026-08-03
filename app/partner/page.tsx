@@ -1526,7 +1526,7 @@ export default function PartnerDashboard() {
                                                             </div>
                                                         </div>
 
-                                                        {!isCarPartner && !isApartmentPartner && (
+                                                        {!isCarPartner && !isApartmentPartner && item.name !== 'Entire Apartment' && (
                                                             <>
                                                                 <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
                                                                     <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation (Available Today)</span>
