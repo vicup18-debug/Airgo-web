@@ -973,7 +973,7 @@ export default function SuperadminDashboard() {
     };
 
     const calculateTotalEscrow = () => {
-        return allBookings.filter(b => ['Paid', 'Approved for Disbursement'].includes(b.status)).reduce((sum, b) => {
+        return allBookings.filter(b => ['Paid', 'Paid - Escrow Secured', 'Approved for Disbursement'].includes(b.status)).reduce((sum, b) => {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
             return sum + (num || 0);
         }, 0).toLocaleString();
@@ -1380,7 +1380,7 @@ export default function SuperadminDashboard() {
                                                                  {booking.status === 'Pending Escrow' && (
                                                                      <button onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Confirm Deposit</button>
                                                                  )}
-                                                                 {booking.status === 'Paid' && (
+                                                                 {(booking.status === 'Paid' || booking.status === 'Paid - Escrow Secured') && (
                                                                      <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
                                                                  )}
                                                                  {booking.status === 'Approved for Disbursement' && (

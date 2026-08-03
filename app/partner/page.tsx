@@ -1516,37 +1516,39 @@ export default function PartnerDashboard() {
                                                             </div>
                                                         </div>
 
-                                                        {!isCarPartner && (
-                                                            <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
-                                                                <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation (Available Today)</span>
-                                                                <div className="flex items-center gap-3">
-                                                                    <button 
-                                                                        onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
-                                                                        className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
-                                                                    >-</button>
-                                                                    <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
-                                                                    <button 
-                                                                        onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
-                                                                        className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
-                                                                    >+</button>
+                                                        {!isCarPartner && !isApartmentPartner && (
+                                                            <>
+                                                                <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
+                                                                    <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation (Available Today)</span>
+                                                                    <div className="flex items-center gap-3">
+                                                                        <button 
+                                                                            onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
+                                                                            className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+                                                                        >-</button>
+                                                                        <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
+                                                                        <button 
+                                                                            onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
+                                                                            className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
+                                                                        >+</button>
+                                                                    </div>
                                                                 </div>
-                                                            </div>
-                                                        )}
 
-                                                        {(() => {
-                                                            const todayStr = new Date().toISOString().split('T')[0];
-                                                            const dayMatch = item.bookedDates?.find((b: any) => b.date === todayStr);
-                                                            const bookedCount = dayMatch ? dayMatch.count : 0;
-                                                            const remaining = Math.max(0, (item.totalAllocated || 0) - bookedCount);
-                                                            return (
-                                                                <div className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2 rounded-lg mb-3">
-                                                                    <span className="text-xs text-gray-500 font-bold">Available Today</span>
-                                                                    <span className={`text-xs font-black px-2 py-0.5 rounded ${remaining > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                        {remaining} left
-                                                                    </span>
-                                                                </div>
-                                                            );
-                                                        })()}
+                                                                {(() => {
+                                                                    const todayStr = new Date().toISOString().split('T')[0];
+                                                                    const dayMatch = item.bookedDates?.find((b: any) => b.date === todayStr);
+                                                                    const bookedCount = dayMatch ? dayMatch.count : 0;
+                                                                    const remaining = Math.max(0, (item.totalAllocated || 0) - bookedCount);
+                                                                    return (
+                                                                        <div className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2 rounded-lg mb-3">
+                                                                            <span className="text-xs text-gray-500 font-bold">Available Today</span>
+                                                                            <span className={`text-xs font-black px-2 py-0.5 rounded ${remaining > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                                                {remaining} left
+                                                                            </span>
+                                                                        </div>
+                                                                    );
+                                                                })()}
+                                                            </>
+                                                        )}
 
                                                         <div className="flex gap-2">
                                                             <button 
