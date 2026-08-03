@@ -700,15 +700,7 @@ export default function HotelHomepage() {
                               </span>
                             </p>
                             
-                            {item.amenities && (
-                              <div className="flex flex-wrap gap-1.5 mb-4">
-                                {item.amenities.split(',').map((amenity: string, aIdx: number) => (
-                                  <span key={aIdx} className="bg-gray-50 text-gray-650 text-[10px] font-bold px-2.5 py-1 rounded-lg border border-gray-100">
-                                    {amenity.trim()}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+
                           </div>
                           
                           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
