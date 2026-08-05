@@ -2271,7 +2271,7 @@ export default function PartnerDashboard() {
 
             {/* DYNAMIC ADD INVENTORY MODAL */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
                             <h2 className="text-xl font-black text-[#004A99]">List New {isShuttlePartner ? 'Taxi Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment' : 'Room Tier'}</h2>
@@ -2403,7 +2403,7 @@ export default function PartnerDashboard() {
 
             {/* EDIT INVENTORY MODAL */}
             {isEditInventoryModalOpen && selectedInventoryForEdit && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
                             <h2 className="text-xl font-black text-[#004A99]">Edit Listing Specifications</h2>

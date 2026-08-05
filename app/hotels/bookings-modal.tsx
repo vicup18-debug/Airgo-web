@@ -242,7 +242,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm overflow-y-auto">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm overflow-y-auto">
             <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
 
                 {/* Header */}

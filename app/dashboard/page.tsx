@@ -1691,7 +1691,7 @@ export default function ClientDashboard() {
 
             {/* EDIT BOOKING MODAL */}
             {isEditModalOpen && selectedBooking && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-xl shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
                             <h2 className="text-xl font-black text-[#000080]">Correct Reservation Details</h2>
@@ -1805,7 +1805,7 @@ export default function ClientDashboard() {
             )}
             {/* EDIT PROFILE MODAL */}
             {isProfileModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden my-auto max-h-[90vh] flex flex-col">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50 shrink-0">
                             <h2 className="text-xl font-black text-[#000080]">Edit Profile Settings</h2>
@@ -1841,7 +1841,7 @@ export default function ClientDashboard() {
 
             {/* CAR RENTAL RECOMMENDATION BANNER/MODAL */}
             {showCarRentalBanner && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm overflow-y-auto">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#000080]/60 backdrop-blur-sm overflow-y-auto">
                     <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-8 border border-gray-100 text-center animate-in fade-in zoom-in duration-200">
                         <div className="w-20 h-20 bg-blue-50 text-[#000080] rounded-full flex items-center justify-center mx-auto mb-6">
                             <svg className="w-10 h-10 text-[#000080]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
