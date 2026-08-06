@@ -680,7 +680,7 @@ export default function HotelHomepage() {
                           </div>
                         </div>
 
-                        <div className="p-6 flex-grow flex flex-col justify-between">
+                        <div className="p-6 flex flex-col">
                           <div>
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#000080] transition-colors leading-snug">{item.name}</h3>
