@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import HotelBookingModal from './hotels/bookings-modal';
 import CarBookingModal from '../components/CarBookingModal';
 import AnimatedSplash from '../components/AnimatedSplash';
+import { getHotelState } from '../utils/formatAddress';
 
 // 🟢 PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
 const FALLBACK_ROOMS = [
@@ -690,13 +691,7 @@ export default function HotelHomepage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
                               <span className="truncate">
-                                {item.location ? (
-                                  item.location.split(',').length === 3 
-                                    ? `(${item.location.split(',')[0].trim()}) ${item.location.split(',')[1].trim()}, ${item.location.split(',')[2].trim()}`
-                                    : item.location.split(',').length > 1 
-                                      ? `${item.location.split(',')[0].trim()}, ${item.location.split(',').pop().trim()}` 
-                                      : item.location
-                                ) : 'Nigeria'}
+                                {getHotelState(item)}
                               </span>
                             </p>
                             
