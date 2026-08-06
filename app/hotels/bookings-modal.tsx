@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { getHotelState } from '../../utils/formatAddress';
 
 function RoomImageCarousel({ images, primaryImage, className }: { images?: string[], primaryImage: string, className?: string }) {
     const allImages = Array.from(new Set([primaryImage, ...(images || [])].filter(Boolean)));
@@ -250,7 +251,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                     <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                         <h2 className="text-2xl font-black text-white leading-tight">{hotel.name}</h2>
-                        <p className="text-blue-200 text-sm">📍 {hotel.location}</p>
+                        <p className="text-blue-200 text-sm">📍 {getHotelState(hotel)}</p>
                     </div>
                     <button onClick={onClose} className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full w-8 h-8 flex items-center justify-center text-white font-bold transition">
                         ✕
