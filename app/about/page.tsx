@@ -18,7 +18,7 @@ export default function AboutPage() {
                     </p>
                 </div>
 
-                {/* 🟢 WHO WE ARE NARRATIVE */}
+                {/* WHO WE ARE NARRATIVE */}
                 <div className="bg-white p-10 md:p-12 rounded-3xl shadow-navy border border-gray-100 mb-16">
                     <h2 className="text-3xl font-black text-gray-900 mb-6">Who We Are</h2>
                     <p className="text-gray-600 leading-relaxed text-lg">
@@ -26,13 +26,13 @@ export default function AboutPage() {
                     </p>
                 </div>
 
-                {/* 🟢 INTERACTIVE CARD GRID (No Glow, Crisp Borders) */}
+                {/* INTERACTIVE CARD GRID (No Glow, Crisp Borders) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
 
 
 
                     <div className="bg-white p-8 rounded-3xl shadow-navy border border-gray-100 hover:shadow-navy-lg hover:-translate-y-2 transition-all duration-300 cursor-default">
-                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl">🏨</div>
+                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl"></div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-3">Hotel Reservations</h2>
                         <p className="text-gray-600 leading-relaxed">
                             Connect to a wide range of hotels worldwide, from budget-friendly accommodations to luxury stays. Explore verified listings and secure reservations that guarantee comfort and value.
@@ -40,7 +40,7 @@ export default function AboutPage() {
                     </div>
 
                     <div className="bg-white p-8 rounded-3xl shadow-navy border border-gray-100 hover:shadow-navy-lg hover:-translate-y-2 transition-all duration-300 cursor-default">
-                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl">🚘</div>
+                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl"></div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-3">Car Rentals</h2>
                         <p className="text-gray-600 leading-relaxed">
                             Dependable car rental services for ultimate convenience. From airport pickups to executive vehicle hire, access well-maintained vehicles and trusted partners to move around easily.
@@ -48,7 +48,7 @@ export default function AboutPage() {
                     </div>
 
                     <div className="bg-white p-8 rounded-3xl shadow-navy border border-gray-100 hover:shadow-navy-lg hover:-translate-y-2 transition-all duration-300 cursor-default">
-                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl">🎧</div>
+                        <div className="w-14 h-14 bg-[#F0F7FF] text-[#004A99] flex items-center justify-center rounded-xl mb-6 text-2xl"></div>
                         <h2 className="text-2xl font-bold text-gray-900 mb-3">24/7 Support</h2>
                         <p className="text-gray-600 leading-relaxed">
                             A dedicated support team ready to assist you around the clock. Receive prompt assistance for bookings, inquiries, and travel-related concerns anytime, anywhere.

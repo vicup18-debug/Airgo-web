@@ -181,7 +181,7 @@ function LiveDriverTracker({ booking }: { booking: any }) {
                 <div>
                     <h4 className="text-sm font-black text-green-400 uppercase tracking-widest flex items-center gap-1.5 animate-pulse">
                         <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                        📡 Driver Live GPS active
+                        Driver Live GPS active
                     </h4>
                     <p className="text-xs text-gray-400 mt-0.5">Status: <span className="text-gray-200 font-bold">{statusText}</span></p>
                 </div>
@@ -524,7 +524,7 @@ export default function PartnerDashboard() {
             if (!prevReq) {
                 // A new available ride request has arrived!
                 shouldPlaySound = true;
-                toast.success(`🚗 New Ride Dispatch Request: ${req.itemName}! Check the Available Requests tab.`, { duration: 6000 });
+                toast.success(`New Ride Dispatch Request: ${req.itemName}! Check the Available Requests tab.`, { duration: 6000 });
                 break;
             }
         }
@@ -613,12 +613,12 @@ export default function PartnerDashboard() {
             const secureId = parsedUser.id || parsedUser.userId || parsedUser._id;
             // Fleet managers do not join the live drivers room
             socketInstance.emit('join_partner', { partnerId: secureId });
-            console.log(`📡 WebSocket: Partner Dashboard connected, joined private partner_${secureId}`);
+            console.log(`WebSocket: Partner Dashboard connected, joined private partner_${secureId}`);
         });
 
         // Fleet managers do not process live booking requests directly
         socketInstance.on('new_booking_request', (booking: any) => {
-            console.log("📡 WebSocket: Real-time dispatch request ignored for Fleet Manager", booking);
+            console.log("WebSocket: Real-time dispatch request ignored for Fleet Manager", booking);
         });
 
         socketInstance.on('booking_claimed', (data: any) => {
@@ -633,8 +633,8 @@ export default function PartnerDashboard() {
         });
 
         socketInstance.on('payment_received', (booking: any) => {
-            console.log("📡 WebSocket: Real-time payment confirmation received", booking);
-            toast.success(`💳 Escrow Payment confirmed! Client ${booking.clientName} has paid ₦${booking.totalPrice} for ${booking.itemName}.`, {
+            console.log("WebSocket: Real-time payment confirmation received", booking);
+            toast.success(`Escrow Payment confirmed! Client ${booking.clientName} has paid ₦${booking.totalPrice} for ${booking.itemName}.`, {
                 duration: 8000
             });
             playNotificationSound();
@@ -642,9 +642,9 @@ export default function PartnerDashboard() {
         });
 
         socketInstance.on('booking_updated', (booking: any) => {
-            console.log("📡 WebSocket: Real-time booking update received", booking);
+            console.log("WebSocket: Real-time booking update received", booking);
             if (booking.status === 'Paid - Escrow Secured') {
-                toast.success(`💳 Escrow Secured! Client has funded the escrow for ${booking.itemName}.`, {
+                toast.success(`Escrow Secured! Client has funded the escrow for ${booking.itemName}.`, {
                     duration: 8000
                 });
                 playNotificationSound();
@@ -756,7 +756,7 @@ export default function PartnerDashboard() {
 
             const data = await res.json();
             if (res.ok) {
-                toast.success("🎉 Ride Request accepted successfully! Converted to Booking.");
+                toast.success("Ride Request accepted successfully! Converted to Booking.");
                 fetchAvailableRequests();
                 fetchPartnerData(user, true);
             } else {
@@ -800,7 +800,7 @@ export default function PartnerDashboard() {
 
             const data = await res.json();
             if (res.ok) {
-                toast.success("🎉 Your fare bid has been submitted to the client!");
+                toast.success("Your fare bid has been submitted to the client!");
                 // Clear inputs
                 setBidFares(prev => ({ ...prev, [bookingId]: '' }));
                 setBidVehicles(prev => ({ ...prev, [bookingId]: '' }));
@@ -872,7 +872,7 @@ export default function PartnerDashboard() {
                 driverPhone: newItem.driverPhone,
                 driverPassword: newItem.driverPassword
             } : {
-                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? newItem.name : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, city: newItem.city, state: newItem.state, name: user.partnerType === 'apartment' ? 'Entire Apartment' : newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
+                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? (newItem.hotelName || newItem.name) : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, city: newItem.city, state: newItem.state, name: newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
             };
 
             const token = localStorage.getItem('airgo_token');
@@ -894,7 +894,7 @@ export default function PartnerDashboard() {
                 fetchPartnerData(user);
             }
         } catch (error) {
-            toast.error("❌ Error listing item. Please try again.");
+            toast.error("Error listing item. Please try again.");
         } finally {
             setIsUploading(false);
         }
@@ -958,8 +958,8 @@ export default function PartnerDashboard() {
                 driverPassword: editItemData.driverPassword
             } : {
                 hotelAddress: editItemData.hotelAddress,
-                hotelName: user.partnerType === 'apartment' ? editItemData.name : (user.businessName || user.name),
-                name: user.partnerType === 'apartment' ? 'Entire Apartment' : editItemData.name,
+                hotelName: user.partnerType === 'apartment' ? (editItemData.hotelName || editItemData.name) : (user.businessName || user.name),
+                name: editItemData.name,
                 netPrice: Number(editItemData.netPrice),
                 totalAllocated: Number(editItemData.totalAllocated),
                 amenities: editItemData.amenities,
@@ -1375,7 +1375,7 @@ export default function PartnerDashboard() {
                             onClick={() => handleEditListingClick(item)} 
                             className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-1.5 rounded-lg text-xs font-black transition cursor-pointer text-center"
                         >
-                            ✏️ Edit Details
+                            Edit Details
                         </button>
                         <button 
                             onClick={() => handleDeleteListing(item._id)} 
@@ -2384,10 +2384,10 @@ export default function PartnerDashboard() {
                                                         if (val !== 'NEW') {
                                                             const match = myInventory.find(i => i.hotelAddress === val);
                                                             if (match) {
-                                                                setNewItem({ ...newItem, hotelAddress: match.hotelAddress, city: match.city, state: match.state });
+                                                                setNewItem({ ...newItem, hotelAddress: match.hotelAddress, city: match.city, state: match.state, hotelName: match.hotelName });
                                                             }
                                                         } else {
-                                                            setNewItem({ ...newItem, hotelAddress: '', city: '', state: '' });
+                                                            setNewItem({ ...newItem, hotelAddress: '', city: '', state: '', hotelName: '' });
                                                         }
                                                     }}
                                                 >
@@ -2402,6 +2402,7 @@ export default function PartnerDashboard() {
 
                                     {selectedBuildingForNew === 'NEW' && (
                                         <>
+                                            <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property / Estate Name *</label><input required type="text" placeholder="e.g. Grow Homes (Leave blank if standalone)" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelName || ''} onChange={e => setNewItem({ ...newItem, hotelName: e.target.value })} /></div>
                                             <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.city} onChange={e => setNewItem({ ...newItem, city: e.target.value })} /></div>
@@ -2537,6 +2538,7 @@ export default function PartnerDashboard() {
                                 </div>
                             ) : isApartmentPartner ? (
                                 <div className="grid grid-cols-1 gap-4">
+                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Property / Estate Name *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelName || ''} onChange={e => setEditItemData({ ...editItemData, hotelName: e.target.value })} /></div>
                                     <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.hotelAddress} onChange={e => setEditItemData({ ...editItemData, hotelAddress: e.target.value })} /></div>
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.city} onChange={e => setEditItemData({ ...editItemData, city: e.target.value })} /></div>
@@ -2721,7 +2723,7 @@ export default function PartnerDashboard() {
                         </div>
 
                         <span className="bg-amber-400/10 text-amber-400 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest mb-3 border border-amber-400/25">
-                            ⚡ New Dispatch Alert
+                            New Dispatch Alert
                         </span>
                         
                         <h3 className="text-xl font-black text-white">{incomingDispatch.itemName}</h3>
@@ -2819,7 +2821,7 @@ export default function PartnerDashboard() {
                                                 body: JSON.stringify({ fare: Number(fare), vehicleDetails: user?.businessName || '' })
                                             });
                                             if (res.ok) {
-                                                toast.success("🎉 Custom fare offer submitted live!");
+                                                toast.success("Custom fare offer submitted live!");
                                                 setDispatchBidPrice('');
                                             } else {
                                                 toast.error("Failed to submit fare offer.");

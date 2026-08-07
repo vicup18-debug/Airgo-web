@@ -40,7 +40,7 @@ export default function FlightsPage() {
                             <div className="text-center hidden md:block">
                                 <span className="text-xs text-gray-400 font-bold block">{flight.duration}</span>
                                 <div className="w-24 border-b-2 border-gray-300 my-1 relative">
-                                    <span className="absolute -top-2.5 left-10 text-gray-400">✈️</span>
+                                    <span className="absolute -top-2.5 left-10 text-gray-400"></span>
                                 </div>
                                 <span className="text-xs text-green-600 font-bold">{flight.type}</span>
                             </div>

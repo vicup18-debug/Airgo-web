@@ -94,7 +94,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     const router = useRouter();
     const isAdmin = user?.role === 'admin';
 
-    // 🟢 SECURITY: Check if user is logged in
+    // SECURITY: Check if user is logged in
     useEffect(() => {
         const userData = localStorage.getItem('airgo_user');
         if (userData) {
@@ -151,7 +151,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
 
     if (!isOpen || !hotel) return null;
 
-    // 🛡️ DYNAMIC REMAINING ROOMS ENGINE
+    // DYNAMIC REMAINING ROOMS ENGINE
     const getRemainingRooms = (r: any, customCheckIn?: string, customCheckOut?: string) => {
         if ((r.totalAllocated || 0) <= 0) return 0;
         const ci = customCheckIn || checkIn;
@@ -194,7 +194,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
         return null;
     };
 
-    // 🟢 CALCULATE TOTAL NIGHTS & PRICE
+    // CALCULATE TOTAL NIGHTS & PRICE
     const getPriceBreakdown = () => {
         if (!checkIn || !checkOut || !selectedRoom) return { base: 0, fee: 0, total: 0 };
         const start = new Date(checkIn);
@@ -216,7 +216,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
         return { base, fee, total };
     };
 
-    // 🟢 CALCULATE TOTAL NIGHTS & PRICE
+    // CALCULATE TOTAL NIGHTS & PRICE
     const calculateTotal = () => {
         return getPriceBreakdown().total.toLocaleString();
     };
@@ -224,7 +224,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     const handleBooking = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 🟢 REQUIRE LOGIN BEFORE BOOKING
+        // REQUIRE LOGIN BEFORE BOOKING
         if (!user) {
             toast.success("Please sign in to secure this booking.");
             router.push('/login');
@@ -294,7 +294,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                     <img src={hotel.image} alt={hotel.name} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-6">
                         <h2 className="text-2xl font-black text-white leading-tight">{hotel.name}</h2>
-                        <p className="text-blue-200 text-sm">📍 {getHotelState(hotel)}</p>
+                        <p className="text-blue-200 text-sm">{getHotelState(hotel)}</p>
                     </div>
                     <button onClick={onClose} className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 backdrop-blur-md rounded-full w-8 h-8 flex items-center justify-center text-white font-bold transition">
                         ✕
@@ -448,7 +448,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                             <span className="text-[10px] text-gray-400 font-medium">/ night</span>
                                         </p>
                                         {selectedRoom.discountPercentage > 0 && (
-                                            <p className="text-[10px] text-red-600 font-black uppercase mt-0.5 animate-pulse">🔥 {selectedRoom.discountPercentage}% Discount Applied</p>
+                                            <p className="text-[10px] text-red-600 font-black uppercase mt-0.5 animate-pulse">{selectedRoom.discountPercentage}% Discount Applied</p>
                                         )}
                                     </div>
                                 </div>

@@ -252,31 +252,31 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
         socketInstance.on('connect', () => {
             socketInstance.emit('join_booking', { bookingId: createdBookingId });
-            console.log(`📡 WebSocket: Client joined live matching room booking_${createdBookingId}`);
+            console.log(`WebSocket: Client joined live matching room booking_${createdBookingId}`);
         });
 
         socketInstance.on('new_driver_bid', (data: any) => {
             if (data && data.driverOffers) {
                 setMatchingBids(data.driverOffers);
-                toast.success("🚗 New driver bid received live!");
+                toast.success("New driver bid received live!");
             }
         });
 
         socketInstance.on('booking_updated', (booking: any) => {
             if (booking.offerStatus === 'Accepted') {
                 // Driver accepted the client's direct fare — proceed to payment
-                toast.success("🎉 Fare accepted! Redirecting to checkout.");
+                toast.success("Fare accepted! Redirecting to checkout.");
                 handleClose();
                 router.push('/dashboard');
             } else if (booking.offerStatus === 'Pending Partner') {
                 // Client fired a counter-offer — redirect to dashboard to await driver's
                 // Accept / Reject / Counter response. The Paystack button stays hidden
                 // there until offerStatus becomes 'Accepted'.
-                toast.success("📨 Counter-offer sent! Waiting for driver's response on your dashboard.");
+                toast.success("Counter-offer sent! Waiting for driver's response on your dashboard.");
                 handleClose();
                 router.push('/dashboard');
             } else if (booking.offerStatus === 'Rejected' || booking.status === 'Cancelled') {
-                toast.error("❌ The offer was declined. You can try selecting another driver.");
+                toast.error("The offer was declined. You can try selecting another driver.");
             }
         });
 
@@ -439,9 +439,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
             if (res.ok) {
                 if (payload.counterFare) {
-                    toast.success(`🎉 Counter-offer of ₦${Number(payload.counterFare).toLocaleString()} sent to driver!`);
+                    toast.success(`Counter-offer of ₦${Number(payload.counterFare).toLocaleString()} sent to driver!`);
                 } else {
-                    toast.success('🎉 Bid accepted! Redirecting to checkout...');
+                    toast.success('Bid accepted! Redirecting to checkout...');
                 }
                 // Reset counter UI state
                 setCounterActiveId(null);
@@ -733,7 +733,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                                     }}
                                                     className="w-full px-3 py-2 text-left text-[10px] text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-medium truncate"
                                                 >
-                                                    📍 {item.display_name}
+                                                    {item.display_name}
                                                 </button>
                                             ))}
                                         </div>
@@ -766,7 +766,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                                     }}
                                                     className="w-full px-3 py-2 text-left text-[10px] text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-medium truncate"
                                                 >
-                                                    📍 {item.display_name}
+                                                    {item.display_name}
                                                 </button>
                                             ))}
                                         </div>

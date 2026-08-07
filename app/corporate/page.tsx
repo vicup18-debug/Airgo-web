@@ -45,7 +45,7 @@ Message: ${formData.message}`;
                         <p>Partner with Airgo.ng and transform the way your organization manages travel. Contact our corporate team today to discuss your needs and discover how our tailored corporate contract solutions can support your business growth. Airgo.ng – Simplifying Corporate Travel, Empowering Your Business.</p>
                     </div>
 
-                    {/* 🟢 CTA SECTION */}
+                    {/* CTA SECTION */}
                     <div className="mt-16 border-t border-gray-100 pt-12">
                         <h2 className="text-3xl font-black text-[#000080] mb-6">Start Your Corporate Agreement</h2>
                         
@@ -54,15 +54,15 @@ Message: ${formData.message}`;
                                 <p className="text-gray-600">Reach out to our corporate team directly or fill out the inquiry form to get a personalized consultation.</p>
                                 <div className="space-y-4 text-gray-800 font-medium">
                                     <p className="flex items-center gap-3">
-                                        <span className="text-xl">✉️</span> 
+                                        <span className="text-xl"></span> 
                                         <a href="mailto:Info@airgo.ng" className="hover:text-[#000080] transition">Info@airgo.ng</a>
                                     </p>
                                     <p className="flex items-center gap-3">
-                                        <span className="text-xl">📞</span> 
+                                        <span className="text-xl"></span> 
                                         <a href="tel:+2347078344409" className="hover:text-[#000080] transition">+234 707 834 4409 (Corporate Line)</a>
                                     </p>
                                     <p className="flex items-center gap-3">
-                                        <span className="text-xl">💬</span> 
+                                        <span className="text-xl"></span> 
                                         <a href="https://wa.me/2347078344409" target="_blank" rel="noopener noreferrer" className="text-green-600 hover:text-green-700 font-bold transition">Message Us on WhatsApp</a>
                                     </p>
                                 </div>

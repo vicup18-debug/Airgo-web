@@ -64,7 +64,7 @@ export default function PaystackPaymentButton({ booking, user, onSuccess, onClos
             }}
             className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs py-2 px-4 rounded-xl shadow-md transition-colors"
         >
-            💳 Pay Escrow (₦{rawAmount.toLocaleString()})
+            Pay Escrow (₦{rawAmount.toLocaleString()})
         </button>
     );
 }

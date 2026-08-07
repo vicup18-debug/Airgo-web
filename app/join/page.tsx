@@ -144,7 +144,7 @@ export default function JoinPartnerPage() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 🟢 STRICT VALIDATION
+        // STRICT VALIDATION
         if (!agreed) return setError("You must agree to the Terms & Conditions.");
         if (!verificationFile) return setError("Please upload the required verification document.");
         if (!formData.phone) return setError("Phone number is required.");
@@ -180,7 +180,7 @@ export default function JoinPartnerPage() {
             // 2. ASSIGN URL BASED ON PARTNER TYPE
             const payload = {
                 ...formData,
-                email: formData.email.toLowerCase(), // 🟢 SMART UPGRADE: Force email to lowercase for DB consistency
+                email: formData.email.toLowerCase(), // SMART UPGRADE: Force email to lowercase for DB consistency
                 role: 'partner',
                 cacCertificateUrl: (formData.partnerType === 'hotel' || formData.partnerType === 'apartment') ? finalFileUrl : '',
                 driversLicenseUrl: (formData.partnerType === 'car' || formData.partnerType === 'shuttle') ? finalFileUrl : '',
@@ -196,8 +196,8 @@ export default function JoinPartnerPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-            // 🟢 SHOW GREEN BANNER & REDIRECT
-            setSuccessMessage("✅ Application Submitted! Please check your email for a verification link to activate your account. Redirecting...");
+            // SHOW GREEN BANNER & REDIRECT
+            setSuccessMessage("Application Submitted! Please check your email for a verification link to activate your account. Redirecting...");
 
             setTimeout(() => {
                 router.push('/login?verifyEmail=true');
@@ -223,17 +223,17 @@ export default function JoinPartnerPage() {
                 <div className="bg-white py-8 px-6 shadow-2xl rounded-3xl">
                     <form className="space-y-5" onSubmit={handleRegister}>
 
-                        {/* 🔴 ERROR BANNER */}
+                        {/* ERROR BANNER */}
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
-                                ⚠️ {error}
+                                {error}
                             </div>
                         )}
 
-                        {/* 🟢 SUCCESS BANNER */}
+                        {/* SUCCESS BANNER */}
                         {successMessage && (
                             <div className="bg-green-50 text-green-700 p-3 rounded-xl text-sm font-bold border border-green-100 flex items-center gap-2">
-                                <span className="animate-pulse">⏳</span> {successMessage}
+                                <span className="animate-pulse"></span> {successMessage}
                             </div>
                         )}
 
@@ -287,14 +287,14 @@ export default function JoinPartnerPage() {
                             </div>
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number *</label>
-                                {/* 🟢 SMART FIELD: Restricts to valid phone number lengths */}
+                                {/* SMART FIELD: Restricts to valid phone number lengths */}
                                 <input required type="tel" pattern="^\+?[0-9]{10,14}$" placeholder="e.g. 08012345678" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                             </div>
                         </div>
 
                         <div>
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Business Email</label>
-                            {/* 🟢 SMART FIELD: Instantly converts to lowercase as they type */}
+                            {/* SMART FIELD: Instantly converts to lowercase as they type */}
                             <input required type="email" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 outline-none" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value.toLowerCase() })} />
                         </div>
 

@@ -11,9 +11,9 @@ export default function RegisterPage() {
     const [agreed, setAgreed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [successMessage, setSuccessMessage] = useState(''); // 🟢 NEW: Green Banner State
+    const [successMessage, setSuccessMessage] = useState(''); // NEW: Green Banner State
 
-    // 🟢 NEW: Password Visibility States
+    // NEW: Password Visibility States
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -22,7 +22,7 @@ export default function RegisterPage() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // 🟢 STRICT VALIDATION
+        // STRICT VALIDATION
         if (!agreed) return setError("You must agree to the Terms & Conditions.");
         if (!formData.phone) return setError("Phone number is required.");
         if (formData.password !== formData.confirmPassword) return setError("Passwords do not match.");
@@ -50,8 +50,8 @@ export default function RegisterPage() {
 
             if (!res.ok) throw new Error(data.message || 'Registration failed');
 
-            // 🟢 SHOW GREEN BANNER & REDIRECT
-            setSuccessMessage("✅ Account created successfully! Please check your email for a verification link to activate your account. Redirecting...");
+            // SHOW GREEN BANNER & REDIRECT
+            setSuccessMessage("Account created successfully! Please check your email for a verification link to activate your account. Redirecting...");
 
             setTimeout(() => {
                 router.push('/login?verifyEmail=true');
@@ -117,17 +117,17 @@ export default function RegisterPage() {
                 <div className="bg-white py-8 px-6 shadow-xl rounded-3xl border border-gray-100">
                     <form className="space-y-4" onSubmit={handleRegister}>
 
-                        {/* 🔴 ERROR BANNER */}
+                        {/* ERROR BANNER */}
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100">
-                                ⚠️ {error}
+                                {error}
                             </div>
                         )}
 
-                        {/* 🟢 SUCCESS BANNER */}
+                        {/* SUCCESS BANNER */}
                         {successMessage && (
                             <div className="bg-green-50 text-green-700 p-3 rounded-xl text-sm font-bold border border-green-100 flex items-center gap-2">
-                                <span className="animate-pulse">⏳</span> {successMessage}
+                                <span className="animate-pulse"></span> {successMessage}
                             </div>
                         )}
 
@@ -146,7 +146,7 @@ export default function RegisterPage() {
                             <input required type="tel" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none transition" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                         </div>
 
-                        {/* 🟢 PASSWORD FIELD WITH EYE ICON */}
+                        {/* PASSWORD FIELD WITH EYE ICON */}
                         <div className="relative">
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Password</label>
                             <input required type={showPassword ? "text" : "password"} minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none transition pr-12" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
@@ -155,7 +155,7 @@ export default function RegisterPage() {
                             </button>
                         </div>
 
-                        {/* 🟢 CONFIRM PASSWORD FIELD WITH EYE ICON */}
+                        {/* CONFIRM PASSWORD FIELD WITH EYE ICON */}
                         <div className="relative">
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Confirm Password</label>
                             <input required type={showConfirmPassword ? "text" : "password"} minLength={6} className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:border-[#000080] outline-none transition pr-12" value={formData.confirmPassword} onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })} />

@@ -14,11 +14,10 @@ export default function SustainabilityPage() {
                     </p>
                 </div>
 
-                {/* 🟢 INTERACTIVE INITIATIVE CARDS */}
+                {/* INTERACTIVE INITIATIVE CARDS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
 
                     <div className="bg-white border border-gray-200 p-8 rounded-3xl hover:-translate-y-2 hover:border-[#38A169] transition-all duration-300">
-                        <div className="w-12 h-12 bg-green-50 text-green-600 flex items-center justify-center rounded-full mb-6 text-xl">🌱</div>
                         <h3 className="text-xl font-bold text-gray-900 mb-3">Eco-Friendly Hotels</h3>
                         <p className="text-gray-600 text-sm leading-relaxed">
                             We collaborate with hotels that implement energy and water conservation systems, waste reduction, and the use of eco-friendly materials.
@@ -26,7 +25,6 @@ export default function SustainabilityPage() {
                     </div>
 
                     <div className="bg-white border border-gray-200 p-8 rounded-3xl hover:-translate-y-2 hover:border-[#004A99] transition-all duration-300">
-                        <div className="w-12 h-12 bg-blue-50 text-blue-600 flex items-center justify-center rounded-full mb-6 text-xl">✈️</div>
                         <h3 className="text-xl font-bold text-gray-900 mb-3">Smarter Transit</h3>
                         <p className="text-gray-600 text-sm leading-relaxed">
                             Partnering with airlines that prioritize fuel efficiency, and promoting low-emission vehicles and shared mobility for our car rentals.
@@ -34,7 +32,6 @@ export default function SustainabilityPage() {
                     </div>
 
                     <div className="bg-white border border-gray-200 p-8 rounded-3xl hover:-translate-y-2 hover:border-[#FFB81C] transition-all duration-300">
-                        <div className="w-12 h-12 bg-yellow-50 text-yellow-600 flex items-center justify-center rounded-full mb-6 text-xl">📱</div>
                         <h3 className="text-xl font-bold text-gray-900 mb-3">Digital-First</h3>
                         <p className="text-gray-600 text-sm leading-relaxed">
                             Minimizing paper use and reducing operational waste by offering e-tickets, digital confirmations, and paperless transactions.

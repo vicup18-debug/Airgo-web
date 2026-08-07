@@ -29,7 +29,7 @@ export default function Navigation() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // 🟢 SAFETY SWITCH: Hide global nav on auth and partner pages
+  // SAFETY SWITCH: Hide global nav on auth and partner pages
   const hideTopNav = ['/admin', '/partner', '/driver', '/dashboard', '/login', '/register', '/join'].some(route => pathname.startsWith(route));
   const hideBottomNav = ['/admin', '/partner', '/driver', '/login', '/register', '/join'].some(route => pathname.startsWith(route));
 

@@ -285,7 +285,7 @@ export default function ClientDashboard() {
             if (!prevBooking) {
                 // A new booking has arrived!
                 shouldPlaySound = true;
-                toast.success(`📅 Booking request created successfully: ${booking.itemName}`);
+                toast.success(`Booking request created successfully: ${booking.itemName}`);
             } else {
                 // Check if any driver offers (bids) have been added
                 const prevBidsCount = prevBooking.driverOffers?.length || 0;
@@ -296,7 +296,7 @@ export default function ClientDashboard() {
                     const prevDriverIds = new Set(prevBooking.driverOffers?.map((o: any) => o.driverId) || []);
                     const newBids = booking.driverOffers.filter((o: any) => !prevDriverIds.has(o.driverId));
                     for (const newBid of newBids) {
-                        toast.success(`🚗 New Bid: ${newBid.driverName} offered ₦${Number(newBid.fare).toLocaleString()} for ${booking.itemName}!`, { duration: 6000 });
+                        toast.success(`New Bid: ${newBid.driverName} offered ₦${Number(newBid.fare).toLocaleString()} for ${booking.itemName}!`, { duration: 6000 });
                     }
                 }
 
@@ -304,26 +304,26 @@ export default function ClientDashboard() {
                 if (prevBooking.offerStatus !== booking.offerStatus) {
                     if (booking.offerStatus === 'Pending Client' && prevBooking.offerStatus !== 'Pending Client') {
                         shouldPlaySound = true;
-                        toast.success(`💜 Counter Offer: Driver countered with ₦${Number(booking.counterPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()} on your ride ${booking.itemName}!`, { duration: 6000 });
+                        toast.success(`Counter Offer: Driver countered with ₦${Number(booking.counterPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()} on your ride ${booking.itemName}!`, { duration: 6000 });
                     } else if (booking.offerStatus === 'Accepted' && prevBooking.offerStatus !== 'Accepted') {
                         shouldPlaySound = true;
-                        toast.success(`✅ Offer Accepted: Driver accepted your bid of ₦${Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()} for ${booking.itemName}! Please proceed to payment.`, { duration: 8000 });
+                        toast.success(`Offer Accepted: Driver accepted your bid of ₦${Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()} for ${booking.itemName}! Please proceed to payment.`, { duration: 8000 });
                     } else if (booking.offerStatus === 'Rejected' && prevBooking.offerStatus !== 'Rejected') {
                         shouldPlaySound = true;
-                        toast.error(`❌ Offer Declined: Driver declined your bid for ${booking.itemName}.`, { duration: 6000 });
+                        toast.error(`Offer Declined: Driver declined your bid for ${booking.itemName}.`, { duration: 6000 });
                     }
                 }
 
                 if (prevBooking.status !== booking.status) {
                     if (booking.status === 'Trip Started' && prevBooking.status !== 'Trip Started') {
                         shouldPlaySound = true;
-                        toast.success(`🟢 Trip Started: Your ride ${booking.itemName} has started! Safety first.`, { duration: 6000 });
+                        toast.success(`Trip Started: Your ride ${booking.itemName} has started! Safety first.`, { duration: 6000 });
                     } else if (booking.status === 'Trip End Pending' && prevBooking.status !== 'Trip End Pending') {
                         shouldPlaySound = true;
-                        toast.success(`🏁 Trip Ended: Driver completed the trip for ${booking.itemName}. Please confirm completion.`, { duration: 8000 });
+                        toast.success(`Trip Ended: Driver completed the trip for ${booking.itemName}. Please confirm completion.`, { duration: 8000 });
                     } else if ((booking.status === 'Paid' || booking.status === 'Paid - Escrow Secured') && prevBooking.status !== 'Paid' && prevBooking.status !== 'Paid - Escrow Secured') {
                         shouldPlaySound = true;
-                        toast.success(`💳 Payment Confirmed: Escrow payment verified successfully for ${booking.itemName}!`, { duration: 6000 });
+                        toast.success(`Payment Confirmed: Escrow payment verified successfully for ${booking.itemName}!`, { duration: 6000 });
                     }
                 }
             }
@@ -483,7 +483,7 @@ export default function ClientDashboard() {
             const data = await res.json();
             if (res.ok) {
                 if (action === 'Accept') {
-                    toast.success("🎉 Counter-offer accepted! You can now proceed to payment.");
+                    toast.success("Counter-offer accepted! You can now proceed to payment.");
                     setActivePaymentBooking(data.booking);
                 } else {
                     toast.success("Offer declined. Booking cancelled.");
@@ -521,9 +521,9 @@ export default function ClientDashboard() {
             const data = await res.json();
             if (res.ok) {
                 if (counterFare) {
-                    toast.success(`🎉 Your counter-bid of ₦${counterFare.toLocaleString()} has been sent to the driver for approval!`);
+                    toast.success(`Your counter-bid of ₦${counterFare.toLocaleString()} has been sent to the driver for approval!`);
                 } else {
-                    toast.success("🎉 Driver offer accepted successfully! Proceed to checkout.");
+                    toast.success("Driver offer accepted successfully! Proceed to checkout.");
                     setActivePaymentBooking(data.booking);
                 }
                 const userData = localStorage.getItem('airgo_user');
@@ -676,7 +676,7 @@ export default function ClientDashboard() {
             if (res.ok) {
                 const allBookings = await res.json();
 
-                // 🟢 FILTER: Match the booking's userId to the logged-in client's ID
+                // FILTER: Match the booking's userId to the logged-in client's ID
                 const clientBookings = allBookings.filter((b: any) =>
                     b.userId === parsedUser.id || b.userId === parsedUser.userId
                 );
@@ -734,7 +734,7 @@ export default function ClientDashboard() {
         return () => clearInterval(interval);
     }, [router]);
 
-    // 🟢 Register Firebase Cloud Messaging for Background Push Alerts
+    // Register Firebase Cloud Messaging for Background Push Alerts
     const setupPushNotifications = useCallback(async () => {
         try {
             if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
@@ -784,10 +784,10 @@ export default function ClientDashboard() {
                     },
                     body: JSON.stringify({ fcmToken })
                 });
-                console.log("🔥 Passenger FCM token registered and synced with server:", fcmToken);
+                console.log("Passenger FCM token registered and synced with server:", fcmToken);
             }
         } catch (err) {
-            console.error("❌ Passenger FCM registration failed:", err);
+            console.error("Passenger FCM registration failed:", err);
         }
     }, []);
 
@@ -797,7 +797,7 @@ export default function ClientDashboard() {
         }
     }, [user, setupPushNotifications]);
 
-    // 🟢 Parse incoming VoIP call credentials from URL on mount
+    // Parse incoming VoIP call credentials from URL on mount
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
@@ -825,7 +825,7 @@ export default function ClientDashboard() {
                     url.searchParams.delete('offer');
                     window.history.replaceState({}, '', url.toString());
                     
-                    console.log("🔔 Client Dashboard: parsed incoming VoIP call credentials from URL successfully.");
+                    console.log("Client Dashboard: parsed incoming VoIP call credentials from URL successfully.");
                 } catch (e) {
                     console.error("Error parsing VoIP call credentials from URL query parameters:", e);
                 }
@@ -850,23 +850,23 @@ export default function ClientDashboard() {
             myBookings.forEach((booking: any) => {
                 if (['Pending Escrow', 'Accepted', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status)) {
                     socketInstance.emit('join_booking', { bookingId: booking._id });
-                    console.log(`📡 WebSocket: Dashboard joined room booking_${booking._id}`);
+                    console.log(`WebSocket: Dashboard joined room booking_${booking._id}`);
                 }
             });
         });
 
         socketInstance.on('new_driver_bid', (data: any) => {
-            console.log("📡 WebSocket: Live driver bid received", data);
+            console.log("WebSocket: Live driver bid received", data);
             fetchMyBookings(parsedUser, true);
         });
 
         socketInstance.on('booking_updated', (data: any) => {
-            console.log("📡 WebSocket: Live booking status update received", data);
+            console.log("WebSocket: Live booking status update received", data);
             fetchMyBookings(parsedUser, true);
         });
 
         socketInstance.on('incoming_call_alert', (data: any) => {
-            console.log("📞 Incoming call alert received globally on client dashboard:", data);
+            console.log("Incoming call alert received globally on client dashboard:", data);
             setChatBookingId(data.bookingId);
             setChatBookingName(data.bookingName);
             setChatInitialOffer(data);
@@ -896,7 +896,7 @@ export default function ClientDashboard() {
             });
 
             if (res.ok) {
-                toast.success("🎉 Payment verified! Escrow holds activated.");
+                toast.success("Payment verified! Escrow holds activated.");
                 const userData = localStorage.getItem('airgo_user');
                 if (userData) {
                     fetchMyBookings(JSON.parse(userData));
@@ -988,7 +988,7 @@ export default function ClientDashboard() {
         } else {
             try {
                 await navigator.clipboard.writeText(`${shareText}\nInvoice: ${invoiceUrl}`);
-                toast.success("📋 Booking details copied to clipboard!");
+                toast.success("Booking details copied to clipboard!");
             } catch (err) {
                 toast.error("Failed to copy booking details.");
             }
@@ -1005,7 +1005,7 @@ export default function ClientDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans pb-20">
-            {/* 🟢 NAVBAR */}
+            {/* NAVBAR */}
             <div className="bg-[#000080] p-4 flex justify-between items-center text-white shadow-md">
                 <Link href="/" className="font-black text-xl tracking-tight hover:text-blue-200 transition">
                     Airgo<span className="text-[#FFB81C]">.ng</span>
@@ -1019,7 +1019,7 @@ export default function ClientDashboard() {
 
             <div className="max-w-6xl mx-auto px-4 md:px-6 mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                {/* 🟢 RESERVATIONS COLUMN */}
+                {/* RESERVATIONS COLUMN */}
                 <div className="lg:col-span-2">
                     <h2 className="text-2xl font-black text-gray-900 mb-6">My Reservations</h2>
 
@@ -1049,7 +1049,7 @@ export default function ClientDashboard() {
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* 🚕 Pending Taxi Ride Requests */}
+                            {/* Pending Taxi Ride Requests */}
                             {myRideRequests.length > 0 && (
                                 <div className="mb-6 space-y-4">
                                     <h3 className="text-sm font-black text-yellow-600 uppercase tracking-widest flex items-center gap-1.5 mb-2">
@@ -1500,7 +1500,7 @@ export default function ClientDashboard() {
                                                     )}
                                                     {booking.offerStatus === 'Accepted' && (
                                                         <p className="text-sm font-medium text-emerald-800">
-                                                            🎉 Your price offer of <span className="font-extrabold text-emerald-700">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span> was <span className="font-bold">accepted</span>! Please complete payment to lock your reservation.
+                                                            Your price offer of <span className="font-extrabold text-emerald-700">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span> was <span className="font-bold">accepted</span>! Please complete payment to lock your reservation.
                                                         </p>
                                                     )}
                                                     {booking.offerStatus === 'Rejected' && (
@@ -1619,7 +1619,7 @@ export default function ClientDashboard() {
                     )}
                 </div>
 
-                {/* 🟢 OFFICIAL SUPPORT COLUMN */}
+                {/* OFFICIAL SUPPORT COLUMN */}
                 <div className="lg:col-span-1 space-y-6">
                     <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
                         <div className="w-16 h-16 bg-blue-50 text-[#004A99] rounded-full flex items-center justify-center text-2xl font-black mb-4">

@@ -183,7 +183,7 @@ export default function SuperadminDashboard() {
         
         socket.on('new_room_approval_request', (data: any) => {
             const type = data.partnerType === 'apartment' ? 'Apartment' : 'Room';
-            toast.success(`New ${type} Requires Approval: ${data.name}`, { duration: 6000, icon: '🔔' });
+            toast.success(`New ${type} Requires Approval: ${data.name}`, { duration: 6000, icon: '' });
             fetchAllSystemData(true);
         });
 
@@ -257,10 +257,10 @@ export default function SuperadminDashboard() {
                     setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, status: nextStatus } : b));
                 } else {
                     const data = await res.json().catch(() => ({}));
-                    toast.error(`❌ Failed to update status: ${data.message || 'Unknown error'}`);
+                    toast.error(`Failed to update status: ${data.message || 'Unknown error'}`);
                 }
             } catch (error) {
-                toast.error("❌ Error connecting to server.");
+                toast.error("Error connecting to server.");
             }
         }
     };
@@ -283,10 +283,10 @@ export default function SuperadminDashboard() {
                     toast.success(`Plate marked as ${status}!`);
                     setAllBookings(prev => prev.map(b => b._id === bookingId ? { ...b, vehiclePlateStatus: status } : b));
                 } else {
-                    toast.error(`❌ Failed to update plate status.`);
+                    toast.error(`Failed to update plate status.`);
                 }
             } catch (error) {
-                toast.error("❌ Error connecting to server.");
+                toast.error("Error connecting to server.");
             }
         }
     };
@@ -350,7 +350,7 @@ export default function SuperadminDashboard() {
                 toast.success("Partner Approved!");
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isApproved: true } : p));
             }
-        } catch (error) { toast.error("❌ Error connecting to server."); }
+        } catch (error) { toast.error("Error connecting to server."); }
     };
 
     const handleToggleStatus = async (partnerId: string) => {
@@ -362,7 +362,7 @@ export default function SuperadminDashboard() {
                 toast.success(`${data.message}`);
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isActive: data.isActive } : p));
             }
-        } catch (error) { toast.error("❌ Error changing partner status."); }
+        } catch (error) { toast.error("Error changing partner status."); }
     };
 
     const handleDeletePartner = async (partnerId: string) => {
@@ -374,7 +374,7 @@ export default function SuperadminDashboard() {
                     toast.success("Partner Deleted!");
                     setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isDeleted: true } : p));
                 }
-            } catch (error) { toast.error("❌ Error connecting to server."); }
+            } catch (error) { toast.error("Error connecting to server."); }
         }
     };
 
@@ -386,7 +386,7 @@ export default function SuperadminDashboard() {
                 toast.success("Partner Restored!");
                 setPartners(prev => prev.map(p => p._id === partnerId ? { ...p, isDeleted: false } : p));
             }
-        } catch (error) { toast.error("❌ Error connecting to server."); }
+        } catch (error) { toast.error("Error connecting to server."); }
     };
 
     const handleApproveItem = async (type: 'rooms' | 'cars', itemId: string) => {
@@ -776,7 +776,7 @@ export default function SuperadminDashboard() {
                 setCarImageFile(null);
                 fetchAllSystemData();
             }
-        } catch (error) { toast.error("❌ Error adding vehicle."); } finally { setIsUploading(false); }
+        } catch (error) { toast.error("Error adding vehicle."); } finally { setIsUploading(false); }
     };
 
     // --- ADD ROOM MATRIX ---
@@ -814,7 +814,7 @@ export default function SuperadminDashboard() {
                 setRoomImageFile(null);
                 fetchAllSystemData();
             }
-        } catch (error) { toast.error("❌ Error adding room category configuration."); } finally { setIsUploading(false); }
+        } catch (error) { toast.error("Error adding room category configuration."); } finally { setIsUploading(false); }
     };
 
     // --- DELETE ITEM (Generic) ---
@@ -917,12 +917,12 @@ export default function SuperadminDashboard() {
         socket.on('connect', () => {
             setIsChatConnected(true);
             socket.emit('join_booking_chat', { bookingId });
-            console.log("⚡ Admin Connected to Airgo Socket Server");
+            console.log("Admin Connected to Airgo Socket Server");
         });
 
         socket.on('disconnect', () => {
             setIsChatConnected(false);
-            console.log("❌ Admin Disconnected from Airgo Socket Server");
+            console.log("Admin Disconnected from Airgo Socket Server");
         });
 
         socket.on('receive_chat_message', (msg: any) => {
@@ -948,10 +948,10 @@ export default function SuperadminDashboard() {
         const trimmed = chatInputText.trim();
         if (!trimmed || !selectedChatroom?.booking?._id) return;
 
-        // 🚨 PHONE NUMBER PROTECTION: Block numbers with more than 9 digits
+        // PHONE NUMBER PROTECTION: Block numbers with more than 9 digits
         const phoneRegex = /(?:\d[\s\-\.\(\)\+]*){10,}/;
         if (phoneRegex.test(trimmed)) {
-            toast.error("🔒 Phone number exchange is prohibited to prevent off-platform transactions.");
+            toast.error("Phone number exchange is prohibited to prevent off-platform transactions.");
             return;
         }
 
@@ -1060,15 +1060,15 @@ export default function SuperadminDashboard() {
                     <button className="md:hidden text-gray-300" onClick={() => setIsMobileMenuOpen(false)}>✕</button>
                 </div>
                 <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-                    <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'overview' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>📊 Global Overview</button>
-                    <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'bookings' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>📅 Bookings Manager</button>
-                    <button onClick={() => { setActiveTab('escrow'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'escrow' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>💰 Escrow Ledger</button>
-                    <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'approvals' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🛡️ Partner Approvals</button>
+                    <button onClick={() => { setActiveTab('overview'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'overview' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Global Overview</button>
+                    <button onClick={() => { setActiveTab('bookings'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'bookings' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Bookings Manager</button>
+                    <button onClick={() => { setActiveTab('escrow'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'escrow' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Escrow Ledger</button>
+                    <button onClick={() => { setActiveTab('approvals'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'approvals' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Partner Approvals</button>
                     <div className="my-2 border-b border-gray-800"></div>
-                    <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🚘 Manage Fleet</button>
-                    <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🏨 Manage Room Matrix</button>
-                    <button onClick={() => { setActiveTab('affiliates'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'affiliates' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>🤝 Affiliates Hub</button>
-                    <button onClick={() => { setActiveTab('chats'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'chats' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>💬 Chat Monitor</button>
+                    <button onClick={() => { setActiveTab('fleet'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'fleet' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Manage Fleet</button>
+                    <button onClick={() => { setActiveTab('rooms'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'rooms' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Manage Room Matrix</button>
+                    <button onClick={() => { setActiveTab('affiliates'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'affiliates' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Affiliates Hub</button>
+                    <button onClick={() => { setActiveTab('chats'); setIsMobileMenuOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition font-medium ${activeTab === 'chats' ? 'bg-[#000080] text-white shadow-md' : 'hover:bg-gray-800 text-gray-300'}`}>Chat Monitor</button>
                 </nav>
                 <div className="p-4 border-t border-gray-800">
                     <button onClick={handleLogout} className="w-full bg-red-900/50 text-red-400 px-4 py-3 rounded-xl text-sm font-bold border border-red-900/50 hover:bg-red-900 hover:text-white transition">Sign Out</button>
@@ -1135,11 +1135,11 @@ export default function SuperadminDashboard() {
                                             onClick={() => setIsNewBookingModalOpen(true)}
                                             className="bg-[#000080] hover:bg-blue-900 text-white font-bold text-xs py-2.5 px-5 rounded-xl shadow-md transition-all hover:scale-105"
                                         >
-                                            ➕ Create Concierge Booking
+                                            Create Concierge Booking
                                         </button>
                                     </div>
 
-                                    {/* 🔍 SEARCH AND FILTERS */}
+                                    {/* SEARCH AND FILTERS */}
                                     <div className="p-4 border-b border-gray-100 bg-white flex flex-col md:flex-row gap-4 items-center justify-between">
                                         <div className="relative w-full md:max-w-md">
                                             <input 
@@ -1149,7 +1149,7 @@ export default function SuperadminDashboard() {
                                                 value={bookingSearchQuery}
                                                 onChange={(e) => setBookingSearchQuery(e.target.value)}
                                             />
-                                            <span className="absolute left-3.5 top-3 text-gray-400 text-sm">🔍</span>
+                                            <span className="absolute left-3.5 top-3 text-gray-400 text-sm"></span>
                                         </div>
                                         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                                             {(['All', 'Pending Escrow', 'Paid', 'Approved for Disbursement', 'Paid Out', 'Archived'] as const).map((filter) => (
@@ -1198,7 +1198,7 @@ export default function SuperadminDashboard() {
                                                     }).length === 0 ? (
                                                     <tr>
                                                         <td colSpan={9} className="p-12 text-center text-gray-500 bg-white">
-                                                            <div className="text-4xl mb-2">📅</div>
+                                                            <div className="text-4xl mb-2"></div>
                                                             <p className="font-bold">No bookings found matching filter criteria.</p>
                                                         </td>
                                                     </tr>
@@ -1275,7 +1275,7 @@ export default function SuperadminDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Detailed Client Info</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
-                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">{booking.clientPhone || 'N/A'}</p>
                                                                             <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email provided'}</p>
                                                                         </div>
                                                                         <div>
@@ -1301,7 +1301,7 @@ export default function SuperadminDashboard() {
                                                                                          </span>
                                                                                          {booking.vehiclePlateUrl && (
                                                                                              <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#000080] hover:underline">
-                                                                                                 📷 View Photo
+                                                                                                 View Photo
                                                                                              </a>
                                                                                          )}
                                                                                      </div>
@@ -1330,7 +1330,7 @@ export default function SuperadminDashboard() {
                                                                                      onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
                                                                                      className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-green-700 text-center transition"
                                                                                  >
-                                                                                     💵 Confirm Deposit
+                                                                                     Confirm Deposit
                                                                                  </button>
                                                                              )}
                                                                              {!['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'].includes(booking.status) ? (
@@ -1342,7 +1342,7 @@ export default function SuperadminDashboard() {
                                                      rel="noreferrer"
                                                      className="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 text-center transition"
                                                  >
-                                                     📄 Get Invoice Receipt PDF
+                                                     Get Invoice Receipt PDF
                                                  </a>
                                              )}
                                                                          </div>
@@ -1377,7 +1377,7 @@ export default function SuperadminDashboard() {
                                                     <tr>
                                                         <td colSpan={4} className="p-0">
                                                             <div className="p-12 text-center bg-white border border-gray-100 shadow-sm m-6 rounded-3xl">
-                                                                <div className="text-6xl mb-4">📭</div>
+                                                                <div className="text-6xl mb-4"></div>
                                                                 <h3 className="text-2xl font-black text-[#000080] mb-2">No Transactions Yet</h3>
                                                                 <p className="text-gray-500 max-w-md mx-auto">When clients make a reservation, all escrow details and dispatch information will appear here.</p>
                                                             </div>
@@ -1421,7 +1421,7 @@ export default function SuperadminDashboard() {
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Client Details</p>
                                                                             <p className="text-sm font-black text-gray-900">{booking.clientName || 'N/A'}</p>
-                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                                            <p className="text-xs font-bold text-[#000080] mt-1 flex items-center gap-1">{booking.clientPhone || 'N/A'}</p>
                                                                             <p className="text-xs text-gray-500 mt-1">{booking.clientEmail || 'No email provided'}</p>
                                                                         </div>
                                                                         <div>
@@ -1447,7 +1447,7 @@ export default function SuperadminDashboard() {
                                                                                         </span>
                                                                                         {booking.vehiclePlateUrl && (
                                                                                             <a href={booking.vehiclePlateUrl} target="_blank" rel="noreferrer" className="text-[9px] font-bold text-[#000080] hover:underline">
-                                                                                                📷 View Photo
+                                                                                                View Photo
                                                                                             </a>
                                                                                         )}
                                                                                     </div>
@@ -1483,21 +1483,21 @@ export default function SuperadminDashboard() {
                                                                                       onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} 
                                                                                       className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-green-700 transition"
                                                                                   >
-                                                                                      💵 Confirm Deposit
+                                                                                      Confirm Deposit
                                                                                   </button>
                                                                               )}
                                                                              <button 
                                                                                  onClick={(e) => { e.stopPropagation(); handleEditBookingClick(booking); }} 
                                                                                  className="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-700 transition"
                                                                              >
-                                                                                 ✏️ Correct Details
+                                                                                 Correct Details
                                                                              </button>
                                                                              <button 
                                                                                  onClick={(e) => { e.stopPropagation(); handleResendEmail(booking._id); }} 
                                                                                  disabled={isResendingEmail === booking._id}
                                                                                  className="bg-[#000080] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-900 transition disabled:opacity-50"
                                                                              >
-                                                                                 ✉️ {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
+                                                                                 {isResendingEmail === booking._id ? 'Resending...' : 'Resend Email'}
                                                                              </button>
                                                                             {!['Paid', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed'].includes(booking.status) ? (
                                                  <button 
@@ -1505,7 +1505,7 @@ export default function SuperadminDashboard() {
                                                      onClick={(e) => e.stopPropagation()}
                                                      className="bg-gray-100 text-gray-400 px-3 py-1.5 rounded-lg text-xs font-bold border border-gray-200 cursor-not-allowed opacity-60 text-center w-full"
                                                  >
-                                                     📄 Receipt (Locked)
+                                                     Receipt (Locked)
                                                  </button>
                                              ) : (
                                                  <a 
@@ -1515,7 +1515,7 @@ export default function SuperadminDashboard() {
                                                      onClick={(e) => e.stopPropagation()}
                                                      className="bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-900 transition text-center animate-fade-in"
                                                  >
-                                                     📄 Get Receipt PDF
+                                                     Get Receipt PDF
                                                  </a>
                                              )}
                                                                             {booking.status !== 'Archived' && (
@@ -1561,7 +1561,7 @@ export default function SuperadminDashboard() {
                                         </div>
                                     </div>
                                     
-                                    {/* 🔍 PARTNER SEARCH BAR */}
+                                    {/* PARTNER SEARCH BAR */}
                                     <div className="p-4 border-b border-gray-100 bg-white">
                                         <div className="relative">
                                             <input 
@@ -1571,7 +1571,7 @@ export default function SuperadminDashboard() {
                                                 value={partnerSearchQuery}
                                                 onChange={(e) => setPartnerSearchQuery(e.target.value)}
                                             />
-                                            <span className="absolute left-3.5 top-3 text-gray-400 text-sm">🔍</span>
+                                            <span className="absolute left-3.5 top-3 text-gray-400 text-sm"></span>
                                         </div>
                                     </div>
 
@@ -1620,7 +1620,7 @@ export default function SuperadminDashboard() {
                                                         <tr onClick={() => setExpandedPartnerId(expandedPartnerId === partner._id ? null : partner._id)} className={`transition cursor-pointer ${partner.isActive === false ? 'bg-red-50/50' : 'hover:bg-blue-50'}`}>
                                                             <td className="p-4">
                                                                 <p className="font-bold text-gray-900">{partner.name}</p>
-                                                                <p className="text-[10px] uppercase font-black text-blue-600">{partner.role === 'driver' ? '🚕 Driver' : partner.partnerType === 'car' ? '🚘 Fleet' : (partner.partnerType === 'shuttle' || partner.partnerType === 'airport-shuttle') ? '🚐 Shuttle' : partner.partnerType === 'hotel' ? '🏨 Hotel' : partner.partnerType === 'apartment' ? '🏢 Apartment' : 'Partner'}</p>
+                                                                <p className="text-[10px] uppercase font-black text-blue-600">{partner.role === 'driver' ? 'Driver' : partner.partnerType === 'car' ? 'Fleet' : (partner.partnerType === 'shuttle' || partner.partnerType === 'airport-shuttle') ? 'Shuttle' : partner.partnerType === 'hotel' ? 'Hotel' : partner.partnerType === 'apartment' ? 'Apartment' : 'Partner'}</p>
                                                                 <p className="text-[10px] text-[#000080] font-bold uppercase mt-1">Tap for details ▼</p>
                                                             </td>
                                                             <td className="p-4 text-gray-600 font-medium">{partner.businessName || 'N/A'}</td>
@@ -1662,8 +1662,8 @@ export default function SuperadminDashboard() {
                                                                         </div>
                                                                         <div>
                                                                             <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Documents</p>
-                                                                            {partner.cacCertificateUrl && <a href={partner.cacCertificateUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#000080] hover:underline block mb-1">📄 View CAC Certificate</a>}
-                                                                            {partner.driversLicenseUrl && <a href={partner.driversLicenseUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#000080] hover:underline block mb-1">📄 View Driver's License</a>}
+                                                                            {partner.cacCertificateUrl && <a href={partner.cacCertificateUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#000080] hover:underline block mb-1">View CAC Certificate</a>}
+                                                                            {partner.driversLicenseUrl && <a href={partner.driversLicenseUrl} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#000080] hover:underline block mb-1">View Driver's License</a>}
                                                                             {!partner.cacCertificateUrl && !partner.driversLicenseUrl && <p className="text-xs text-gray-500">No documents uploaded</p>}
                                                                         </div>
                                                                     </div>
@@ -1753,7 +1753,7 @@ export default function SuperadminDashboard() {
                                     </div>
                                     <div className="px-6 pt-6 pb-2 border-b border-gray-100 bg-white">
                                         <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"></span>
                                             <input 
                                                 type="text" 
                                                 placeholder="Search fleet by name, class, location, state, or plate number..." 
@@ -1866,7 +1866,7 @@ export default function SuperadminDashboard() {
                                                                                     onClick={() => handleDisburseAffiliateCommission(app._id)}
                                                                                     className="bg-[#000080] text-white px-2 py-1 rounded text-[10px] font-bold hover:bg-blue-900 transition mt-1 cursor-pointer"
                                                                                 >
-                                                                                    💸 Payout
+                                                                                    Payout
                                                                                 </button>
                                                                             )}
                                                                         </div>
@@ -1988,7 +1988,7 @@ export default function SuperadminDashboard() {
                                     </div>
                                     <div className="px-6 pt-6 pb-2 border-b border-gray-100 bg-white">
                                         <div className="relative">
-                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">🔍</span>
+                                            <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400"></span>
                                             <input 
                                                 type="text" 
                                                 placeholder="Search rooms by name, hotel, address, or amenities..." 
@@ -2008,7 +2008,7 @@ export default function SuperadminDashboard() {
                                                     <span className="text-[10px] uppercase tracking-wider text-blue-600 font-black">{room.hotelName}</span>
                                                     <h3 className="font-black text-gray-900 text-lg mt-0.5">{room.name}</h3>
                                                     <p className="text-xs text-gray-400 mt-1 line-clamp-1">Amenities: {room.amenities}</p>
-                                                    <p className="text-[10px] text-gray-500 mt-1 line-clamp-1">📍 {room.hotelAddress || 'No address'}</p>
+                                                    <p className="text-[10px] text-gray-500 mt-1 line-clamp-1">{room.hotelAddress || 'No address'}</p>
                                                     <div className="flex justify-between items-center mt-4 pt-2 border-t border-gray-200">
                                                         <p className="font-bold text-[#000080]">₦{room.pricePerNight?.toLocaleString()} <span className="text-[10px] font-normal text-gray-400">/ night</span></p>
                                                         <div className="flex items-center gap-2">
@@ -2040,7 +2040,7 @@ export default function SuperadminDashboard() {
                                         <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
                                             {activeChatrooms.length === 0 ? (
                                                 <div className="p-8 text-center text-gray-400">
-                                                    <span className="text-3xl block mb-2">💬</span>
+                                                    <span className="text-3xl block mb-2"></span>
                                                     <p className="text-xs font-bold">No active conversations found.</p>
                                                 </div>
                                             ) : (
@@ -2072,7 +2072,7 @@ export default function SuperadminDashboard() {
                                                                 <span className="text-gray-400 font-medium shrink-0">{lastMsgTime}</span>
                                                             </div>
                                                             <p className="text-[11px] text-gray-600 line-clamp-1 italic font-medium">
-                                                                {chatroom.lastMessage?.senderRole === 'admin' ? '🛡️ Admin: ' : chatroom.lastMessage?.senderRole === 'partner' ? '🚘 Partner: ' : ''}
+                                                                {chatroom.lastMessage?.senderRole === 'admin' ? 'Admin: ' : chatroom.lastMessage?.senderRole === 'partner' ? 'Partner: ' : ''}
                                                                 {lastMsgText}
                                                             </p>
                                                         </div>
@@ -2087,7 +2087,7 @@ export default function SuperadminDashboard() {
                                         {!selectedChatroom ? (
                                             <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400 gap-2 bg-gray-50/30">
                                                 <div className="w-16 h-16 bg-[#000080]/5 text-[#000080] rounded-full flex items-center justify-center text-3xl font-black shadow-inner mb-2 animate-bounce">
-                                                    💬
+                                                    
                                                 </div>
                                                 <h4 className="font-black text-gray-700 mt-2 text-lg">Select a Conversation</h4>
                                                 <p className="text-xs max-w-sm leading-relaxed font-medium">
@@ -2121,7 +2121,7 @@ export default function SuperadminDashboard() {
                                                         </div>
                                                     ) : chatroomMessages.length === 0 ? (
                                                         <div className="flex-1 flex flex-col items-center justify-center text-gray-400 gap-2">
-                                                            <span className="text-2xl">💤</span>
+                                                            <span className="text-2xl"></span>
                                                             <span className="text-xs font-bold">No messages in this chat.</span>
                                                         </div>
                                                     ) : (
@@ -2531,8 +2531,8 @@ export default function SuperadminDashboard() {
                                                 });
                                             }}
                                         >
-                                            <option value="hotel">🏨 Hotel Stay</option>
-                                            <option value="car">🚘 Car Rental</option>
+                                            <option value="hotel">Hotel Stay</option>
+                                            <option value="car">Car Rental</option>
                                         </select>
                                     </div>
                                     <div className="flex-1">

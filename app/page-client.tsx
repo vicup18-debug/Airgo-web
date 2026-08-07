@@ -9,7 +9,7 @@ import CarBookingModal from '../components/CarBookingModal';
 import AnimatedSplash from '../components/AnimatedSplash';
 import { getHotelState } from '../utils/formatAddress';
 
-// 🟢 PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
+// PHASE 2: THE FALLBACK MATRIX - Keeps the site looking premium if the DB is empty
 const FALLBACK_ROOMS = [
   {
     _id: 'airgo_room_01',
@@ -210,7 +210,7 @@ export default function HotelHomepage() {
     fetchData();
   }, []);
 
-  // 🛡️ DYNAMIC AVAILABILITY ENGINE
+  // DYNAMIC AVAILABILITY ENGINE
   const isItemAvailableForDates = (item: any, checkInStr: string, checkOutStr: string) => {
     const allocated = item.totalAllocated !== undefined ? item.totalAllocated : 1;
     if (allocated <= 0) return false;
@@ -263,7 +263,7 @@ export default function HotelHomepage() {
       
       setCheckIn(checkInVal);
       setCheckOut(checkOutVal);
-      toast.success("📅 We've set default stay dates for your convenience.");
+      toast.success("We've set default stay dates for your convenience.");
     }
     
     setSelectedItem(item);
@@ -315,7 +315,7 @@ export default function HotelHomepage() {
       router.push(isCar ? '/dashboard' : '/dashboard?hotelBooked=true');
 
     } catch (error: any) {
-      toast.error(`❌ ${error.message}`);
+      toast.error(`${error.message}`);
     } finally {
       setIsBooking(false);
     }
@@ -596,7 +596,7 @@ export default function HotelHomepage() {
                                   }}
                                   className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
                               >
-                                  📍 {item.display_name}
+                                  {item.display_name}
                               </button>
                           ))}
                       </div>
@@ -621,7 +621,7 @@ export default function HotelHomepage() {
                                   }}
                                   className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
                               >
-                                  📍 {item.display_name}
+                                  {item.display_name}
                               </button>
                           ))}
                       </div>
@@ -714,7 +714,7 @@ export default function HotelHomepage() {
                           )}
                           {/* ESCROW PROTECTED pill */}
                           <div className="absolute bottom-2 left-2 bg-[#000080] text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
-                            <span>🛡️</span> ESCROW PROTECTED
+                            <span></span> ESCROW PROTECTED
                           </div>
                         </div>
 

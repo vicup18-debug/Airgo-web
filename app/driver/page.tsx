@@ -56,7 +56,7 @@ export default function DriverDashboard() {
     const socketRef = useRef<Socket | null>(null);
     const isMutedSound = useRef(false);
 
-    // 🟢 1. Authentication & Initial Loading
+    // 1. Authentication & Initial Loading
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const storedUser = localStorage.getItem('airgo_user');
@@ -84,7 +84,7 @@ export default function DriverDashboard() {
         }
     }, [router]);
 
-    // 🟢 1b. Auto-refresh available dispatches & bookings every 5 seconds
+    // 1b. Auto-refresh available dispatches & bookings every 5 seconds
     useEffect(() => {
         if (!myUserId) return;
         const interval = setInterval(() => {
@@ -93,7 +93,7 @@ export default function DriverDashboard() {
         return () => clearInterval(interval);
     }, [myUserId]);
 
-    // 🟢 1c. Parse incoming VoIP call credentials from URL on mount
+    // 1c. Parse incoming VoIP call credentials from URL on mount
     useEffect(() => {
         if (typeof window !== 'undefined') {
             const params = new URLSearchParams(window.location.search);
@@ -121,7 +121,7 @@ export default function DriverDashboard() {
                     url.searchParams.delete('offer');
                     window.history.replaceState({}, '', url.toString());
                     
-                    console.log("🔔 Driver Portal: parsed incoming VoIP call credentials from URL successfully.");
+                    console.log("Driver Portal: parsed incoming VoIP call credentials from URL successfully.");
                 } catch (e) {
                     console.error("Error parsing VoIP call credentials from URL query parameters:", e);
                 }
@@ -129,7 +129,7 @@ export default function DriverDashboard() {
         }
     }, [router]);
 
-    // 🟢 Register Firebase Cloud Messaging for Background Push Alerts
+    // Register Firebase Cloud Messaging for Background Push Alerts
     const setupPushNotifications = useCallback(async () => {
         try {
             if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('Notification' in window)) {
@@ -179,10 +179,10 @@ export default function DriverDashboard() {
                     },
                     body: JSON.stringify({ fcmToken })
                 });
-                console.log("🔥 FCM token registered and synced with server:", fcmToken);
+                console.log("FCM token registered and synced with server:", fcmToken);
             }
         } catch (err) {
-            console.error("❌ FCM registration failed:", err);
+            console.error("FCM registration failed:", err);
         }
     }, []);
 
@@ -192,7 +192,7 @@ export default function DriverDashboard() {
         }
     }, [myUserId, setupPushNotifications]);
 
-    // 🟢 2. Fetch Driver & Assigned Vehicle Details
+    // 2. Fetch Driver & Assigned Vehicle Details
     const fetchDriverData = async (driverId: string) => {
         setIsLoading(true);
         const token = localStorage.getItem('airgo_token');
@@ -261,7 +261,7 @@ export default function DriverDashboard() {
         }
     };
 
-    // 🟢 3. WebSockets setup for dispatches & updates
+    // 3. WebSockets setup for dispatches & updates
     useEffect(() => {
         if (!user || !myUserId) return;
 
@@ -272,7 +272,7 @@ export default function DriverDashboard() {
         socketRef.current = socket;
 
         socket.on('connect', () => {
-            console.log("📡 Driver Portal Connected to WebSocket!");
+            console.log("Driver Portal Connected to WebSocket!");
             socket.emit('join_drivers', { city: user.city || 'Abuja' });
             socket.emit('join_partner', { partnerId: myUserId });
             socket.emit('join_driver', { driverId: myUserId });
@@ -280,16 +280,16 @@ export default function DriverDashboard() {
 
         // Live dispatch broadcast
         socket.on('new_booking_request', (booking: any) => {
-            console.log("📡 WebSocket: Live dispatch offer:", booking);
+            console.log("WebSocket: Live dispatch offer:", booking);
             setAvailableRequests(prev => {
                 if (prev.some(r => r._id === booking._id)) return prev;
                 return [booking, ...prev];
             });
             playNotificationSound();
-            toast.success(`⚡ New Ride Request from ${booking.clientName || 'Guest'}!`, {
+            toast.success(`New Ride Request from ${booking.clientName || 'Guest'}!`, {
                 duration: 6000,
                 position: 'top-center',
-                icon: '🚕'
+                icon: ''
             });
         });
 
@@ -321,12 +321,12 @@ export default function DriverDashboard() {
             toast.error("An accepted trip request was cancelled due to unpaid escrow.", {
                 duration: 5000,
                 position: 'top-center',
-                icon: '⏰'
+                icon: ''
             });
         });
 
         socket.on('incoming_call_alert', (data: any) => {
-            console.log("📞 Incoming call alert received globally on driver portal:", data);
+            console.log("Incoming call alert received globally on driver portal:", data);
             setChatBookingId(data.bookingId);
             setChatBookingName(data.bookingName);
             setChatInitialOffer(data);
@@ -338,7 +338,7 @@ export default function DriverDashboard() {
         };
     }, [user, myUserId]);
 
-    // 🟢 Driver Telemetry Position Watcher
+    // Driver Telemetry Position Watcher
     useEffect(() => {
         if (!myUserId) return;
 
@@ -427,7 +427,7 @@ export default function DriverDashboard() {
         }
     };
 
-    // 🟢 4. Bidding Controls
+    // 4. Bidding Controls
     const handleQuickIncrement = (reqId: string, baseFare: number, increment: number) => {
         const currentVal = parseInt(bidFares[reqId] || String(baseFare), 10);
         setBidFares(prev => ({
@@ -517,7 +517,7 @@ export default function DriverDashboard() {
         }
     };
 
-    // 🟢 Driver responds to a client's counter-offer on an existing booking
+    // Driver responds to a client's counter-offer on an existing booking
     // action = 'Accept' | 'Decline' | 'Counter'
     const handleCounterOfferResponse = async (
         bookingId: string,
@@ -559,11 +559,11 @@ export default function DriverDashboard() {
 
             if (res.ok) {
                 if (action === 'Accept') {
-                    toast.success('✅ Counter-offer accepted! Awaiting client payment.');
+                    toast.success('Counter-offer accepted! Awaiting client payment.');
                 } else if (action === 'Decline') {
-                    toast.success('❌ Counter-offer declined. Booking cancelled.');
+                    toast.success('Counter-offer declined. Booking cancelled.');
                 } else {
-                    toast.success('💬 Counter sent back to passenger!');
+                    toast.success('Counter sent back to passenger!');
                 }
                 setCounterOfferInputs(prev => { const n = { ...prev }; delete n[bookingId]; return n; });
                 silentRefresh();
@@ -577,7 +577,7 @@ export default function DriverDashboard() {
         }
     };
 
-    // 🟢 5. Trip Management Operations
+    // 5. Trip Management Operations
     const handleStartTrip = async (bookingId: string) => {
         setIsUpdatingTripId(bookingId);
         const token = localStorage.getItem('airgo_token');
@@ -641,7 +641,7 @@ export default function DriverDashboard() {
             {/* TOP PREMIUM DRIVER HEADER */}
             <header className="bg-slate-900 border-b border-gray-800 px-6 py-4 sticky top-0 z-20 flex justify-between items-center shadow-lg">
                 <div className="flex items-center gap-3">
-                    <span className="text-3xl">🚕</span>
+                    <span className="text-3xl"></span>
                     <div>
                         <h1 className="text-xl font-black tracking-tight text-white flex items-center gap-2">
                             Airgo <span className="text-[#FFB81C] uppercase text-xs px-2 py-0.5 bg-yellow-400/10 rounded-full border border-yellow-400/20">Driver Portal</span>
@@ -670,7 +670,7 @@ export default function DriverDashboard() {
                     {assignedCar ? (
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-blue-600/20 rounded-2xl border border-blue-500/30 flex items-center justify-center text-2xl">
-                                🚗
+                                
                             </div>
                             <div>
                                 <h2 className="text-base font-extrabold text-white">{assignedCar.name}</h2>
@@ -681,7 +681,7 @@ export default function DriverDashboard() {
                         </div>
                     ) : (
                         <div className="flex items-center gap-3 text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 p-3 rounded-2xl text-xs font-bold">
-                            <span>⚠️</span>
+                            <span></span>
                             <span>No active vehicle profile linked to your driver profile. Fleet Managers must assign you to a vehicle.</span>
                         </div>
                     )}
@@ -701,7 +701,7 @@ export default function DriverDashboard() {
                             <div className="w-px h-8 bg-gray-700"></div>
                             <div className="text-center">
                                 <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Telemetry</p>
-                                <span className="text-xs text-blue-400 font-bold animate-pulse">🛰️ Syncing</span>
+                                <span className="text-xs text-blue-400 font-bold animate-pulse">Syncing</span>
                             </div>
                         </div>
                     )}
@@ -756,29 +756,29 @@ export default function DriverDashboard() {
                                     <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Trips Completed</p>
                                     <p className="text-2xl font-black text-white mt-1">{myBookings.filter(b => ['Completed', 'Completed & Disbursed'].includes(b.status)).length}</p>
                                 </div>
-                                <span className="text-3xl">🏁</span>
+                                <span className="text-3xl"></span>
                             </div>
                             <div className="bg-slate-900 border border-gray-800 p-5 rounded-3xl flex items-center justify-between shadow-xl">
                                 <div>
                                     <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Total Distance</p>
                                     <p className="text-2xl font-black text-white mt-1">{(myBookings.filter(b => ['Completed', 'Completed & Disbursed'].includes(b.status)).length * 14.8).toFixed(1)} km</p>
                                 </div>
-                                <span className="text-3xl">📏</span>
+                                <span className="text-3xl"></span>
                             </div>
                             <div className="bg-slate-900 border border-gray-800 p-5 rounded-3xl flex items-center justify-between shadow-xl">
                                 <div>
                                     <p className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider">Average Rating</p>
                                     <p className="text-2xl font-black text-yellow-400 mt-1 flex items-center gap-1">4.9 <span className="text-xs text-gray-400">★</span></p>
                                 </div>
-                                <span className="text-3xl">⭐</span>
+                                <span className="text-3xl"></span>
                             </div>
                         </div>
 
                         {activeTab === 'dispatches' ? (
-                    /* 🚕 DISPATCHES TAB */
+                    /* DISPATCHES TAB */
                     <div className="space-y-6">
 
-                        {/* ⚡ Active Negotiations — bookings awaiting driver response to a counter */}
+                        {/* Active Negotiations — bookings awaiting driver response to a counter */}
                         {myBookings.filter(b => b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')).map(booking => {
                             const clientPrice = parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, ''));
                             const isPendingPartner = booking.offerStatus === 'Pending Partner';
@@ -786,7 +786,7 @@ export default function DriverDashboard() {
                                 <div key={booking._id} className="bg-amber-950/40 border-2 border-amber-500/50 rounded-3xl p-5 shadow-xl animate-pulse-slow">
                                     <div className="flex items-center justify-between mb-3">
                                         <span className="text-xs font-black text-amber-400 uppercase tracking-widest">
-                                            {isPendingPartner ? '⚡ Counter-Offer From Passenger — Your Response Required' : '💬 You Countered — Awaiting Passenger'}
+                                            {isPendingPartner ? 'Counter-Offer From Passenger — Your Response Required' : 'You Countered — Awaiting Passenger'}
                                         </span>
                                         <span className="text-xs text-gray-400">{booking.itemName}</span>
                                     </div>
@@ -801,14 +801,14 @@ export default function DriverDashboard() {
                                                     onClick={() => handleCounterOfferResponse(booking._id, 'Accept', clientPrice)}
                                                     className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-black uppercase tracking-wide transition disabled:opacity-50"
                                                 >
-                                                    {isRespondingCounterId === booking._id ? '...' : '✅ Accept ₦' + clientPrice.toLocaleString()}
+                                                    {isRespondingCounterId === booking._id ? '...' : 'Accept ₦' + clientPrice.toLocaleString()}
                                                 </button>
                                                 <button
                                                     disabled={isRespondingCounterId === booking._id}
                                                     onClick={() => handleCounterOfferResponse(booking._id, 'Decline', 0)}
                                                     className="flex-1 bg-red-700 hover:bg-red-800 text-white py-2.5 rounded-xl text-xs font-black uppercase tracking-wide transition disabled:opacity-50"
                                                 >
-                                                    {isRespondingCounterId === booking._id ? '...' : '❌ Decline'}
+                                                    {isRespondingCounterId === booking._id ? '...' : 'Decline'}
                                                 </button>
                                             </div>
                                             <div className="flex gap-2">
@@ -827,7 +827,7 @@ export default function DriverDashboard() {
                                                     onClick={() => handleCounterOfferResponse(booking._id, 'Counter', clientPrice)}
                                                     className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-black transition disabled:opacity-50"
                                                 >
-                                                    {isRespondingCounterId === booking._id ? '...' : '💬 Counter'}
+                                                    {isRespondingCounterId === booking._id ? '...' : 'Counter'}
                                                 </button>
                                             </div>
                                         </>
@@ -841,7 +841,7 @@ export default function DriverDashboard() {
 
                         {availableRequests.length === 0 ? (
                             <div className="text-center py-16 bg-slate-900/50 border border-gray-800 rounded-3xl p-8 shadow-inner">
-                                <span className="text-5xl">📡</span>
+                                <span className="text-5xl"></span>
                                 <h3 className="text-lg font-extrabold text-white mt-4">Waiting for dispatches...</h3>
                                 <p className="text-sm text-gray-400 max-w-sm mx-auto mt-2 leading-relaxed">
                                     New taxi ride requests broadcasted by passengers in your city will appear here in real-time. Keep this page open.
@@ -880,14 +880,14 @@ export default function DriverDashboard() {
 
                                                 <div className="mt-4 bg-slate-800/40 rounded-2xl p-4 border border-gray-850 space-y-3">
                                                     <div className="flex gap-3 text-sm">
-                                                        <span className="text-blue-400">🟢</span>
+                                                        <span className="text-blue-400"></span>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Pickup Location</p>
                                                             <p className="text-xs font-semibold text-gray-200 mt-0.5">{req.fromAddress}</p>
                                                         </div>
                                                     </div>
                                                     <div className="flex gap-3 text-sm">
-                                                        <span className="text-red-400">🔴</span>
+                                                        <span className="text-red-400"></span>
                                                         <div>
                                                             <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Destination</p>
                                                             <p className="text-xs font-semibold text-gray-200 mt-0.5">{req.toAddress}</p>
@@ -897,10 +897,10 @@ export default function DriverDashboard() {
 
                                                 <div className="flex gap-6 mt-4 text-xs font-bold text-gray-400">
                                                     <div>
-                                                        <span>📏 Distance:</span> <span className="text-white">{req.distance || '0'} km</span>
+                                                        <span>Distance:</span> <span className="text-white">{req.distance || '0'} km</span>
                                                     </div>
                                                     <div>
-                                                        <span>📅 Time:</span> <span className="text-white">{req.checkIn}</span>
+                                                        <span>Time:</span> <span className="text-white">{req.checkIn}</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -908,7 +908,7 @@ export default function DriverDashboard() {
                                             <div className="mt-6 pt-4 border-t border-gray-800">
                                                 {hasSubmittedBid && isBidLocked ? (
                                                     <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4 text-center">
-                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">⛔ Cannot Bid Right Now</p>
+                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">Cannot Bid Right Now</p>
                                                         <p className="text-xs text-gray-400">{bidLockReason}</p>
                                                     </div>
                                                 ) : hasSubmittedBid ? (
@@ -939,7 +939,7 @@ export default function DriverDashboard() {
                                                 ) : isBidLocked ? (
                                                     // Driver has an active negotiation, ongoing trip, or active bid elsewhere
                                                     <div className="bg-red-950/40 border border-red-500/30 rounded-2xl p-4 text-center">
-                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">⛔ Cannot Bid Right Now</p>
+                                                        <p className="text-xs font-black text-red-400 uppercase tracking-widest mb-1">Cannot Bid Right Now</p>
                                                         <p className="text-xs text-gray-400">{bidLockReason}</p>
                                                     </div>
                                                 ) : (
@@ -1010,7 +1010,7 @@ export default function DriverDashboard() {
                         )}
                     </div>
                 ) : (
-                    /* 🧳 ACTIVE TRIPS TAB */
+                    /* ACTIVE TRIPS TAB */
                     <div className="space-y-6">
                         {myBookings.filter(b => {
                             // Exclude bookings still in price negotiation — those show in Dispatches tab
@@ -1018,7 +1018,7 @@ export default function DriverDashboard() {
                             return ['Pending Escrow', 'Accepted', 'Paid - Escrow Secured', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending', 'Completed'].includes(b.status);
                         }).length === 0 ? (
                             <div className="text-center py-16 bg-slate-900/50 border border-gray-800 rounded-3xl p-8 shadow-inner">
-                                <span className="text-5xl">🚗</span>
+                                <span className="text-5xl"></span>
                                 <h3 className="text-lg font-extrabold text-white mt-4">No active trips found</h3>
                                 <p className="text-sm text-gray-400 max-w-sm mx-auto mt-2 leading-relaxed">
                                     When you accept dispatches or when client bookings are assigned to you, your active trips and details will appear here.
@@ -1063,8 +1063,8 @@ export default function DriverDashboard() {
                                                     <div className="bg-slate-850 p-4 rounded-2xl border border-gray-800">
                                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Client Details</p>
                                                         <p className="text-sm font-extrabold text-white">{booking.clientName || 'Passenger'}</p>
-                                                        <p className="text-xs text-gray-400 mt-1">📧 {booking.clientEmail || 'N/A'}</p>
-                                                        <p className="text-xs text-gray-400 mt-1">📞 {booking.clientPhone || 'N/A'}</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{booking.clientEmail || 'N/A'}</p>
+                                                        <p className="text-xs text-gray-400 mt-1">{booking.clientPhone || 'N/A'}</p>
                                                     </div>
 
                                                     {/* Route details */}
@@ -1086,7 +1086,7 @@ export default function DriverDashboard() {
                                                 {isTripActive && (
                                                     <div className="mt-6 bg-slate-950/80 p-5 rounded-3xl border border-gray-800">
                                                         <div className="flex justify-between items-center text-xs font-bold text-gray-400 mb-2">
-                                                            <span>🚀 Simulating Live Telemetry Route...</span>
+                                                            <span>Simulating Live Telemetry Route...</span>
                                                             <span className="text-blue-400">{simulatedSpeed} km/h</span>
                                                         </div>
                                                         <div className="h-2 bg-slate-800 rounded-full overflow-hidden relative">
@@ -1108,7 +1108,7 @@ export default function DriverDashboard() {
                                                 {booking.isOffer && booking.offerStatus === 'Pending Partner' && (
                                                     <div className="mt-6 bg-amber-950/40 border border-amber-500/30 rounded-2xl p-5">
                                                         <p className="text-xs font-black text-amber-400 uppercase tracking-widest mb-1">
-                                                            ⚡ Passenger Counter-Offer
+                                                            Passenger Counter-Offer
                                                         </p>
                                                         <p className="text-2xl font-black text-white mt-1">
                                                             ₦{parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, '')).toLocaleString()}
@@ -1128,14 +1128,14 @@ export default function DriverDashboard() {
                                                                 )}
                                                                 className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow disabled:opacity-50"
                                                             >
-                                                                {isRespondingCounterId === booking._id ? '...' : '✅ Accept Offer'}
+                                                                {isRespondingCounterId === booking._id ? '...' : 'Accept Offer'}
                                                             </button>
                                                             <button
                                                                 disabled={isRespondingCounterId === booking._id}
                                                                 onClick={() => handleCounterOfferResponse(booking._id, 'Decline', 0)}
                                                                 className="flex-1 bg-red-700 hover:bg-red-800 text-white py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow disabled:opacity-50"
                                                             >
-                                                                {isRespondingCounterId === booking._id ? '...' : '❌ Decline'}
+                                                                {isRespondingCounterId === booking._id ? '...' : 'Decline'}
                                                             </button>
                                                         </div>
 
@@ -1160,7 +1160,7 @@ export default function DriverDashboard() {
                                                                 )}
                                                                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-black transition shadow disabled:opacity-50"
                                                             >
-                                                                {isRespondingCounterId === booking._id ? '...' : '💬 Counter'}
+                                                                {isRespondingCounterId === booking._id ? '...' : 'Counter'}
                                                             </button>
                                                         </div>
                                                     </div>
@@ -1179,7 +1179,7 @@ export default function DriverDashboard() {
                                                                 }}
                                                                 className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition shadow-md"
                                                             >
-                                                                💬 Chat with Passenger
+                                                                Chat with Passenger
                                                             </button>
                                                         )}
                                                     </div>
@@ -1192,7 +1192,7 @@ export default function DriverDashboard() {
                                                                 onClick={() => handleStartTrip(booking._id)}
                                                                 className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-6 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
                                                             >
-                                                                {isUpdatingTripId === booking._id ? 'Starting...' : '🟢 Start Trip'}
+                                                                {isUpdatingTripId === booking._id ? 'Starting...' : 'Start Trip'}
                                                             </button>
                                                         )}
 
@@ -1203,7 +1203,7 @@ export default function DriverDashboard() {
                                                                 onClick={() => handleEndTrip(booking._id)}
                                                                 className="bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white px-6 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
                                                             >
-                                                                {isUpdatingTripId === booking._id ? 'Ending...' : '🔴 Complete / End Trip'}
+                                                                {isUpdatingTripId === booking._id ? 'Ending...' : 'Complete / End Trip'}
                                                             </button>
                                                         )}
                                                     </div>

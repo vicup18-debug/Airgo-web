@@ -170,7 +170,7 @@ export default function AffiliatePage() {
         if (!activeAffiliate) return;
         const refUrl = `https://airgo.ng/?ref=${encodeURIComponent(activeAffiliate.email)}`;
         navigator.clipboard.writeText(refUrl)
-            .then(() => toast.success("📋 Referral link copied to clipboard!"))
+            .then(() => toast.success("Referral link copied to clipboard!"))
             .catch(() => toast.error("Failed to copy link."));
     };
 
@@ -198,7 +198,7 @@ export default function AffiliatePage() {
         <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
             <main className="flex-grow max-w-6xl mx-auto py-12 px-6 w-full">
                 
-                {/* 🟢 NAVIGATION TABS (Only shown if not logged in to dashboard) */}
+                {/* NAVIGATION TABS (Only shown if not logged in to dashboard) */}
                 {viewMode !== 'dashboard' && (
                     <div className="flex justify-center gap-4 mb-12">
                         <button
@@ -224,7 +224,7 @@ export default function AffiliatePage() {
                     </div>
                 )}
 
-                {/* 🟢 VIEW 1: REGISTRATION / APPLICATION FORM */}
+                {/* VIEW 1: REGISTRATION / APPLICATION FORM */}
                 {viewMode === 'apply' && (
                     <>
                         {/* Header */}
@@ -243,7 +243,7 @@ export default function AffiliatePage() {
                         {/* Grid Benefits */}
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
                             <div className="bg-white p-6 rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-md transition">
-                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl">💰</div>
+                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl"></div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">High Commission</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">
                                     Earn up to 5% commission on every validated hotel booking and 5% on executive car fleet checkouts.
@@ -251,7 +251,7 @@ export default function AffiliatePage() {
                             </div>
 
                             <div className="bg-white p-6 rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-md transition">
-                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl">🛡️</div>
+                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl"></div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Escrow-Assured</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">
                                     With Airgo Escrow Guarantee, trust rates are incredibly high, yielding industry-leading conversion ratios.
@@ -259,7 +259,7 @@ export default function AffiliatePage() {
                             </div>
 
                             <div className="bg-white p-6 rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-md transition">
-                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl">📊</div>
+                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl"></div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">Real-time Stats</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">
                                     Track every click, dynamic registration, completed checkout, and accumulated commission in real time.
@@ -267,7 +267,7 @@ export default function AffiliatePage() {
                             </div>
 
                             <div className="bg-white p-6 rounded-3xl border border-gray-200/60 shadow-sm hover:shadow-md transition">
-                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl">⚡</div>
+                                <div className="w-12 h-12 bg-blue-50 text-[#000080] flex items-center justify-center rounded-2xl mb-4 text-2xl"></div>
                                 <h3 className="text-xl font-bold text-gray-900 mb-2">On-Time Payouts</h3>
                                 <p className="text-sm text-gray-500 leading-relaxed">
                                     Receive your earnings directly into your local or international bank account monthly on a fixed schedule.
@@ -279,7 +279,7 @@ export default function AffiliatePage() {
                         <div className="max-w-2xl mx-auto bg-white rounded-3xl border border-gray-200/80 p-8 md:p-12 shadow-md">
                             {submitted ? (
                                 <div className="text-center py-8">
-                                    <div className="text-6xl mb-6">🎉</div>
+                                    <div className="text-6xl mb-6"></div>
                                     <h2 className="text-3xl font-black text-gray-900 mb-4">Application Submitted!</h2>
                                     <p className="text-gray-600 mb-8 leading-relaxed">
                                         Thank you for applying to the Airgo.ng Affiliate Program. Our compliance and partner success team will review your channel and strategy. We will get back to you via email within 48 hours.
@@ -384,11 +384,11 @@ export default function AffiliatePage() {
                     </>
                 )}
 
-                {/* 🟢 VIEW 2: PASSWORD LOGIN PORTAL */}
+                {/* VIEW 2: PASSWORD LOGIN PORTAL */}
                 {viewMode === 'login' && (
                     <div className="max-w-md mx-auto bg-white rounded-3xl border border-gray-200 p-8 md:p-10 shadow-lg animate-fade-in mt-12">
                         <div className="text-center mb-8">
-                            <div className="text-4xl mb-4">🔐</div>
+                            <div className="text-4xl mb-4"></div>
                             <h2 className="text-2xl font-black text-gray-900">Affiliate Portal</h2>
                             <p className="text-gray-500 text-sm mt-1">
                                 Access your real-time referred metrics and dashboard.
@@ -431,7 +431,7 @@ export default function AffiliatePage() {
                     </div>
                 )}
 
-                {/* 🟢 VIEW 3: LIVE AFFILIATE DASHBOARD */}
+                {/* VIEW 3: LIVE AFFILIATE DASHBOARD */}
                 {viewMode === 'dashboard' && activeAffiliate && (
                     <div className="space-y-8 animate-fade-in">
                         {/* Dashboard Top Header */}
@@ -443,7 +443,7 @@ export default function AffiliatePage() {
                                         Approved Partner
                                     </span>
                                 </div>
-                                <p className="text-gray-500 font-semibold mt-1">Welcome back, {activeAffiliate.name} 👋</p>
+                                <p className="text-gray-500 font-semibold mt-1">Welcome back, {activeAffiliate.name} </p>
                             </div>
                             <button
                                 onClick={handleSignOut}
@@ -481,7 +481,7 @@ export default function AffiliatePage() {
                         {/* Referral Link Sharing Tool */}
                         <div className="bg-blue-50 border border-blue-100 rounded-3xl p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
                             <div className="flex-1">
-                                <h3 className="text-lg font-black text-blue-900 flex items-center gap-2 mb-1">🔗 Your Unique Referral Link</h3>
+                                <h3 className="text-lg font-black text-blue-900 flex items-center gap-2 mb-1">Your Unique Referral Link</h3>
                                 <p className="text-xs text-blue-700 leading-relaxed font-semibold">
                                     Share this link via social media, YouTube description, blog, or whatsapp. Customers booking through this link credit you automatically.
                                 </p>
@@ -520,7 +520,7 @@ export default function AffiliatePage() {
                                         {referredBookings.length === 0 ? (
                                             <tr>
                                                 <td colSpan={6} className="p-12 text-center text-gray-500">
-                                                    <div className="text-5xl mb-4">🔗</div>
+                                                    <div className="text-5xl mb-4"></div>
                                                     <h4 className="font-bold text-gray-800 text-lg">No referrals tracked yet</h4>
                                                     <p className="text-xs text-gray-400 max-w-sm mx-auto mt-1">
                                                         Once customers complete bookings using your referral code, their payout status will populate here.

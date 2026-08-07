@@ -125,17 +125,17 @@ export default function SupportPage() {
 
             if (res.ok) {
                 toast.success("Message dispatched! A ticket has been generated and sent to our support team.", { id: loadingToast });
-                setFormSuccess("✅ Support message sent successfully! Our concierge team will get back to you shortly.");
+                setFormSuccess("Support message sent successfully! Our concierge team will get back to you shortly.");
                 setFormData({ name: '', email: '', subject: 'Inquiry', message: '' });
             } else {
                 const errData = await res.json();
                 const errMsg = errData.message || "Failed to dispatch message.";
                 toast.error(errMsg, { id: loadingToast });
-                setFormError(`⚠️ ${errMsg}`);
+                setFormError(`${errMsg}`);
             }
         } catch (error) {
             toast.error("Network error. Please try again.", { id: loadingToast });
-            setFormError("⚠️ Network error. Please check your connection and try again.");
+            setFormError("Network error. Please check your connection and try again.");
         } finally {
             setIsSending(false);
         }
@@ -166,17 +166,16 @@ export default function SupportPage() {
                     </p>
                 </div>
 
-                {/* 🌟 SPLIT VIEW GRID */}
+                {/* SPLIT VIEW GRID */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
                     
-                    {/* 📞 LEFT PANEL: CONTACT CHANNELS */}
+                    {/* LEFT PANEL: CONTACT CHANNELS */}
                     <div className="lg:col-span-4 space-y-6">
                         <div className="bg-white p-6 rounded-3xl shadow-navy border border-gray-100">
                             <h3 className="text-sm font-black text-gray-900 uppercase tracking-wider mb-4">Official Channels</h3>
                             
                             <div className="space-y-4">
                                 <a href="tel:+2347078344409" className="flex items-center p-4 bg-gray-50 rounded-2xl hover:bg-blue-50/50 hover:border-[#004A99] border border-transparent transition duration-300">
-                                    <div className="w-10 h-10 bg-[#EBF5FF] text-[#004A99] flex items-center justify-center rounded-xl text-lg mr-4">📞</div>
                                     <div>
                                         <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Call Support 24/7</h4>
                                         <p className="text-sm font-black text-gray-900">+234 707 834 4409</p>
@@ -184,7 +183,6 @@ export default function SupportPage() {
                                 </a>
 
                                 <a href="mailto:support@airgo.ng" className="flex items-center p-4 bg-gray-50 rounded-2xl hover:bg-blue-50/50 hover:border-[#004A99] border border-transparent transition duration-300">
-                                    <div className="w-10 h-10 bg-[#EBF5FF] text-[#004A99] flex items-center justify-center rounded-xl text-lg mr-4">✉️</div>
                                     <div>
                                         <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">General Inquiries</h4>
                                         <p className="text-sm font-black text-gray-900">info@airgo.ng</p>
@@ -194,42 +192,42 @@ export default function SupportPage() {
                         </div>
 
                         <div className="bg-gradient-to-br from-[#000080] to-blue-900 p-6 rounded-3xl shadow-md text-white">
-                            <h3 className="font-black text-lg mb-2">🛡️ Airgo Escrow Guarantee</h3>
+                            <h3 className="font-black text-lg mb-2">Airgo Escrow Guarantee</h3>
                             <p className="text-xs text-blue-200 leading-relaxed">
                                 Every reservation made on Airgo is fully backed by multi-sig partner protocol escrows. Your funds are secured until check-in or delivery is confirmed, protecting both clients and partners.
                             </p>
                         </div>
                     </div>
 
-                    {/* ⚙️ RIGHT PANEL: SMART CUSTOMER TABS */}
+                    {/* RIGHT PANEL: SMART CUSTOMER TABS */}
                     <div className="lg:col-span-8 bg-white rounded-3xl shadow-navy border border-gray-100 overflow-hidden flex flex-col min-h-[400px] md:min-h-[500px]">
                         
-                        {/* 🌟 TAB SELECTOR */}
+                        {/* TAB SELECTOR */}
                         <div className="flex overflow-x-auto sm:overflow-x-visible border-b border-gray-100 bg-gray-50/80 shrink-0 scrollbar-none">
                             <button 
                                 onClick={() => setActiveTab('chat')} 
                                 className={`flex-1 min-w-[100px] py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${activeTab === 'chat' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
                             >
-                                💬 AI Support
+                                AI Support
                             </button>
                             <button 
                                 onClick={() => setActiveTab('faqs')} 
                                 className={`flex-1 min-w-[80px] py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${activeTab === 'faqs' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
                             >
-                                ❓ FAQs
+                                FAQs
                             </button>
                             <button 
                                 onClick={() => setActiveTab('message')} 
                                 className={`flex-1 min-w-[100px] py-3.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition whitespace-nowrap ${activeTab === 'message' ? 'bg-white text-[#004A99] border-b-2 border-[#004A99]' : 'text-gray-500 hover:text-gray-800'}`}
                             >
-                                ✉️ Contact
+                                Contact
                             </button>
                         </div>
  
-                        {/* 🌟 TAB CONTENT AREAS */}
+                        {/* TAB CONTENT AREAS */}
                         <div className="p-4 md:p-8 flex-1 flex flex-col justify-between">
                             
-                            {/* 💬 TAB 1: AI CONCIERGE CHATBOT */}
+                            {/* TAB 1: AI CONCIERGE CHATBOT */}
                             {activeTab === 'chat' && (
                                 <div className="flex flex-col flex-1 h-[380px] md:h-[420px]">
                                     <div className="flex-1 overflow-y-auto space-y-4 mb-4 pr-1 max-h-[310px] md:max-h-[350px]">
@@ -266,7 +264,7 @@ export default function SupportPage() {
                                 </div>
                             )}
 
-                            {/* ❓ TAB 2: FAQ ACCORDIONS */}
+                            {/* TAB 2: FAQ ACCORDIONS */}
                             {activeTab === 'faqs' && (
                                 <div className="space-y-4">
                                     <div className="relative mb-6">
@@ -277,7 +275,7 @@ export default function SupportPage() {
                                             value={faqSearch}
                                             onChange={(e) => setFaqSearch(e.target.value)}
                                         />
-                                        <span className="absolute left-3.5 top-3 text-gray-400 text-sm">🔍</span>
+                                        <span className="absolute left-3.5 top-3 text-gray-400 text-sm"></span>
                                     </div>
 
                                     <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1">
@@ -306,17 +304,17 @@ export default function SupportPage() {
                                 </div>
                             )}
 
-                            {/* ✉️ TAB 3: CONTACT FORM */}
+                            {/* TAB 3: CONTACT FORM */}
                             {activeTab === 'message' && (
                                 <form onSubmit={handleFormSubmit} className="space-y-5">
-                                    {/* 🔴 ERROR BANNER */}
+                                    {/* ERROR BANNER */}
                                     {formError && (
                                         <div className="bg-red-50 text-red-600 p-3.5 rounded-xl text-sm font-bold border border-red-100 animate-fade-in">
                                             {formError}
                                         </div>
                                     )}
 
-                                    {/* 🟢 SUCCESS BANNER */}
+                                    {/* SUCCESS BANNER */}
                                     {formSuccess && (
                                         <div className="bg-green-50 text-green-700 p-3.5 rounded-xl text-sm font-bold border border-green-100 animate-fade-in">
                                             {formSuccess}

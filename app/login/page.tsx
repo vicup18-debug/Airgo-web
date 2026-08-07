@@ -13,10 +13,10 @@ export default function LoginPage() {
     const [error, setError] = useState('');
     const [showVerifyBanner, setShowVerifyBanner] = useState(false);
 
-    // 🟢 ADDED: Show/Hide Password State
+    // ADDED: Show/Hide Password State
     const [showPassword, setShowPassword] = useState(false);
     
-    // 🟢 ADDED: Resend Verification State
+    // ADDED: Resend Verification State
     const [isResending, setIsResending] = useState(false);
 
     const router = useRouter();
@@ -73,7 +73,7 @@ export default function LoginPage() {
 
             if (!res.ok) throw new Error(data.message || 'Login failed');
 
-            // 🟢 MATCHES YOUR BACKEND EXACTLY
+            // MATCHES YOUR BACKEND EXACTLY
             localStorage.setItem('airgo_token', data.token);
             localStorage.setItem('airgo_user', JSON.stringify({
                 id: data.userId,
@@ -86,7 +86,7 @@ export default function LoginPage() {
                 partnerType: data.partnerType
             }));
 
-            // 🟢 SMART REDIRECT BASED ON ROLE
+            // SMART REDIRECT BASED ON ROLE
             if (data.role === 'admin') {
                 router.push('/admin');
             } else if (data.role === 'partner') {
@@ -161,7 +161,7 @@ export default function LoginPage() {
                         {showVerifyBanner && (
                             <div className="bg-blue-50 text-blue-800 p-4 rounded-2xl text-sm font-semibold border border-blue-100 flex flex-col gap-1 shadow-sm">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-lg">📧</span>
+                                    <span className="text-lg"></span>
                                     <span className="font-bold text-blue-900">Verify your Email Address</span>
                                 </div>
                                 <p className="text-xs text-blue-700 mt-1 leading-relaxed">
@@ -180,7 +180,7 @@ export default function LoginPage() {
 
                         {error && (
                             <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm font-bold border border-red-100 flex flex-col gap-2">
-                                <span>⚠️ {error}</span>
+                                <span>{error}</span>
                                 {error.includes('verify your email') && (
                                     <button 
                                         type="button" 
@@ -206,7 +206,7 @@ export default function LoginPage() {
                             />
                         </div>
 
-                        {/* 🟢 UPGRADED: Password Field with Show/Hide Toggle */}
+                        {/* UPGRADED: Password Field with Show/Hide Toggle */}
                         <div className="relative">
                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wide mb-1">Password</label>
                             <input

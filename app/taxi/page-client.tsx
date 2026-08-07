@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import CarBookingModal from '../../components/CarBookingModal';
 
-// 🟢 THE FALLBACK MATRIX: If the database is empty, we inject this premium fleet automatically so the site never looks broken!
+// THE FALLBACK MATRIX: If the database is empty, we inject this premium fleet automatically so the site never looks broken!
 const FALLBACK_FLEET = [
     {
         _id: 'airgo_fleet_01',
@@ -176,7 +176,7 @@ export default function CarsPage() {
                     if (data.length > 0) {
                         setCarFleet(data);
                     } else {
-                        setCarFleet(FALLBACK_FLEET); // 🟢 Inject fallback if DB is empty
+                        setCarFleet(FALLBACK_FLEET); // Inject fallback if DB is empty
                     }
                 }
             } catch (error) {
@@ -219,7 +219,7 @@ export default function CarsPage() {
                                         onClick={handleUseCurrentLocation}
                                         className="text-[10px] bg-blue-100 text-[#000080] px-2 py-1 rounded font-bold hover:bg-blue-200 transition flex items-center gap-1"
                                     >
-                                        📍 Use Current Location
+                                        Use Current Location
                                     </button>
                                 </div>
                                 <input 
@@ -247,7 +247,7 @@ export default function CarsPage() {
                                                 }}
                                                 className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
                                             >
-                                                📍 {item.display_name}
+                                                {item.display_name}
                                             </button>
                                         ))}
                                     </div>
@@ -279,7 +279,7 @@ export default function CarsPage() {
                                                 }}
                                                 className="w-full px-4 py-3 text-left text-xs text-gray-700 hover:bg-blue-50 border-b border-gray-100 last:border-none font-semibold truncate cursor-pointer"
                                             >
-                                                📍 {item.display_name}
+                                                {item.display_name}
                                             </button>
                                         ))}
                                     </div>
@@ -298,7 +298,7 @@ export default function CarsPage() {
                     </div>
                 </div>
 
-                {/* 🟢 AIRPORT SHUTTLE "HOW IT WORKS" & BRANDING */}
+                {/* AIRPORT SHUTTLE "HOW IT WORKS" & BRANDING */}
                 <div className="max-w-4xl mx-auto px-6 mb-16 text-center">
                     <div className="bg-white rounded-[2.5rem] p-8 md:p-12 border border-gray-100 shadow-xl max-w-3xl mx-auto mb-16 animate-in fade-in slide-in-from-bottom-8 duration-500">
                         <div className="flex items-center justify-center gap-3 mb-6 bg-blue-50 text-[#000080] px-5 py-2.5 rounded-full w-fit mx-auto border border-blue-100/50">

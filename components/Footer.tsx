@@ -57,7 +57,7 @@ export default function Footer() {
     }
   };
 
-  // 🟢 SAFETY SWITCH: Hides the footer on admin panels, dashboards, and auth screens so layouts don't break!
+  // SAFETY SWITCH: Hides the footer on admin panels, dashboards, and auth screens so layouts don't break!
   const hiddenRoutes = ['/admin', '/partner', '/driver', '/dashboard', '/login', '/register', '/join'];
   if (hiddenRoutes.some(route => pathname.startsWith(route))) return null;
 
@@ -107,7 +107,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm md:text-base">Platform Governance</h4>
             <ul className="text-sm text-blue-200 space-y-3 font-medium">
-              <li><Link href="/support" className="hover:text-[#FFB81C] font-bold transition">💬 Support & AI Help Center</Link></li>
+              <li><Link href="/support" className="hover:text-[#FFB81C] font-bold transition">Support & AI Help Center</Link></li>
               <li><Link href="/about" className="hover:text-white transition">About Airgo</Link></li>
               <li><Link href="/corporate" className="hover:text-white transition">Corporate Solutions</Link></li>
               <li><Link href="/escrow" className="hover:text-white transition">Escrow Protection Agreement</Link></li>

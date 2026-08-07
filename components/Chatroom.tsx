@@ -43,7 +43,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
     const currentUserId = currentUser.id || currentUser.userId || currentUser._id || '';
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
-    // 🟢 VoIP STATE & REFS
+    // VoIP STATE & REFS
     const [callState, setCallState] = useState<'idle' | 'calling' | 'incoming' | 'connecting' | 'active' | 'ended'>('idle');
     const [callerName, setCallerName] = useState('');
     const [isMuted, setIsMuted] = useState(false);
@@ -165,7 +165,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
             localStreamRef.current = stream;
             return stream;
         } catch (err) {
-            toast.error("🔒 Microphone permission denied or device not found.");
+            toast.error("Microphone permission denied or device not found.");
             throw err;
         }
     };
@@ -295,12 +295,12 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
         socket.on('connect', () => {
             setIsConnected(true);
             socket.emit('join_booking_chat', { bookingId });
-            console.log("⚡ Connected to Airgo Socket Server");
+            console.log("Connected to Airgo Socket Server");
         });
 
         socket.on('disconnect', () => {
             setIsConnected(false);
-            console.log("❌ Disconnected from Airgo Socket Server");
+            console.log("Disconnected from Airgo Socket Server");
         });
 
         // 3. Listen for incoming messages
@@ -387,10 +387,10 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
         const trimmed = newMessage.trim();
         if (!trimmed) return;
 
-        // 🚨 PHONE NUMBER PROTECTION: Block numbers with more than 9 digits
+        // PHONE NUMBER PROTECTION: Block numbers with more than 9 digits
         const phoneRegex = /(?:\d[\s\-\.\(\)\+]*){10,}/;
         if (phoneRegex.test(trimmed)) {
-            toast.error("🔒 Phone number exchange is prohibited to prevent off-platform transactions.");
+            toast.error("Phone number exchange is prohibited to prevent off-platform transactions.");
             return;
         }
 
@@ -446,7 +446,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                 <div className="bg-[#000080] p-4 text-white rounded-t-3xl flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#FFB81C] text-[#000080] rounded-full flex items-center justify-center font-black shadow-inner">
-                            💬
+                            
                         </div>
                         <div>
                             <h3 className="font-black text-sm truncate max-w-[200px]">{bookingName}</h3>
@@ -463,7 +463,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                 title="Start Voice Call"
                                 className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold flex items-center justify-center transition cursor-pointer select-none"
                             >
-                                📞
+                                
                             </button>
                         )}
                         <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center transition cursor-pointer">✕</button>
@@ -472,7 +472,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
 
                 {/* Warning Banner */}
                 <div className="bg-amber-50 border-b border-amber-100 p-2 text-center text-[10px] text-amber-800 font-bold tracking-wide shrink-0">
-                    🔒 Security Guard: Exchange of phone numbers (10+ digits) is strictly blocked in this chatroom.
+                    Security Guard: Exchange of phone numbers (10+ digits) is strictly blocked in this chatroom.
                 </div>
 
                 {/* Messages Panel */}
@@ -484,7 +484,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400 gap-2">
-                            <span className="text-4xl">👋</span>
+                            <span className="text-4xl"></span>
                             <h4 className="font-black text-gray-700 mt-2">Start the Conversation</h4>
                             <p className="text-xs max-w-xs leading-relaxed">
                                 Chat safely regarding delivery details, check-in logistics, or support questions here on the Airgo platform.
@@ -551,7 +551,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                             <div className={`w-24 h-24 bg-[#FFB81C] text-[#000080] rounded-full flex items-center justify-center text-4xl font-black shadow-lg z-10 relative ${
                                 ['calling', 'incoming', 'connecting'].includes(callState) ? 'animate-bounce' : ''
                             }`}>
-                                📞
+                                
                             </div>
                             {/* Pulse Waves */}
                             {['calling', 'incoming', 'active'].includes(callState) && (
@@ -582,7 +582,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                         className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-xl shadow-lg transition cursor-pointer select-none"
                                         title="Decline Call"
                                     >
-                                        ❌
+                                        
                                     </button>
                                     {/* Accept Button */}
                                     <button 
@@ -591,7 +591,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                         className="w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-xl shadow-lg transition animate-pulse cursor-pointer select-none"
                                         title="Answer Call"
                                     >
-                                        📞
+                                        
                                     </button>
                                 </>
                             ) : (
@@ -606,7 +606,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                             }`}
                                             title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
                                         >
-                                            {isMuted ? '🎙️❌' : '🎙️'}
+                                            {isMuted ? '' : ''}
                                         </button>
                                     )}
                                     
@@ -618,7 +618,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                             className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-xl shadow-lg transition cursor-pointer select-none"
                                             title="End Call"
                                         >
-                                            🛑
+                                            
                                         </button>
                                     )}
                                 </>

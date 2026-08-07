@@ -4,7 +4,7 @@ import Footer from "@/components/Footer";
 import Providers from "@/components/Providers";
 import "./globals.css";
 
-// 🟢 UPGRADED: Dynamic SEO Metadata Template & OpenGraph for WhatsApp/Social Sharing
+// UPGRADED: Dynamic SEO Metadata Template & OpenGraph for WhatsApp/Social Sharing
 export const metadata: Metadata = {
   title: {
     default: "Airgo.ng | Secure Luxury Escrow Bookings",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   },
 };
 
-// 🟢 FIXED: Removed userScalable for WCAG Accessibility & SEO Compliance
+// FIXED: Removed userScalable for WCAG Accessibility & SEO Compliance
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,

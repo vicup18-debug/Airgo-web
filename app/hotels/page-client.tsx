@@ -12,11 +12,11 @@ export default function HotelsPage() {
     const [activeCategory, setActiveCategory] = useState("All");
     const router = useRouter();
 
-    // 🟢 NEW STATES FOR LIVE DATA
+    // NEW STATES FOR LIVE DATA
     const [liveHotels, setLiveHotels] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // 🟢 FETCH FROM RENDER
+    // FETCH FROM RENDER
     useEffect(() => {
         const fetchHotels = async () => {
             try {
@@ -40,10 +40,10 @@ export default function HotelsPage() {
     return (
         <div className="min-h-screen bg-[#F8F9FA] font-sans pb-24">
 
-            {/* 🟢 TOP NAVIGATION */}
+            {/* TOP NAVIGATION */}
             
 
-            {/* 🟢 APP-STYLE DASHBOARD CONTAINER */}
+            {/* APP-STYLE DASHBOARD CONTAINER */}
             <div className="max-w-5xl mx-auto px-6 mt-8">
 
                 {/* User Greeting & Header */}
@@ -79,7 +79,7 @@ export default function HotelsPage() {
                     ))}
                 </div>
 
-                {/* 🟢 LOADING / EMPTY STATE HANDLING */}
+                {/* LOADING / EMPTY STATE HANDLING */}
                 {isLoading ? (
                     <div className="flex justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#004A99]"></div>
@@ -99,7 +99,7 @@ export default function HotelsPage() {
                     </div>
                 ) : (
                     <>
-                        {/* 🟢 FEATURED STAYS (Live Data) */}
+                        {/* FEATURED STAYS (Live Data) */}
                         <div className="mb-10">
                             <div className="flex justify-between items-end mb-4">
                                 <h2 className="text-xl font-black text-gray-900">Featured Luxury Stays</h2>

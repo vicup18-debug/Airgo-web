@@ -4,7 +4,7 @@ import { Toaster, useToasterStore } from 'react-hot-toast';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 
 const playNotificationSoundAndVibrate = () => {
-    // 📳 Haptic Vibration (Vibrates mobile devices on notification)
+    // Haptic Vibration (Vibrates mobile devices on notification)
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
         try {
             navigator.vibrate([100]);
@@ -13,7 +13,7 @@ const playNotificationSoundAndVibrate = () => {
         }
     }
     
-    // 🔊 Synthesizes a premium double-beep chime using browser Web Audio API
+    // Synthesizes a premium double-beep chime using browser Web Audio API
     if (typeof window !== 'undefined') {
         try {
             const AudioContext = window.AudioContext || (window as any).webkitAudioContext;

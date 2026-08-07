@@ -21,7 +21,7 @@ export default function HowWeWorkPage() {
                     </p>
                 </div>
 
-                {/* 🟢 INTERACTIVE LIST CARDS */}
+                {/* INTERACTIVE LIST CARDS */}
                 <div className="space-y-6">
                     {steps.map((step, index) => (
                         <div
