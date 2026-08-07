@@ -152,12 +152,16 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
     if (!isOpen || !hotel) return null;
 
     // 🛡️ DYNAMIC REMAINING ROOMS ENGINE
-    const getRemainingRooms = (r: any) => {
+    const getRemainingRooms = (r: any, customCheckIn?: string, customCheckOut?: string) => {
         if ((r.totalAllocated || 0) <= 0) return 0;
-        if (!checkIn || !checkOut || !r.bookedDates) return r.totalAllocated;
+        const ci = customCheckIn || checkIn;
+        const co = customCheckOut || checkOut;
+        if (!ci || !co || !r.bookedDates) return r.totalAllocated;
 
-        let d = new Date(checkIn);
-        const endD = new Date(checkOut);
+        const safeCheckIn = ci.includes('T') ? ci : `${ci}T00:00:00Z`;
+        const safeCheckOut = co.includes('T') ? co : `${co}T00:00:00Z`;
+        let d = new Date(safeCheckIn);
+        const endD = new Date(safeCheckOut);
         let maxBooked = 0;
 
         while (d < endD) {
@@ -169,6 +173,25 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
             d.setUTCDate(d.getUTCDate() + 1);
         }
         return Math.max(0, r.totalAllocated - maxBooked);
+    };
+
+    const findNextAvailableDatesForRoom = (room: any, startSearchDate: string, currentDurationDays: number) => {
+        if (!startSearchDate) return null;
+        let currentStart = new Date(startSearchDate.includes('T') ? startSearchDate : `${startSearchDate}T00:00:00Z`);
+        currentStart.setUTCDate(currentStart.getUTCDate() + 1);
+        
+        for (let i = 0; i < 30; i++) {
+            const checkInStr = currentStart.toISOString().split('T')[0];
+            let currentEnd = new Date(currentStart);
+            currentEnd.setUTCDate(currentEnd.getUTCDate() + (currentDurationDays > 0 ? currentDurationDays : 1));
+            const checkOutStr = currentEnd.toISOString().split('T')[0];
+            
+            if (getRemainingRooms(room, checkInStr, checkOutStr) > 0) {
+                return { checkIn: checkInStr, checkOut: checkOutStr };
+            }
+            currentStart.setUTCDate(currentStart.getUTCDate() + 1);
+        }
+        return null;
     };
 
     // 🟢 CALCULATE TOTAL NIGHTS & PRICE
@@ -305,17 +328,22 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                 <div className="text-center py-10 text-gray-500">No rooms available for this hotel yet.</div>
                             ) : (
                                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                                    {rooms.map(room => {
-                                        const rawRoomPrice = typeof room.pricePerNight === 'string'
+                                                                        const rawRoomPrice = typeof room.pricePerNight === 'string'
                                             ? parseInt(room.pricePerNight.replace(/\D/g, ''))
                                             : room.pricePerNight || 0;
                                         const discountedRoomRate = Math.round(rawRoomPrice * (1 - (room.discountPercentage || 0) / 100));
 
                                         const remainingCount = getRemainingRooms(room);
                                         const isSoldOut = remainingCount <= 0;
+                                        
+                                        const duration = checkIn && checkOut ? Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24)) : 1;
+                                        const nextDates = isSoldOut ? findNextAvailableDatesForRoom(room, checkIn, duration) : null;
+                                        const formatNextDate = (dateStr: string) => {
+                                            return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                                        };
 
                                         return (
-                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in cursor-pointer hover:border-[#000080] hover:shadow-md ${selectedRoom?._id === room._id ? 'border-[#000080] shadow-md bg-blue-50/30' : ''}`} onClick={() => setSelectedRoom(room)}>
+                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in cursor-pointer hover:border-[#000080] hover:shadow-md ${selectedRoom?._id === room._id ? 'border-[#000080] shadow-md bg-blue-50/30' : ''}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
                                                 <RoomImageCarousel images={room.images} primaryImage={room.image} className="w-full h-36 sm:w-24 sm:h-24 rounded-lg shadow-sm shrink-0" />
                                                 <div className="flex-1 flex flex-col justify-between">
                                                     <div>
@@ -352,12 +380,36 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                             </p>
                                                         </div>
                                                         {isSoldOut ? (
-                                                            <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider select-none text-center w-full sm:w-auto">Sold Out</span>
+                                                            <div className="flex flex-col items-end gap-1 w-full sm:w-auto mt-2 sm:mt-0">
+                                                                {nextDates && (
+                                                                    <span className="text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100 whitespace-nowrap">
+                                                                        Next: {formatNextDate(nextDates.checkIn)} - {formatNextDate(nextDates.checkOut)}
+                                                                    </span>
+                                                                )}
+                                                                <button 
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        if (nextDates) {
+                                                                            setCheckIn(nextDates.checkIn);
+                                                                            setCheckOut(nextDates.checkOut);
+                                                                            setSelectedRoom(room);
+                                                                        }
+                                                                    }}
+                                                                    disabled={!nextDates}
+                                                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold w-full sm:w-auto transition-all ${
+                                                                        nextDates 
+                                                                            ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                                                                            : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                                                                    }`}
+                                                                >
+                                                                    {nextDates ? 'View Dates' : 'Sold Out'}
+                                                                </button>
+                                                            </div>
                                                         ) : (
                                                             <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400 w-full sm:w-auto">
                                                                 {selectedRoom?._id === room._id ? 'Selected' : 'Select'}
                                                             </button>
-                                                        )}
+                                                        )}                            )}
                                                     </div>
                                                 </div>
                                             </div>
