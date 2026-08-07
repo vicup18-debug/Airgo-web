@@ -542,6 +542,7 @@ export default function PartnerDashboard() {
     const [imageFile, setImageFile] = useState<File | null>(null);
     const [carImageFiles, setCarImageFiles] = useState<File[]>([]);
 
+    const [selectedBuildingForNew, setSelectedBuildingForNew] = useState<string>('NEW');
     const [newItem, setNewItem] = useState<any>({
         name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
     });
@@ -1298,6 +1299,96 @@ export default function PartnerDashboard() {
         return sum + days;
     }, 0) : 0;
 
+    const renderInventoryCard = (item: any) => (
+        <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50 flex flex-col justify-between">
+            <div>
+                <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
+                <div className="p-4">
+                    <h3 className="font-black text-gray-900 text-lg">{isApartmentPartner ? (item.hotelName || item.name) : item.name}</h3>
+                    <p className="text-xs font-bold text-gray-400 uppercase mt-1">
+                        {isCarPartner ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
+                    </p>
+                    {item.hotelAddress && (
+                        <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {item.hotelAddress}
+                        </p>
+                    )}
+                </div>
+            </div>
+            <div className="p-4 border-t border-gray-200">
+                <div className="flex flex-col">
+                    <div className="flex flex-wrap gap-2 justify-between items-center mb-2">
+                        <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ {isCarPartner ? 'day' : 'night'}</span></p>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-gray-500">Discount:</span>
+                            <input 
+                                type="number" 
+                                className="w-16 px-2 py-1 border rounded text-xs text-center bg-white text-gray-900" 
+                                value={item.discountPercentage || 0}
+                                onChange={(e) => handleUpdateInventory(item._id, { discountPercentage: parseInt(e.target.value) || 0 })}
+                                min="0" max="100"
+                            />
+                            <span className="text-xs font-bold text-gray-500">%</span>
+                        </div>
+                    </div>
+
+                    {!isCarPartner && !isApartmentPartner && item.name !== 'Entire Apartment' && (
+                        <>
+                            <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
+                                <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation (Available Today)</span>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
+                                        className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
+                                    >-</button>
+                                    <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
+                                    <button 
+                                        onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
+                                        className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
+                                    >+</button>
+                                </div>
+                            </div>
+
+                            {(() => {
+                                const todayStr = new Date().toISOString().split('T')[0];
+                                const dayMatch = item.bookedDates?.find((b: any) => b.date === todayStr);
+                                const bookedCount = dayMatch ? dayMatch.count : 0;
+                                const remaining = Math.max(0, (item.totalAllocated || 0) - bookedCount);
+                                return (
+                                    <div className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2 rounded-lg mb-3">
+                                        <span className="text-xs text-gray-500 font-bold">Available Today</span>
+                                        <span className={`text-xs font-black px-2 py-0.5 rounded ${remaining > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                            {remaining} left
+                                        </span>
+                                    </div>
+                                );
+                            })()}
+                        </>
+                    )}
+
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => handleEditListingClick(item)} 
+                            className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-1.5 rounded-lg text-xs font-black transition cursor-pointer text-center"
+                        >
+                            ✏️ Edit Details
+                        </button>
+                        <button 
+                            onClick={() => handleDeleteListing(item._id)} 
+                            className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer border border-red-100"
+                        >
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     if (!user) return null;
 
     if (!user.isApproved) {
@@ -1486,99 +1577,49 @@ export default function PartnerDashboard() {
                                             + Configure {isShuttlePartner ? 'Taxi Trip' : isCarPartner ? 'Vehicle' : isApartmentPartner ? 'Apartment Unit' : 'Room Tier'}
                                         </button>
                                     </div>
-                                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                        {myInventory.length === 0 ? (
-                                            <p className="col-span-full text-center text-gray-500 py-10">You have not listed any inventory yet.</p>
-                                        ) : myInventory.map(item => (
-                                            <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50 flex flex-col justify-between">
-                                                <div>
-                                                    <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
-                                                    <div className="p-4">
-                                                        <h3 className="font-black text-gray-900 text-lg">{isApartmentPartner ? (item.hotelName || item.name) : item.name}</h3>
-                                                        <p className="text-xs font-bold text-gray-400 uppercase mt-1">
-                                                            {isCarPartner ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
-                                                        </p>
-                                                        {item.hotelAddress && (
-                                                            <p className="text-[10px] text-gray-400 mt-1 flex items-center gap-1">
-                                                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                                </svg>
-                                                                {item.hotelAddress}
-                                                            </p>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                                <div className="p-4 border-t border-gray-200">
-                                                    <div className="flex flex-col">
-                                                        <div className="flex flex-wrap gap-2 justify-between items-center mb-2">
-                                                            <p className="font-black text-[#004A99]">₦{(item.price || item.pricePerNight)?.toLocaleString()} <span className="text-[10px] text-gray-400 font-medium">/ {isCarPartner ? 'day' : 'night'}</span></p>
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="text-xs font-bold text-gray-500">Discount:</span>
-                                                                <input 
-                                                                    type="number" 
-                                                                    className="w-16 px-2 py-1 border rounded text-xs text-center bg-white text-gray-900" 
-                                                                    value={item.discountPercentage || 0}
-                                                                    onChange={(e) => handleUpdateInventory(item._id, { discountPercentage: parseInt(e.target.value) || 0 })}
-                                                                    min="0" max="100"
-                                                                />
-                                                                <span className="text-xs font-bold text-gray-500">%</span>
-                                                            </div>
-                                                        </div>
+                                    {isApartmentPartner ? (
+                                        <div className="p-4 md:p-6 bg-gray-100 space-y-6">
+                                            {(() => {
+                                                if (myInventory.length === 0) return <p className="text-center text-gray-500 py-10">You have not listed any inventory yet.</p>;
+                                                
+                                                const grouped = myInventory.reduce((acc: any, item: any) => {
+                                                    const address = item.hotelAddress || 'Unknown Location';
+                                                    if (!acc[address]) acc[address] = [];
+                                                    acc[address].push(item);
+                                                    return acc;
+                                                }, {});
 
-                                                        {!isCarPartner && !isApartmentPartner && item.name !== 'Entire Apartment' && (
-                                                            <>
-                                                                <div className="flex justify-between items-center bg-gray-100 p-2 rounded-lg mb-3">
-                                                                    <span className="text-xs font-bold text-gray-600">Airgo Pool Allocation (Available Today)</span>
-                                                                    <div className="flex items-center gap-3">
-                                                                        <button 
-                                                                            onClick={() => handleUpdateInventory(item._id, { totalAllocated: Math.max(0, (item.totalAllocated || 0) - 1) })}
-                                                                            className="w-6 h-6 bg-white text-[#004A99] rounded font-bold shadow-sm border border-gray-200 hover:bg-gray-50 flex items-center justify-center cursor-pointer"
-                                                                        >-</button>
-                                                                        <span className="font-black text-gray-900 min-w-[20px] text-center">{item.totalAllocated || 0}</span>
-                                                                        <button 
-                                                                            onClick={() => handleUpdateInventory(item._id, { totalAllocated: (item.totalAllocated || 0) + 1 })}
-                                                                            className="w-6 h-6 bg-[#004A99] text-white rounded font-bold shadow-sm hover:bg-blue-800 flex items-center justify-center cursor-pointer"
-                                                                        >+</button>
-                                                                    </div>
+                                                return Object.entries(grouped).map(([address, items]: [string, any]) => (
+                                                    <div key={address} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
+                                                        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                                                            <div className="flex items-center gap-3">
+                                                                <div className="w-10 h-10 bg-[#004A99] text-white rounded-xl flex items-center justify-center">
+                                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1v1H9V7zm5 0h1v1h-1V7zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1zm-5 4h1v1H9v-1zm5 0h1v1h-1v-1z" /></svg>
                                                                 </div>
-
-                                                                {(() => {
-                                                                    const todayStr = new Date().toISOString().split('T')[0];
-                                                                    const dayMatch = item.bookedDates?.find((b: any) => b.date === todayStr);
-                                                                    const bookedCount = dayMatch ? dayMatch.count : 0;
-                                                                    const remaining = Math.max(0, (item.totalAllocated || 0) - bookedCount);
-                                                                    return (
-                                                                        <div className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2 rounded-lg mb-3">
-                                                                            <span className="text-xs text-gray-500 font-bold">Available Today</span>
-                                                                            <span className={`text-xs font-black px-2 py-0.5 rounded ${remaining > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                                {remaining} left
-                                                                            </span>
-                                                                        </div>
-                                                                    );
-                                                                })()}
-                                                            </>
-                                                        )}
-
-                                                        <div className="flex gap-2">
-                                                            <button 
-                                                                onClick={() => handleEditListingClick(item)} 
-                                                                className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-1.5 rounded-lg text-xs font-black transition cursor-pointer text-center"
-                                                            >
-                                                                ✏️ Edit Details
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleDeleteListing(item._id)} 
-                                                                className="bg-red-50 hover:bg-red-600 text-red-600 hover:text-white px-3 py-1.5 rounded-lg text-xs font-black transition cursor-pointer border border-red-100"
-                                                            >
-                                                                Delete
-                                                            </button>
+                                                                <div>
+                                                                    <h3 className="font-black text-gray-900 text-lg uppercase tracking-wide">Building / Estate</h3>
+                                                                    <p className="text-xs text-gray-500 font-bold flex items-center gap-1">
+                                                                        <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                                                        {address}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                            <span className="bg-gray-200 text-gray-700 text-xs font-black px-3 py-1 rounded-full">{items.length} Units</span>
+                                                        </div>
+                                                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-white">
+                                                            {items.map((item: any) => renderInventoryCard(item))}
                                                         </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                                ));
+                                            })()}
+                                        </div>
+                                    ) : (
+                                        <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {myInventory.length === 0 ? (
+                                                <p className="col-span-full text-center text-gray-500 py-10">You have not listed any inventory yet.</p>
+                                            ) : myInventory.map(item => renderInventoryCard(item))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -2329,11 +2370,45 @@ export default function PartnerDashboard() {
                                 </div>
                             ) : isApartmentPartner ? (
                                 <div className="grid grid-cols-1 gap-4">
-                                    <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.city} onChange={e => setNewItem({ ...newItem, city: e.target.value })} /></div>
-                                        <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State *</label><input required type="text" placeholder="e.g. FCT" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.state} onChange={e => setNewItem({ ...newItem, state: e.target.value })} /></div>
-                                    </div>
+                                    {(() => {
+                                        const existingAddresses = Array.from(new Set(myInventory.map(i => i.hotelAddress).filter(Boolean)));
+                                        return (
+                                            <div className="mb-2">
+                                                <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Select Building / Estate *</label>
+                                                <select 
+                                                    className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white"
+                                                    value={selectedBuildingForNew}
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        setSelectedBuildingForNew(val);
+                                                        if (val !== 'NEW') {
+                                                            const match = myInventory.find(i => i.hotelAddress === val);
+                                                            if (match) {
+                                                                setNewItem({ ...newItem, hotelAddress: match.hotelAddress, city: match.city, state: match.state });
+                                                            }
+                                                        } else {
+                                                            setNewItem({ ...newItem, hotelAddress: '', city: '', state: '' });
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="NEW">+ Add New Location / Building</option>
+                                                    {existingAddresses.map(addr => (
+                                                        <option key={String(addr)} value={String(addr)}>{String(addr)}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        );
+                                    })()}
+
+                                    {selectedBuildingForNew === 'NEW' && (
+                                        <>
+                                            <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Apartment Address *</label><input required type="text" placeholder="e.g. 1 Aguiyi Ironsi St" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.hotelAddress} onChange={e => setNewItem({ ...newItem, hotelAddress: e.target.value })} /></div>
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">City *</label><input required type="text" placeholder="e.g. Abuja" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.city} onChange={e => setNewItem({ ...newItem, city: e.target.value })} /></div>
+                                                <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">State *</label><input required type="text" placeholder="e.g. FCT" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.state} onChange={e => setNewItem({ ...newItem, state: e.target.value })} /></div>
+                                            </div>
+                                        </>
+                                    )}
                                     <div className="grid grid-cols-2 gap-4">
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bedrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.capacity} onChange={e => setNewItem({ ...newItem, capacity: e.target.value })} /></div>
                                         <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Bathrooms *</label><input required type="number" min="1" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.totalAllocated} onChange={e => setNewItem({ ...newItem, totalAllocated: e.target.value })} /></div>
