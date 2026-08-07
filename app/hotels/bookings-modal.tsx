@@ -410,7 +410,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                             <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400 w-full sm:w-auto">
                                                                 {selectedRoom?._id === room._id ? 'Selected' : 'Select'}
                                                             </button>
-                                                        )}                            )}
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
