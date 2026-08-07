@@ -1302,7 +1302,32 @@ export default function PartnerDashboard() {
     const renderInventoryCard = (item: any) => (
         <div key={item._id} className="border border-gray-100 rounded-2xl overflow-hidden shadow-sm bg-gray-50 flex flex-col justify-between">
             <div>
-                <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
+                <div className="relative group">
+                    <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
+                    <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer">
+                        <span className="text-white font-bold text-sm bg-black/60 px-4 py-2 rounded-full border border-white/20 shadow-lg backdrop-blur-sm">Edit Cover Photo</span>
+                        <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                setIsUploading(true);
+                                toast.loading("Uploading new image...", { id: "uploading" });
+                                try {
+                                    const url = await handleUploadToCloudinary(file);
+                                    await handleUpdateInventory(item._id, { image: url, previewImage: url });
+                                    toast.success("Image updated successfully!", { id: "uploading" });
+                                } catch (err) {
+                                    toast.error("Upload failed. Please try again.", { id: "uploading" });
+                                } finally {
+                                    setIsUploading(false);
+                                }
+                            }} 
+                        />
+                    </label>
+                </div>
                 <div className="p-4">
                     <h3 className="font-black text-gray-900 text-lg">{isApartmentPartner ? (item.hotelName || item.name) : item.name}</h3>
                     <p className="text-xs font-bold text-gray-400 uppercase mt-1">
