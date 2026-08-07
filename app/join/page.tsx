@@ -325,7 +325,34 @@ export default function JoinPartnerPage() {
                             </label>
                         </div>
 
-                        <button type="button" onClick={() => setStep(2)} disabled={!agreed} className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(!agreed) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
+                        <button type="button" onClick={() => {
+                            if (!formData.businessName) {
+                                setError("Business Name is required.");
+                                return;
+                            }
+                            if (!formData.name) {
+                                setError("Contact Name is required.");
+                                return;
+                            }
+                            if (!formData.phone) {
+                                setError("Phone number is required.");
+                                return;
+                            }
+                            if (!formData.email) {
+                                setError("Business Email is required.");
+                                return;
+                            }
+                            if (formData.password.length < 6) {
+                                setError("Password must be at least 6 characters.");
+                                return;
+                            }
+                            if (formData.password !== formData.confirmPassword) {
+                                setError("Passwords do not match.");
+                                return;
+                            }
+                            setError('');
+                            setStep(2);
+                        }} disabled={!agreed} className={`w-full flex justify-center py-4 rounded-xl shadow-lg text-lg font-black text-white transition mt-6 ${(!agreed) ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}>
                             Continue
                         </button>
                         </>
