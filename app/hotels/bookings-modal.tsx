@@ -315,7 +315,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                         const isSoldOut = remainingCount <= 0;
 
                                         return (
-                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in ${isSoldOut ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-[#000080] hover:shadow-md'}`} onClick={() => !isSoldOut && setSelectedRoom(room)}>
+                                            <div key={room._id} className={`border border-gray-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 transition bg-gray-50 animate-fade-in cursor-pointer hover:border-[#000080] hover:shadow-md ${selectedRoom?._id === room._id ? 'border-[#000080] shadow-md bg-blue-50/30' : ''}`} onClick={() => setSelectedRoom(room)}>
                                                 <RoomImageCarousel images={room.images} primaryImage={room.image} className="w-full h-36 sm:w-24 sm:h-24 rounded-lg shadow-sm shrink-0" />
                                                 <div className="flex-1 flex flex-col justify-between">
                                                     <div>
@@ -354,7 +354,9 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                         {isSoldOut ? (
                                                             <span className="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider select-none text-center w-full sm:w-auto">Sold Out</span>
                                                         ) : (
-                                                            <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400 w-full sm:w-auto">Select</button>
+                                                            <button className="bg-[#FFB81C] text-[#000080] px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-yellow-400 w-full sm:w-auto">
+                                                                {selectedRoom?._id === room._id ? 'Selected' : 'Select'}
+                                                            </button>
                                                         )}
                                                     </div>
                                                 </div>
@@ -366,8 +368,11 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                         </div>
                     ) : (
                         <form onSubmit={handleBooking}>
-                            <div className="mb-4 flex items-center gap-2">
+                            <div className="mb-4 flex items-center justify-between gap-2">
                                 <button type="button" onClick={() => setSelectedRoom(null)} className="text-[#000080] font-bold text-sm hover:underline">← Back to rooms</button>
+                                {selectedRoom && getRemainingRooms(selectedRoom) <= 0 && (
+                                    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">Sold Out For Selected Dates</span>
+                                )}
                             </div>
                             
                             <div className="p-4 bg-blue-50 rounded-xl mb-6 border border-blue-100 flex flex-col sm:flex-row gap-4">
@@ -471,11 +476,11 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                             </div>
 
                             <button
-                                disabled={isSubmitting || !user}
                                 type="submit"
-                                className={`w-full py-4 rounded-xl font-black text-white text-lg shadow-lg transition ${isSubmitting || !user ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#000080] hover:bg-blue-900'}`}
+                                disabled={isSubmitting || getRemainingRooms(selectedRoom) <= 0}
+                                className={`w-full py-4 rounded-xl font-bold text-lg text-white shadow-lg transition-all flex items-center justify-center gap-2 ${isSubmitting || getRemainingRooms(selectedRoom) <= 0 ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] hover:bg-yellow-400 hover:-translate-y-0.5'}`}
                             >
-                                {isSubmitting ? 'Securing Booking...' : 'Proceed to Escrow'}
+                                {isSubmitting ? 'Securing Booking...' : (getRemainingRooms(selectedRoom) <= 0 ? 'Sold Out For These Dates' : 'Complete Booking')}
                             </button>
                         </form>
                     )}
