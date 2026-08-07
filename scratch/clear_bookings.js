@@ -1,0 +1,1 @@
+const mongoose = require('mongoose'); const Room = require('../backend/models/Room'); mongoose.connect('mongodb://localhost:27017/airgo-db').then(async () => { await Room.updateMany({}, { $set: { bookedDates: [], totalAllocated: 100 } }); console.log('Rooms cleared and allocated to 100.'); process.exit(0); });

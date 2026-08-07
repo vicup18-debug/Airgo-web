@@ -1,0 +1,1 @@
+const mongoose = require('mongoose'); const User = require('../backend/models/User'); mongoose.connect('mongodb://localhost:27017/airgo-db').then(async () => { const users = await User.find({}, {email: 1, phoneNumber: 1}); console.log(users); process.exit(0); });
