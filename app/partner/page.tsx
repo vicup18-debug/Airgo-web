@@ -903,7 +903,7 @@ export default function PartnerDashboard() {
         setSelectedInventoryForEdit(item);
         const isShuttleOrCar = user?.partnerType === 'shuttle' || user?.partnerType === 'airport-shuttle' || user?.partnerType === 'car';
         setEditItemData({
-            name: item.name || '',
+            name: user?.partnerType === 'apartment' ? (item.hotelName || item.name || '') : (item.name || ''),
             netPrice: isShuttleOrCar ? '' : String(item.netPrice || item.price || item.pricePerNight || ''),
             retailPrice: isShuttleOrCar ? String(item.retailPrice || item.price || '') : '',
             totalAllocated: String(item.totalAllocated || '1'),
@@ -1494,7 +1494,7 @@ export default function PartnerDashboard() {
                                                 <div>
                                                     <img src={item.image} alt={item.name} className="w-full h-44 object-cover" />
                                                     <div className="p-4">
-                                                        <h3 className="font-black text-gray-900 text-lg">{item.name}</h3>
+                                                        <h3 className="font-black text-gray-900 text-lg">{isApartmentPartner ? (item.hotelName || item.name) : item.name}</h3>
                                                         <p className="text-xs font-bold text-gray-400 uppercase mt-1">
                                                             {isCarPartner ? `Class: ${item.type}` : `Amenities: ${item.amenities}`}
                                                         </p>
