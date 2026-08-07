@@ -151,6 +151,26 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
 
     if (!isOpen || !hotel) return null;
 
+    // 🛡️ DYNAMIC REMAINING ROOMS ENGINE
+    const getRemainingRooms = (r: any) => {
+        if ((r.totalAllocated || 0) <= 0) return 0;
+        if (!checkIn || !checkOut || !r.bookedDates) return r.totalAllocated;
+
+        let d = new Date(checkIn);
+        const endD = new Date(checkOut);
+        let maxBooked = 0;
+
+        while (d < endD) {
+            const dateStr = d.toISOString().split('T')[0];
+            const dayMatch = r.bookedDates?.find((b: any) => b.date === dateStr);
+            if (dayMatch && dayMatch.count > maxBooked) {
+                maxBooked = dayMatch.count;
+            }
+            d.setUTCDate(d.getUTCDate() + 1);
+        }
+        return Math.max(0, r.totalAllocated - maxBooked);
+    };
+
     // 🟢 CALCULATE TOTAL NIGHTS & PRICE
     const getPriceBreakdown = () => {
         if (!checkIn || !checkOut || !selectedRoom) return { base: 0, fee: 0, total: 0 };
@@ -290,26 +310,6 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                             ? parseInt(room.pricePerNight.replace(/\D/g, ''))
                                             : room.pricePerNight || 0;
                                         const discountedRoomRate = Math.round(rawRoomPrice * (1 - (room.discountPercentage || 0) / 100));
-
-                                        // 🛡️ DYNAMIC REMAINING ROOMS ENGINE
-                                        const getRemainingRooms = (r: any) => {
-                                            if ((r.totalAllocated || 0) <= 0) return 0;
-                                            if (!checkIn || !checkOut || !r.bookedDates) return r.totalAllocated;
-
-                                            let d = new Date(checkIn);
-                                            const endD = new Date(checkOut);
-                                            let maxBooked = 0;
-
-                                            while (d < endD) {
-                                                const dateStr = d.toISOString().split('T')[0];
-                                                const dayMatch = r.bookedDates?.find((b: any) => b.date === dateStr);
-                                                if (dayMatch && dayMatch.count > maxBooked) {
-                                                    maxBooked = dayMatch.count;
-                                                }
-                                                d.setUTCDate(d.getUTCDate() + 1);
-                                            }
-                                            return Math.max(0, r.totalAllocated - maxBooked);
-                                        };
 
                                         const remainingCount = getRemainingRooms(room);
                                         const isSoldOut = remainingCount <= 0;
