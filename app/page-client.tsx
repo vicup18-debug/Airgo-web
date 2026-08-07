@@ -400,14 +400,8 @@ export default function HotelHomepage() {
     
     let matchesLocation = true;
     if (searchWords.length > 0) {
-      const matchesName = searchWords.every(word => hotel.name?.toLowerCase().includes(word));
-      
-      const ignoreWords = ['state', 'local', 'government', 'lga', 'nigeria', 'country', 'area', 'council'];
-      const significantWords = searchWords.filter(w => !ignoreWords.includes(w) && isNaN(Number(w)) && w.length > 2);
-      const wordsToMatch = significantWords.length > 0 ? significantWords : searchWords;
-      
-      const matchesLocString = wordsToMatch.some(word => hotel.location?.toLowerCase().includes(word));
-      matchesLocation = matchesName || matchesLocString;
+      const searchableString = `${hotel.name || ''} ${hotel.location || ''} ${hotel.city || ''} ${hotel.state || ''}`.toLowerCase();
+      matchesLocation = searchWords.every(word => searchableString.includes(word));
     }
 
     // 2. Stay type match
@@ -428,14 +422,8 @@ export default function HotelHomepage() {
     
     let matchesLocation = true;
     if (searchWords.length > 0) {
-      const ignoreWords = ['state', 'local', 'government', 'lga', 'nigeria', 'country', 'area', 'council'];
-      const significantWords = searchWords.filter(w => !ignoreWords.includes(w) && isNaN(Number(w)) && w.length > 2);
-      const wordsToMatch = significantWords.length > 0 ? significantWords : searchWords;
-      
-      matchesLocation = wordsToMatch.some(word => 
-        car.location?.toLowerCase().includes(word) ||
-        car.state?.toLowerCase().includes(word)
-      );
+      const searchableString = `${car.vehicleMake || ''} ${car.vehicleModel || ''} ${car.location || ''} ${car.state || ''} ${car.city || ''}`.toLowerCase();
+      matchesLocation = searchWords.every(word => searchableString.includes(word));
     }
 
     // 2. Availability match (using dates)
