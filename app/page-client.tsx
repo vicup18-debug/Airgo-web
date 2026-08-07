@@ -211,18 +211,17 @@ export default function HotelHomepage() {
   }, []);
 
   // 🛡️ DYNAMIC AVAILABILITY ENGINE
-  const isItemAvailable = (item: any, isCar: boolean = false) => {
+  const isItemAvailableForDates = (item: any, checkInStr: string, checkOutStr: string) => {
     const allocated = item.totalAllocated !== undefined ? item.totalAllocated : 1;
     if (allocated <= 0) return false;
-    if (!checkIn || !checkOut) return true;
+    if (!checkInStr || !checkOutStr) return true;
     if (!item.bookedDates) return true;
 
-    const safeCheckIn = checkIn.includes('T') ? checkIn : `${checkIn}T00:00:00Z`;
-    const safeCheckOut = checkOut.includes('T') ? checkOut : `${checkOut}T00:00:00Z`;
+    const safeCheckIn = checkInStr.includes('T') ? checkInStr : `${checkInStr}T00:00:00Z`;
+    const safeCheckOut = checkOutStr.includes('T') ? checkOutStr : `${checkOutStr}T00:00:00Z`;
     let d = new Date(safeCheckIn);
     const endD = new Date(safeCheckOut);
 
-    // Total capacity vs allocated threshold
     const capacityThreshold = allocated;
 
     while (d < endD) {
@@ -232,6 +231,10 @@ export default function HotelHomepage() {
       d.setUTCDate(d.getUTCDate() + 1);
     }
     return true;
+  };
+
+  const isItemAvailable = (item: any, isCar: boolean = false) => {
+    return isItemAvailableForDates(item, checkIn, checkOut);
   };
 
   const calculateTotal = (pricePerUnit: any, discountPercentage: number = 0) => {
@@ -369,6 +372,28 @@ export default function HotelHomepage() {
     return hotel.rooms.some((room: any) => isItemAvailable(room, false));
   };
 
+  const findNextAvailableDates = (hotel: any, startSearchDate: string, currentDurationDays: number) => {
+    if (!startSearchDate) return null;
+    let currentStart = new Date(startSearchDate.includes('T') ? startSearchDate : `${startSearchDate}T00:00:00Z`);
+    currentStart.setUTCDate(currentStart.getUTCDate() + 1); // Start checking from the day after the search date
+    
+    for (let i = 0; i < 30; i++) {
+      const checkInStr = currentStart.toISOString().split('T')[0];
+      
+      let currentEnd = new Date(currentStart);
+      currentEnd.setUTCDate(currentEnd.getUTCDate() + (currentDurationDays > 0 ? currentDurationDays : 1));
+      const checkOutStr = currentEnd.toISOString().split('T')[0];
+      
+      const isAvail = hotel.rooms.some((room: any) => isItemAvailableForDates(room, checkInStr, checkOutStr));
+      
+      if (isAvail) {
+        return { checkIn: checkInStr, checkOut: checkOutStr };
+      }
+      currentStart.setUTCDate(currentStart.getUTCDate() + 1);
+    }
+    return null;
+  };
+
   const filteredRooms = groupedHotels.filter((hotel) => {
     // 1. Location match
     const searchWords = location ? location.toLowerCase().split(/[\s,]+/).filter(Boolean) : [];
@@ -391,6 +416,10 @@ export default function HotelHomepage() {
       (stayType === 'apartment' && hotel.partnerType === 'apartment');
 
     return matchesLocation && matchesStayType;
+  }).sort((a, b) => {
+    const aAvail = isHotelAvailable(a);
+    const bAvail = isHotelAvailable(b);
+    return (bAvail ? 1 : 0) - (aAvail ? 1 : 0);
   });
 
   const filteredCars = liveCars.filter((car) => {
@@ -655,19 +684,38 @@ export default function HotelHomepage() {
                   {filteredRooms.map((item, idx) => {
                     const available = isHotelAvailable(item);
                     const basePrice = item.pricePerNight;
+                    const duration = checkIn && checkOut ? Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 3600 * 24)) : 1;
+                    const nextDates = !available ? findNextAvailableDates(item, checkIn, duration) : null;
+                    
+                    const formatNextDate = (dateStr: string) => {
+                      return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+                    };
+
+                    const handleCardClick = (e: React.MouseEvent) => {
+                      e.stopPropagation();
+                      if (available) {
+                        handleItemSelect(item);
+                      } else if (nextDates) {
+                        setCheckIn(nextDates.checkIn);
+                        setCheckOut(nextDates.checkOut);
+                        handleItemSelect(item);
+                      }
+                    };
 
                     return (
                       <div 
                         key={item._id} 
-                        onClick={() => available ? handleItemSelect(item) : null}
+                        onClick={handleCardClick}
                         style={{ animationDelay: `${idx * 80}ms` }}
-                        className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer opacity-0 animate-slide-up ${!available && 'opacity-60 grayscale'}`}
+                        className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer opacity-0 animate-slide-up ${!available && 'opacity-75'}`}
                       >
                         <div className="h-64 overflow-hidden relative">
-                          <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out" />
+                          <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out ${!available && 'grayscale'}`} />
                           {!available ? (
-                            <div className="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center backdrop-blur-[2px]">
-                              <div className="bg-red-600 text-white font-black text-sm px-4 py-2 rounded-lg -rotate-12 tracking-widest shadow-2xl border border-white/20">SOLD OUT</div>
+                            <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center backdrop-blur-[1px]">
+                              <div className="bg-red-600 text-white font-black text-xs sm:text-sm px-4 py-2 rounded-lg -rotate-12 tracking-widest shadow-2xl border border-white/20">
+                                {nextDates ? 'SOLD OUT ON DATES' : 'SOLD OUT'}
+                              </div>
                             </div>
                           ) : (
                             item.discountPercentage > 0 && (
@@ -687,6 +735,13 @@ export default function HotelHomepage() {
                             <div className="flex justify-between items-start mb-2">
                               <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#000080] transition-colors leading-snug">{item.name}</h3>
                             </div>
+                            {!available && nextDates && (
+                              <div className="mb-3">
+                                <span className="text-xs font-bold text-red-600 bg-red-50 px-2.5 py-1 rounded-md border border-red-100 inline-block">
+                                  Next available: {formatNextDate(nextDates.checkIn)} - {formatNextDate(nextDates.checkOut)}
+                                </span>
+                              </div>
+                            )}
                             <p className="text-sm text-gray-500 font-medium flex items-center gap-1 mb-3">
                               <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -712,18 +767,15 @@ export default function HotelHomepage() {
                             </div>
                             
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (available) handleItemSelect(item);
-                              }}
-                              disabled={!available}
+                              onClick={handleCardClick}
+                              disabled={!available && !nextDates}
                               className={`px-5 py-3 rounded-xl font-black text-xs transition-all duration-300 ${
-                                !available 
+                                (!available && !nextDates)
                                   ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none' 
                                   : 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-0.5'
                               }`}
                             >
-                              {available ? 'Book Room' : 'Unavailable'}
+                              {available ? 'Book Room' : (nextDates ? 'View Dates' : 'Unavailable')}
                             </button>
                           </div>
                         </div>
