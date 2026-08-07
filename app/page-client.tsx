@@ -217,9 +217,11 @@ export default function HotelHomepage() {
     if (!checkIn || !checkOut) return true;
     if (!item.bookedDates) return true;
 
-    let d = new Date(checkIn);
-    const endD = new Date(checkOut);
-    
+    const safeCheckIn = checkIn.includes('T') ? checkIn : `${checkIn}T00:00:00Z`;
+    const safeCheckOut = checkOut.includes('T') ? checkOut : `${checkOut}T00:00:00Z`;
+    let d = new Date(safeCheckIn);
+    const endD = new Date(safeCheckOut);
+
     // Total capacity vs allocated threshold
     const capacityThreshold = allocated;
 
