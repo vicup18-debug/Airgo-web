@@ -328,7 +328,8 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                 <div className="text-center py-10 text-gray-500">No rooms available for this hotel yet.</div>
                             ) : (
                                 <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-2">
-                                                                        const rawRoomPrice = typeof room.pricePerNight === 'string'
+                                    {rooms.map(room => {
+                                        const rawRoomPrice = typeof room.pricePerNight === 'string'
                                             ? parseInt(room.pricePerNight.replace(/\D/g, ''))
                                             : room.pricePerNight || 0;
                                         const discountedRoomRate = Math.round(rawRoomPrice * (1 - (room.discountPercentage || 0) / 100));
