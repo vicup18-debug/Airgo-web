@@ -1023,10 +1023,14 @@ export default function PartnerDashboard() {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
             const isCar = user.partnerType?.toLowerCase().includes('car') || user.partnerType === 'shuttle' || user.partnerType === 'airport-shuttle';
             const endpoint = isCar ? `/api/cars/${id}` : `/api/rooms/${id}`;
+            const token = localStorage.getItem('airgo_token');
             
             const response = await fetch(`${apiUrl}${endpoint}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
                 body: JSON.stringify(updates)
             });
 
