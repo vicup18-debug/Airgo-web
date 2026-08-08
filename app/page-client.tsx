@@ -327,6 +327,8 @@ export default function HotelHomepage() {
     const hotelsMap = new Map<string, any>();
     
     liveRooms.forEach(room => {
+      if (room.isActive === false) return; // Skip rooms that have been manually removed from the pool
+      
       const key = room.hotelName ? room.hotelName.trim() : 'Unknown Hotel';
       if (!hotelsMap.has(key)) {
         hotelsMap.set(key, {

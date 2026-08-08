@@ -1395,6 +1395,16 @@ export default function PartnerDashboard() {
                         </>
                     )}
 
+                    <div className="flex justify-between items-center bg-gray-50 border border-gray-100 p-2 rounded-lg mb-3">
+                        <span className="text-xs text-gray-500 font-bold">Visibility Status</span>
+                        <button 
+                            onClick={() => handleUpdateInventory(item._id, { isActive: item.isActive === false ? true : false })}
+                            className={`text-xs font-black px-3 py-1 rounded-full border cursor-pointer transition ${item.isActive !== false ? 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200' : 'bg-gray-200 text-gray-600 border-gray-300 hover:bg-gray-300'}`}
+                        >
+                            {item.isActive !== false ? 'Active (Live)' : 'Paused (Hidden)'}
+                        </button>
+                    </div>
+
                     <div className="flex gap-2">
                         <button 
                             onClick={() => handleEditListingClick(item)} 
@@ -2868,3 +2878,4 @@ export default function PartnerDashboard() {
         </div>
     );
 }
+
