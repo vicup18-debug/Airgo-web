@@ -713,7 +713,7 @@ export default function HotelHomepage() {
                             )
                           )}
                           {/* ESCROW PROTECTED pill */}
-                          <div className="absolute bottom-2 left-2 bg-[#000080] text-white text-[8px] md:text-[10px] font-black px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <div className="absolute bottom-2 left-2 bg-black/70 backdrop-blur-sm text-white text-[8px] md:text-[10px] font-bold px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full flex items-center gap-1 shadow-md border border-white/10">
                             <span></span> ESCROW PROTECTED
                           </div>
                         </div>
@@ -748,7 +748,7 @@ export default function HotelHomepage() {
                               {item.discountPercentage > 0 && (
                                 <p className="text-[10px] md:text-xs text-gray-400 font-bold line-through mb-0.5">₦{basePrice.toLocaleString()}</p>
                               )}
-                              <p className="text-sm md:text-2xl font-black text-[#000080]">
+                              <p className="text-sm md:text-2xl font-black text-gray-900">
                                 ₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}
                               </p>
                               <p className="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase">{checkIn && checkOut ? 'Total Price' : 'Per Night'}</p>
@@ -757,10 +757,10 @@ export default function HotelHomepage() {
                             <button
                               onClick={handleCardClick}
                               disabled={!available && !nextDates}
-                              className={`px-5 py-3 rounded-xl font-black text-xs transition-all duration-300 ${
+                              className={`px-3 md:px-5 py-2 md:py-2.5 rounded-lg md:rounded-xl font-bold text-[10px] md:text-xs transition-all duration-300 ${
                                 (!available && !nextDates)
-                                  ? 'bg-gray-200 text-gray-500 cursor-not-allowed shadow-none' 
-                                  : 'bg-[#000080] text-white hover:bg-blue-900 shadow-[0_8px_20px_rgba(0,0,128,0.2)] hover:shadow-[0_8px_25px_rgba(0,0,128,0.3)] hover:-translate-y-0.5'
+                                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed shadow-none' 
+                                  : 'border border-[#000080] text-[#000080] bg-transparent hover:bg-[#000080] hover:text-white hover:shadow-lg hover:-translate-y-0.5'
                               }`}
                             >
                               {available ? 'Book Room' : (nextDates ? 'View Dates' : 'Unavailable')}
