@@ -356,7 +356,7 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                                         {room.discountPercentage}% OFF
                                                                     </span>
                                                                 )}
-                                                                {room.name !== 'Entire Apartment' && (
+                                                                {room.name !== 'Entire Apartment' && hotel?.partnerType !== 'apartment' && (
                                                                     <span className="bg-red-50 text-red-600 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-wider border border-red-100/50">
                                                                         {remainingCount} left
                                                                     </span>

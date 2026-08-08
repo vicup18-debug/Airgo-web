@@ -668,7 +668,7 @@ export default function HotelHomepage() {
                   <p className="text-gray-500 mt-2">Try adjusting your search query or choosing different dates.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-8">
                   {filteredRooms.map((item, idx) => {
                     const available = isHotelAvailable(item);
                     const basePrice = item.pricePerNight;
@@ -695,13 +695,13 @@ export default function HotelHomepage() {
                         key={item._id} 
                         onClick={handleCardClick}
                         style={{ animationDelay: `${idx * 80}ms` }}
-                        className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer opacity-0 animate-slide-up ${!available && 'opacity-75'}`}
+                        className={`bg-white rounded-[2rem] overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 flex flex-col group cursor-pointer opacity-0 animate-slide-up h-full ${!available && 'opacity-75'}`}
                       >
-                        <div className="h-64 overflow-hidden relative">
+                        <div className="h-40 md:h-64 overflow-hidden relative shrink-0">
                           <img src={item.image || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=800&q=80'} alt={item.name} className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out ${!available && 'grayscale'}`} />
                           {!available ? (
                             <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center backdrop-blur-[1px]">
-                              <div className="bg-red-600 text-white font-black text-xs sm:text-sm px-4 py-2 rounded-lg -rotate-12 tracking-widest shadow-2xl border border-white/20">
+                              <div className="bg-red-600 text-white font-black text-[9px] md:text-sm px-2 md:px-4 py-1 md:py-2 rounded-lg -rotate-12 md:tracking-widest shadow-2xl border border-white/20">
                                 {nextDates ? 'SOLD OUT ON DATES' : 'SOLD OUT'}
                               </div>
                             </div>
@@ -713,15 +713,15 @@ export default function HotelHomepage() {
                             )
                           )}
                           {/* ESCROW PROTECTED pill */}
-                          <div className="absolute bottom-2 left-2 bg-[#000080] text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
+                          <div className="absolute bottom-2 left-2 bg-[#000080] text-white text-[8px] md:text-[10px] font-black px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full flex items-center gap-1 shadow-md">
                             <span></span> ESCROW PROTECTED
                           </div>
                         </div>
 
-                        <div className="p-6 flex flex-col">
+                        <div className="p-3 md:p-6 flex flex-col h-full justify-between">
                           <div>
-                            <div className="flex justify-between items-start mb-2">
-                              <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#000080] transition-colors leading-snug">{item.name}</h3>
+                            <div className="flex justify-between items-start mb-1 md:mb-2">
+                              <h3 className="text-base md:text-xl font-bold text-gray-900 group-hover:text-[#000080] transition-colors leading-snug line-clamp-2">{item.name}</h3>
                             </div>
                             {!available && nextDates && (
                               <div className="mb-3">
@@ -730,8 +730,8 @@ export default function HotelHomepage() {
                                 </span>
                               </div>
                             )}
-                            <p className="text-sm text-gray-500 font-medium flex items-center gap-1 mb-3">
-                              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <p className="text-xs md:text-sm text-gray-500 font-medium flex items-center gap-1 mb-3">
+                              <svg className="w-3 h-3 md:w-4 md:h-4 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                               </svg>
@@ -743,15 +743,15 @@ export default function HotelHomepage() {
 
                           </div>
                           
-                          <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
+                          <div className="mt-2 md:mt-4 pt-2 md:pt-4 border-t border-gray-100 flex items-center justify-between">
                             <div>
                               {item.discountPercentage > 0 && (
-                                <p className="text-xs text-gray-400 font-bold line-through mb-0.5">₦{basePrice.toLocaleString()}</p>
+                                <p className="text-[10px] md:text-xs text-gray-400 font-bold line-through mb-0.5">₦{basePrice.toLocaleString()}</p>
                               )}
-                              <p className="text-2xl font-black text-[#000080]">
+                              <p className="text-sm md:text-2xl font-black text-[#000080]">
                                 ₦{Math.round(basePrice * (1 - (item.discountPercentage || 0) / 100)).toLocaleString()}
                               </p>
-                              <p className="text-[10px] text-gray-400 font-bold uppercase">{checkIn && checkOut ? 'Total Price' : 'Per Night'}</p>
+                              <p className="text-[9px] md:text-[10px] text-gray-400 font-bold uppercase">{checkIn && checkOut ? 'Total Price' : 'Per Night'}</p>
                             </div>
                             
                             <button
