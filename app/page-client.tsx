@@ -64,7 +64,6 @@ export default function HotelHomepage() {
   // SHUTTLE BOOKING STATES
   const [shuttleFrom, setShuttleFrom] = useState('');
   const [shuttleTo, setShuttleTo] = useState('');
-  const [shuttleDateTime, setShuttleDateTime] = useState('');
 
   // Autocomplete search states
   const [fromSuggestions, setFromSuggestions] = useState<any[]>([]);
@@ -154,8 +153,8 @@ export default function HotelHomepage() {
   };
 
   const handleBookShuttle = () => {
-    if (!shuttleFrom.trim() || !shuttleTo.trim() || !shuttleDateTime) {
-      toast.error("Please fill in all route and timing details for your shuttle.");
+    if (!shuttleFrom.trim() || !shuttleTo.trim()) {
+      toast.error("Please fill in all route details for your shuttle.");
       return;
     }
     
@@ -625,12 +624,7 @@ export default function HotelHomepage() {
 
                 <div className="h-px bg-gray-100 my-1 mx-2" />
 
-                <div className="flex items-center px-2 py-3 hover:bg-gray-50 rounded-lg transition-colors cursor-text group relative">
-                  <svg className="w-5 h-5 text-[#000080] mr-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                  <input type="datetime-local" min={new Date().toISOString().substring(0, 16)} className="w-full bg-transparent text-gray-900 focus:outline-none font-semibold text-sm placeholder-gray-400 cursor-pointer" value={shuttleDateTime} onChange={(e) => setShuttleDateTime(e.target.value)} />
-                </div>
-
-                <button type="button" onClick={handleBookShuttle} disabled={!shuttleFrom || !shuttleTo || !shuttleDateTime} className="w-full mt-4 bg-[#FFB81C] disabled:bg-gray-200 disabled:text-gray-400 text-[#000080] px-6 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-yellow-400 transition shadow-md cursor-pointer flex justify-center items-center gap-2">
+                <button type="button" onClick={handleBookShuttle} disabled={!shuttleFrom || !shuttleTo} className="w-full mt-4 bg-[#FFB81C] disabled:bg-gray-200 disabled:text-gray-400 text-[#000080] px-6 py-4 rounded-xl font-black text-sm uppercase tracking-wide hover:bg-yellow-400 transition shadow-md cursor-pointer flex justify-center items-center gap-2">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                   Search Ride
                 </button>
@@ -853,8 +847,8 @@ export default function HotelHomepage() {
           isOpen={!!selectedItem}
           onClose={() => setSelectedItem(null)}
           car={selectedItem}
-          initialCheckIn={shuttleDateTime}
-          initialCheckOut={shuttleDateTime}
+          initialCheckIn={new Date().toISOString()}
+          initialCheckOut={new Date().toISOString()}
           initialFromAddress={shuttleFrom}
           initialToAddress={shuttleTo}
         />
