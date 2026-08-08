@@ -2360,32 +2360,26 @@ export default function PartnerDashboard() {
                         <form onSubmit={handleAddItem} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={newItem.name} onChange={e => setNewItem({ ...newItem, name: e.target.value })} /></div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
-                                        {isShuttlePartner || isCarPartner ? 'Retail Price (What the Customer Pays ₦)' : 'Retail Price per night (₦)'}
-                                    </label>
-                                    <input 
-                                        required 
-                                        type="number" 
-                                        min="0" 
-                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
-                                        value={isShuttlePartner || isCarPartner ? (newItem.retailPrice || '') : (newItem.netPrice || '')} 
-                                        onChange={e => {
-                                            if (isShuttlePartner || isCarPartner) {
-                                                setNewItem({ ...newItem, retailPrice: e.target.value, netPrice: '' });
-                                            } else {
+                                {!(isCarPartner || isShuttlePartner) && (
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                                            Net Price per night (₦)
+                                        </label>
+                                        <input 
+                                            required 
+                                            type="number" 
+                                            min="0" 
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
+                                            value={newItem.netPrice || ''} 
+                                            onChange={e => {
                                                 setNewItem({ ...newItem, netPrice: e.target.value, retailPrice: '' });
-                                            }
-                                        }} 
-                                    />
-                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">
-                                        {isShuttlePartner 
-                                            ? 'Airgo will automatically deduct a 10% dispatch fee from this retail price.' 
-                                            : isCarPartner 
-                                                ? 'Airgo will automatically deduct an 11% platform commission from this retail price.' 
-                                                : '0% commission. Your take-home payout is 100% of this amount.'}
-                                    </span>
-                                </div>
+                                            }} 
+                                        />
+                                        <span className="text-[10px] text-gray-400 font-medium block mt-1">
+                                            0% commission. Your take-home payout is 100% of this amount.
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             {isCarPartner ? (
@@ -2527,32 +2521,26 @@ export default function PartnerDashboard() {
                         <form onSubmit={handleSaveEditListing} className="p-6 space-y-4 overflow-y-auto flex-1">
                             <div className="grid grid-cols-2 gap-4">
                                 <div><label className="block text-xs font-bold text-gray-900 uppercase mb-1">Name / Title</label><input required type="text" className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" value={editItemData.name} onChange={e => setEditItemData({ ...editItemData, name: e.target.value })} /></div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
-                                        {isShuttlePartner || isCarPartner ? 'Retail Price (What the Customer Pays ₦)' : 'Retail Price per night (₦)'}
-                                    </label>
-                                    <input 
-                                        required 
-                                        type="number" 
-                                        min="0" 
-                                        className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
-                                        value={isShuttlePartner || isCarPartner ? (editItemData.retailPrice || '') : (editItemData.netPrice || '')} 
-                                        onChange={e => {
-                                            if (isShuttlePartner || isCarPartner) {
-                                                setEditItemData({ ...editItemData, retailPrice: e.target.value, netPrice: '' });
-                                            } else {
+                                {!(isCarPartner || isShuttlePartner) && (
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-900 uppercase mb-1">
+                                            Net Price per night (₦)
+                                        </label>
+                                        <input 
+                                            required 
+                                            type="number" 
+                                            min="0" 
+                                            className="w-full px-4 py-2 border rounded-xl text-gray-900 bg-white" 
+                                            value={editItemData.netPrice || ''} 
+                                            onChange={e => {
                                                 setEditItemData({ ...editItemData, netPrice: e.target.value, retailPrice: '' });
-                                            }
-                                        }} 
-                                    />
-                                    <span className="text-[10px] text-gray-400 font-medium block mt-1">
-                                        {isShuttlePartner 
-                                            ? 'Airgo will automatically deduct a 10% dispatch fee from this retail price.' 
-                                            : isCarPartner 
-                                                ? 'Airgo will automatically deduct an 11% platform commission from this retail price.' 
-                                                : '0% commission. Your take-home payout is 100% of this amount.'}
-                                    </span>
-                                </div>
+                                            }} 
+                                        />
+                                        <span className="text-[10px] text-gray-400 font-medium block mt-1">
+                                            0% commission. Your take-home payout is 100% of this amount.
+                                        </span>
+                                    </div>
+                                )}
                             </div>
 
                             {isCarPartner ? (
