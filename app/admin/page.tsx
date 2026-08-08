@@ -204,14 +204,14 @@ export default function SuperadminDashboard() {
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
 
             const [bookingsRes, partnersRes, carsRes, roomsRes, affiliatesRes, activeChatsRes, unappRoomsRes, unappCarsRes] = await Promise.all([
-                fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${apiUrl}/api/auth/partners`),
-                fetch(`${apiUrl}/api/cars`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${apiUrl}/api/rooms/all-admin`),
-                fetch(`${apiUrl}/api/affiliates`),
-                fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${apiUrl}/api/rooms/unapproved/all`, { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch(`${apiUrl}/api/cars/unapproved`, { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch(`${apiUrl}/api/bookings`, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' }),
+                fetch(`${apiUrl}/api/auth/partners`, { cache: 'no-store' }),
+                fetch(`${apiUrl}/api/cars`, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' }),
+                fetch(`${apiUrl}/api/rooms/all-admin`, { cache: 'no-store' }),
+                fetch(`${apiUrl}/api/affiliates`, { cache: 'no-store' }),
+                fetch(`${apiUrl}/api/chats/active`, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' }),
+                fetch(`${apiUrl}/api/rooms/unapproved/all`, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' }),
+                fetch(`${apiUrl}/api/cars/unapproved`, { headers: { 'Authorization': `Bearer ${token}` }, cache: 'no-store' })
             ]);
 
             if (bookingsRes.status === 401) {
