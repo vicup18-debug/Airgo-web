@@ -281,6 +281,10 @@ export default function DriverDashboard() {
         // Live dispatch broadcast
         socket.on('new_booking_request', (booking: any) => {
             console.log("WebSocket: Live dispatch offer:", booking);
+            
+            const audio = new Audio('/sounds/notification.wav');
+            audio.play().catch(e => console.log('Audio playback prevented:', e));
+
             setAvailableRequests(prev => {
                 if (prev.some(r => r._id === booking._id)) return prev;
                 return [booking, ...prev];
