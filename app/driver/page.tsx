@@ -991,15 +991,6 @@ export default function DriverDashboard() {
                                                                 </button>
                                                             </div>
                                                         </div>
-
-                                                        {/* Direct Accept button */}
-                                                        <button 
-                                                            disabled={isAcceptingId === req._id || isBidLocked}
-                                                            onClick={() => acceptClientOffer(req._id)}
-                                                            className="w-full bg-[#000080] hover:bg-blue-900 text-white py-3 rounded-xl text-xs font-black tracking-wider uppercase transition shadow-lg disabled:opacity-50"
-                                                        >
-                                                            {isAcceptingId === req._id ? 'Claiming ride...' : `Accept Passenger Fare (₦${rawPrice.toLocaleString()})`}
-                                                        </button>
                                                     </div>
                                                 )}
                                             </div>

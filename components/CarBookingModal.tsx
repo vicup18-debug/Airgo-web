@@ -37,8 +37,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const rentalType = 'Self Drive';
     const fuelPlan = 'Self Fueling';
     const [travelScope, setTravelScope] = useState<'Intra-City' | 'Inter-State'>('Intra-City');
-    const [isCustomOffer, setIsCustomOffer] = useState(false);
-    const [customOfferPrice, setCustomOfferPrice] = useState('');
 
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
 
@@ -57,6 +55,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
     const [toSuggestions, setToSuggestions] = useState<any[]>([]);
     const [isSearchingFrom, setIsSearchingFrom] = useState(false);
     const [isSearchingTo, setIsSearchingTo] = useState(false);
+
+    // User geolocation for restricting search
+    const [userCoords, setUserCoords] = useState<{lat: number, lon: number} | null>(null);
 
     // Real-time matchmaking states
     const [socket, setSocket] = useState<any>(null);
@@ -325,7 +326,13 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
         else setIsSearchingTo(true);
 
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`);
+            let baseUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`;
+            if (userCoords) {
+                const { lat, lon } = userCoords;
+                const viewbox = `${lon - 0.45},${lat + 0.45},${lon + 0.45},${lat - 0.45}`;
+                baseUrl += `&viewbox=${viewbox}&bounded=1`;
+            }
+            const res = await fetch(baseUrl);
             if (res.ok) {
                 const data = await res.json();
                 if (field === 'from') setFromSuggestions(data);
@@ -341,6 +348,14 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
     useEffect(() => {
         if (isOpen) {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => setUserCoords({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+                    (err) => console.warn('Geolocation error:', err),
+                    { enableHighAccuracy: true, timeout: 5000 }
+                );
+            }
+
             const storedUser = localStorage.getItem('airgo_user');
             let name = '';
             let email = '';
@@ -371,8 +386,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkOut: formattedCheckOut
             });
             setTravelScope('Intra-City');
-            setIsCustomOffer(false);
-            setCustomOfferPrice('');
             setAppliedCoupon(null);
             setPickupCoords(initialPickupCoords || null);
             setDestCoords(initialDestCoords || null);
@@ -483,7 +496,12 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             if (!finalPickupCoords && bookingDetails.fromAddress) {
                 toast.loading("Locating pickup address...", { id: "geocode-pickup" });
                 try {
-                    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.fromAddress)}&countrycodes=ng&limit=1`);
+                    let baseUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.fromAddress)}&countrycodes=ng&limit=1`;
+                    if (userCoords) {
+                        const { lat, lon } = userCoords;
+                        baseUrl += `&viewbox=${lon - 0.45},${lat + 0.45},${lon + 0.45},${lat - 0.45}&bounded=1`;
+                    }
+                    let res = await fetch(baseUrl);
                     if (res.ok) {
                         let data = await res.json();
                         if (data && data.length > 0) {
@@ -493,7 +511,9 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                             const parts = bookingDetails.fromAddress.split(',');
                             if (parts.length > 1) {
                                 const shortQuery = parts[0].trim() + ', ' + parts[1].trim();
-                                res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&countrycodes=ng&limit=1`);
+                                let shortUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&countrycodes=ng&limit=1`;
+                                if (userCoords) shortUrl += `&viewbox=${userCoords.lon - 0.45},${userCoords.lat + 0.45},${userCoords.lon + 0.45},${userCoords.lat - 0.45}&bounded=1`;
+                                res = await fetch(shortUrl);
                                 data = await res.json();
                                 if (data && data.length > 0) finalPickupCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
                             }
@@ -506,17 +526,23 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             if (!finalDestCoords && bookingDetails.toAddress) {
                 toast.loading("Locating destination address...", { id: "geocode-dest" });
                 try {
-                    let res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.toAddress)}&countrycodes=ng&limit=1`);
+                    let baseUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.toAddress)}&countrycodes=ng&limit=1`;
+                    if (userCoords) {
+                        const { lat, lon } = userCoords;
+                        baseUrl += `&viewbox=${lon - 0.45},${lat + 0.45},${lon + 0.45},${lat - 0.45}&bounded=1`;
+                    }
+                    let res = await fetch(baseUrl);
                     if (res.ok) {
                         let data = await res.json();
                         if (data && data.length > 0) {
                             finalDestCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
                         } else {
-                            // Fallback: try with the first two parts of the address
                             const parts = bookingDetails.toAddress.split(',');
                             if (parts.length > 1) {
                                 const shortQuery = parts[0].trim() + ', ' + parts[1].trim();
-                                res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&countrycodes=ng&limit=1`);
+                                let shortUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&countrycodes=ng&limit=1`;
+                                if (userCoords) shortUrl += `&viewbox=${userCoords.lon - 0.45},${userCoords.lat + 0.45},${userCoords.lon + 0.45},${userCoords.lat - 0.45}&bounded=1`;
+                                res = await fetch(shortUrl);
                                 data = await res.json();
                                 if (data && data.length > 0) finalDestCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
                             }
@@ -528,12 +554,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
 
             if (bidBlockReason) {
                 toast.error(bidBlockReason);
-                setIsProcessing(false);
-                return;
-            }
-
-            if (!finalPickupCoords || !finalDestCoords) {
-                toast.error("Could not locate the exact addresses. Please search and select from the dropdowns.");
                 setIsProcessing(false);
                 return;
             }
@@ -553,7 +573,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                 checkIn: bookingDetails.checkIn,
                 checkOut: bookingDetails.checkOut || bookingDetails.checkIn,
                 distance: distance,
-                offeredPrice: Number(customOfferPrice).toLocaleString(),
+                offeredPrice: '0',
                 travelScope: travelScope,
                 city: pickupCity,
                 pickupCoords: finalPickupCoords ? {
@@ -797,26 +817,13 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                         <option value="Inter-State">Inter-State (+₦35k/day)</option>
                                     </select>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">YOUR PRICE BID (₦)</label>
-                                    <input 
-                                        required 
-                                        type="number" 
-                                        min="1"
-                                        placeholder="Proposed fare e.g. 15000"
-                                        className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-semibold text-xs" 
-                                        value={customOfferPrice} 
-                                        onChange={e => {
-                                            setCustomOfferPrice(e.target.value);
-                                            setIsCustomOffer(true);
-                                        }} 
-                                    />
-                                </div>
                             </div>
-
-                            <button type="submit" disabled={isProcessing || Boolean(bidBlockReason)} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition shadow-lg mt-4 ${isProcessing || bidBlockReason ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
-                                {isProcessing ? 'Creating Escrow...' : bidBlockReason ? 'Ride Request Blocked' : 'Send Request to Drivers'}
-                            </button>
+                            
+                            <div className="pt-2">
+                                <button type="submit" disabled={isProcessing || Boolean(bidBlockReason)} className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-wide transition shadow-lg mt-4 ${isProcessing || bidBlockReason ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 'bg-[#FFB81C] text-[#000080] hover:bg-yellow-400'}`}>
+                                    {isProcessing ? 'Creating Escrow...' : bidBlockReason ? 'Ride Request Blocked' : 'Send Request to Drivers'}
+                                </button>
+                            </div>
                         </form>
                     </div>
                 )}
