@@ -697,17 +697,6 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">PICKUP DATE/TIME</label>
-                                    <input required type="datetime-local" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" value={bookingDetails.checkIn} onChange={e => setBookingDetails({ ...bookingDetails, checkIn: e.target.value })} />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">RETURN DATE/TIME</label>
-                                    <input required type="datetime-local" className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 focus:bg-white focus:border-[#000080] outline-none transition font-medium" value={bookingDetails.checkOut} onChange={e => setBookingDetails({ ...bookingDetails, checkOut: e.target.value })} />
-                                </div>
-                            </div>
-
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 relative z-20">
                                 <div className="relative">
                                     <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">FROM (Pickup Location)</label>
