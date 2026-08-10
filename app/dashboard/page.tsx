@@ -1487,7 +1487,7 @@ export default function ClientDashboard() {
                                                     </div>
                                                     {booking.offerStatus === 'Pending Partner' && (
                                                         <p className="text-sm font-medium">
-                                                            Your offer of <span className="font-extrabold text-amber-700">₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span> has been submitted to the partner/driver. Waiting for them to accept or counter.
+                                                            Your offer of <span className="font-extrabold text-amber-700">₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span> has been submitted to the partner/driver. Waiting for them to accept or counter.
                                                         </p>
                                                     )}
                                                     {booking.offerStatus === 'Pending Client' && (
@@ -1495,7 +1495,7 @@ export default function ClientDashboard() {
                                                             <p className="text-sm font-medium">
                                                                 The partner proposed a counter-offer of <span className="font-extrabold text-purple-700">₦{Number(booking.counterPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</span>.
                                                             </p>
-                                                            <p className="text-xs opacity-80">Your original bid was ₦{Number(booking.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}.</p>
+                                                            <p className="text-xs opacity-80">Your original bid was ₦{Number(booking.totalPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}.</p>
                                                         </div>
                                                     )}
                                                     {booking.offerStatus === 'Accepted' && (
