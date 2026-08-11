@@ -49,10 +49,6 @@ export default function DriverDashboard() {
     const [chatBookingName, setChatBookingName] = useState('');
     const [chatInitialOffer, setChatInitialOffer] = useState<any>(null);
 
-    // Telemetry simulator states
-    const [simulatedSpeed, setSimulatedSpeed] = useState(0);
-    const [simulatedFuel, setSimulatedFuel] = useState(82);
-
     const socketRef = useRef<Socket | null>(null);
     const isMutedSound = useRef(false);
 
@@ -84,14 +80,7 @@ export default function DriverDashboard() {
         }
     }, [router]);
 
-    // 1b. Auto-refresh available dispatches & bookings every 5 seconds
-    useEffect(() => {
-        if (!myUserId) return;
-        const interval = setInterval(() => {
-            silentRefresh();
-        }, 5000);
-        return () => clearInterval(interval);
-    }, [myUserId]);
+    // 1b. No polling — state is kept live by WebSocket events only
 
     // 1c. Parse incoming VoIP call credentials from URL on mount
     useEffect(() => {
@@ -392,19 +381,7 @@ export default function DriverDashboard() {
         };
     }, [myUserId]);
 
-    // Telemetry animation simulator
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const hasActiveTrip = myBookings.some(b => b.status === 'Trip Started');
-            if (hasActiveTrip) {
-                setSimulatedSpeed(Math.floor(40 + Math.random() * 35));
-                setSimulatedFuel(prev => Math.max(10, prev - (Math.random() > 0.8 ? 1 : 0)));
-            } else {
-                setSimulatedSpeed(0);
-            }
-        }, 3000);
-        return () => clearInterval(interval);
-    }, [myBookings]);
+    // No telemetry simulation — dashboard focuses on real ride management
 
     // Notification Sound helper
     const playNotificationSound = () => {
@@ -690,25 +667,7 @@ export default function DriverDashboard() {
                         </div>
                     )}
 
-                    {/* Sim telemetry indicators */}
-                    {myBookings.some(b => b.status === 'Trip Started') && (
-                        <div className="flex items-center gap-5 bg-slate-800/80 p-3 rounded-2xl border border-gray-700/50 shadow-inner">
-                            <div className="text-center">
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Speed</p>
-                                <p className="text-lg font-black text-blue-400">{simulatedSpeed} <span className="text-[10px]">km/h</span></p>
-                            </div>
-                            <div className="w-px h-8 bg-gray-700"></div>
-                            <div className="text-center">
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Fuel</p>
-                                <p className="text-lg font-black text-green-400">{simulatedFuel}%</p>
-                            </div>
-                            <div className="w-px h-8 bg-gray-700"></div>
-                            <div className="text-center">
-                                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Telemetry</p>
-                                <span className="text-xs text-blue-400 font-bold animate-pulse">Syncing</span>
-                            </div>
-                        </div>
-                    )}
+
                 </div>
             </section>
 
@@ -1077,27 +1036,7 @@ export default function DriverDashboard() {
                                                     </div>
                                                 </div>
 
-                                                {/* Simulated Live Route Map Telemetry when active */}
-                                                {isTripActive && (
-                                                    <div className="mt-6 bg-slate-950/80 p-5 rounded-3xl border border-gray-800">
-                                                        <div className="flex justify-between items-center text-xs font-bold text-gray-400 mb-2">
-                                                            <span>Simulating Live Telemetry Route...</span>
-                                                            <span className="text-blue-400">{simulatedSpeed} km/h</span>
-                                                        </div>
-                                                        <div className="h-2 bg-slate-800 rounded-full overflow-hidden relative">
-                                                            <div 
-                                                                className="h-full bg-gradient-to-r from-blue-600 to-emerald-400 rounded-full transition-all duration-1000"
-                                                                style={{ width: '45%' }}
-                                                            ></div>
-                                                            <div className="absolute left-[45%] top-[-3px] w-3 h-3 bg-white border-2 border-blue-500 rounded-full shadow animate-ping"></div>
-                                                        </div>
-                                                        <div className="flex justify-between text-[9px] text-gray-500 mt-1.5 font-bold uppercase tracking-wider">
-                                                            <span>Origin Address</span>
-                                                            <span>Simulating Ride Status (45% Complete)</span>
-                                                            <span>Destination Address</span>
-                                                        </div>
-                                                    </div>
-                                                )}
+
 
                                                 {/* ── Passenger Counter-Offer Response Panel ── */}
                                                 {booking.isOffer && booking.offerStatus === 'Pending Partner' && (
