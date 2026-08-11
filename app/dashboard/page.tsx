@@ -1069,8 +1069,12 @@ export default function ClientDashboard() {
                                                 </div>
                                                 <div className="text-left sm:text-right shrink-0 flex flex-col gap-1 w-full sm:w-auto">
                                                     <div>
-                                                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Your Price Bid</p>
-                                                        <p className="text-xl font-black text-[#000080]">₦{Number(req.offeredPrice?.replace(/[^0-9.-]+/g,"") || 0).toLocaleString()}</p>
+                                                        <p className="text-[10px] text-[#000080] font-bold uppercase tracking-wider">Awaiting Driver Offers</p>
+                                                        <div className="flex gap-1 mt-2 justify-start sm:justify-end">
+                                                            <span className="w-2 h-2 rounded-full bg-[#000080] animate-bounce"></span>
+                                                            <span className="w-2 h-2 rounded-full bg-[#000080] animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                                            <span className="w-2 h-2 rounded-full bg-[#000080] animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                                        </div>
                                                     </div>
                                                     <button onClick={() => handleCancelRideRequest(req._id)} className="w-full sm:w-auto bg-white border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 font-bold text-[10px] px-3 py-1.5 rounded-lg transition mt-2 cursor-pointer">
                                                         Cancel Request
