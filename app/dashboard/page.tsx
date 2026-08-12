@@ -42,57 +42,14 @@ const formatDisplayDate = (dateStr: string, itemType: string) => {
     }
 };
 
-// Simulated Live GPS tracking component for active car rentals
+// Real-time trip status component for active car rentals
 function LiveCarTracker({ booking }: { booking: any }) {
-    const [progress, setProgress] = React.useState(0);
-    const [speed, setSpeed] = React.useState(60);
-    const [fuel, setFuel] = React.useState(82);
-    const [eta, setEta] = React.useState(15);
-    const [statusText, setStatusText] = React.useState('En Route to Destination');
-
-    React.useEffect(() => {
-        // Animate the progress along the path (0 to 100)
-        const progressInterval = setInterval(() => {
-            setProgress((prev) => {
-                if (prev >= 100) {
-                    clearInterval(progressInterval);
-                    setStatusText('Delivered to Destination');
-                    setSpeed(0);
-                    setEta(0);
-                    return 100;
-                }
-                const next = prev + 1.5;
-                // Update ETA proportionally
-                setEta(Math.max(1, Math.ceil(15 * (1 - next / 100))));
-                return next;
-            });
-        }, 3000);
-
-        // Fluctuate speed and slowly decrease fuel
-        const telemetryInterval = setInterval(() => {
-            setSpeed((prev) => {
-                if (progress >= 100) return 0;
-                const change = Math.floor(Math.random() * 15) - 7;
-                return Math.min(85, Math.max(40, prev + change));
-            });
-            setFuel((prev) => Math.max(15, prev - (Math.random() > 0.7 ? 1 : 0)));
-        }, 1500);
-
-        return () => {
-            clearInterval(progressInterval);
-            clearInterval(telemetryInterval);
-        };
-    }, [progress]);
-
-    // Calculate position of car along a simulated S-curve path on a 300x120 SVG grid
-    const getCarCoordinates = (p: number) => {
-        const t = p / 100;
-        const x = (1-t)**3 * 20 + 3 * (1-t)**2 * t * 100 + 3 * (1-t) * t**2 * 200 + t**3 * 280;
-        const y = (1-t)**3 * 90 + 3 * (1-t)**2 * t * 10 + 3 * (1-t) * t**2 * 110 + t**3 * 40;
-        return { x, y };
-    };
-
-    const carPos = getCarCoordinates(progress);
+    const statusText = booking.status === 'Trip Started' ? 'En Route to Destination' : booking.status;
+    
+    // Construct Google Maps URL for the route
+    const pickup = booking.fromAddress || (booking.deliveryAddress?.includes('From:') ? booking.deliveryAddress.split('|')[0].replace('From:', '').trim() : booking.deliveryAddress) || '';
+    const dropoff = booking.toAddress || booking.dropoffAddress || (booking.deliveryAddress?.includes('To:') ? booking.deliveryAddress.split('|')[1]?.replace('To:', '')?.trim() : '') || '';
+    const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(pickup)}&destination=${encodeURIComponent(dropoff)}`;
 
     return (
         <div className="w-full mt-4 bg-gray-900 text-white p-5 rounded-2xl border border-gray-800 shadow-inner flex flex-col gap-4 animate-fade-in text-left">
@@ -105,90 +62,45 @@ function LiveCarTracker({ booking }: { booking: any }) {
                     <p className="text-xs text-gray-400 mt-0.5">Status: <span className="text-gray-200 font-bold">{statusText}</span></p>
                 </div>
                 <div className="text-left sm:text-right">
-                    <p className="text-xs text-gray-500 font-bold">Estimated Arrival</p>
-                    <p className="text-lg font-black text-[#FFB81C]">{eta > 0 ? `${eta} mins` : 'Arrived'}</p>
+                    <a 
+                        href={googleMapsUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 bg-[#000080] hover:bg-blue-900 text-white font-bold text-xs px-4 py-2 rounded-lg transition border border-[#FFB81C]/30"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        View Route on Maps
+                    </a>
                 </div>
             </div>
 
-            <div className="relative w-full h-36 bg-gray-950 rounded-xl overflow-hidden border border-gray-800/80">
-                <svg className="w-full h-full" viewBox="0 0 300 120" preserveAspectRatio="none">
-                    <defs>
-                        <pattern id="grid" width="15" height="15" patternUnits="userSpaceOnUse">
-                            <path d="M 15 0 L 0 0 0 15" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5"/>
-                        </pattern>
-                    </defs>
-                    <rect width="100%" height="100%" fill="url(#grid)" />
-
-                    <text x="15" y="110" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase">Airgo Depot</text>
-                    <text x="110" y="25" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase">Wuse II Toll</text>
-                    <text x="225" y="110" className="fill-gray-600 font-bold text-[8px] tracking-wider uppercase">Maitama Ring</text>
-                    <text x="215" y="25" className="fill-gray-400 font-bold text-[8px] tracking-wider uppercase font-black">Your Location</text>
-
-                    <path 
-                        d="M 20 90 C 100 10, 200 110, 280 40" 
-                        fill="none" 
-                        stroke="#1f2937" 
-                        strokeWidth="4" 
-                        strokeLinecap="round"
-                    />
-                    <path 
-                        d="M 20 90 C 100 10, 200 110, 280 40" 
-                        fill="none" 
-                        stroke="#004A99" 
-                        strokeWidth="2.5" 
-                        strokeDasharray="4 2"
-                        strokeLinecap="round"
-                    />
-
-                    <circle cx="20" cy="90" r="5" className="fill-blue-500 stroke-white stroke-2" />
-                    <circle cx="280" cy="40" r="5" className="fill-green-500 stroke-white stroke-2 animate-ping" />
-                    <circle cx="280" cy="40" r="5" className="fill-green-500 stroke-white stroke-2" />
-
-                    <g transform={`translate(${carPos.x - 6}, ${carPos.y - 6})`}>
-                        <circle cx="6" cy="6" r="8" className="fill-green-500/20 stroke-green-500/40 stroke-1 animate-pulse" />
-                        <circle cx="6" cy="6" r="4" className="fill-green-400 stroke-white stroke-1" />
-                    </g>
-                </svg>
-                
-                <div className="absolute bottom-2 left-2 flex gap-1.5 flex-wrap">
-                    <span className="bg-[#000080]/85 text-blue-200 border border-blue-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.rentalType || 'Chauffeur Driven'}</span>
-                    <span className="bg-[#FFB81C]/25 text-yellow-200 border border-yellow-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.fuelPlan || 'Self Fueling'}</span>
-                    <span className="bg-green-900/80 text-green-200 border border-green-800 text-[8px] font-bold px-2 py-0.5 rounded uppercase tracking-wider backdrop-blur-sm">{booking.travelScope || 'Intra-City'}</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-950 p-5 rounded-xl border border-gray-800/80">
+                <div className="flex flex-col gap-3">
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Pickup Location</span>
+                        <span className="text-sm font-medium text-gray-200">{pickup}</span>
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Drop-off Location</span>
+                        <span className="text-sm font-medium text-gray-200">{dropoff}</span>
+                    </div>
                 </div>
-            </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-gray-950 p-4 rounded-xl border border-gray-800/80">
-                <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Current Speed</span>
-                    <span className="text-sm font-black text-gray-200">{speed} km/h</span>
-                </div>
-                <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Fuel Level</span>
-                    <span className="text-sm font-black text-gray-200">{fuel}%</span>
-                </div>
                 <div className="flex flex-col">
                     <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Assigned Driver</span>
-                    <span className="text-sm font-black text-[#FFB81C]">Chinedu Okafor</span>
-                </div>
-                <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Driver Rating</span>
-                    <span className="text-sm font-black text-gray-200 flex items-center gap-1">
-                        4.9
-                        <svg className="w-3.5 h-3.5 text-[#FFB81C] fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                        </svg>
-                        (VIP Class)
-                    </span>
+                    <span className="text-sm font-black text-[#FFB81C]">{booking.driverName || 'Driver Assigned'}</span>
                 </div>
             </div>
 
-            <div className="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-800/50">
-                <span className="text-xs text-gray-400 font-medium">Contact dispatch driver for any changes:</span>
-                <a href="tel:+2347078344409" className="bg-[#FFB81C] hover:bg-yellow-400 text-[#000080] font-black text-xs px-3.5 py-1.5 rounded-lg shadow transition flex items-center gap-1">
+            <div className="flex justify-between items-center bg-gray-800/50 p-3 rounded-xl border border-gray-800/50 mt-2">
+                <span className="text-xs text-gray-400 font-medium">Contact driver for any changes:</span>
+                <a href={booking.driverPhone ? `tel:${booking.driverPhone}` : '#'} className="bg-[#FFB81C] hover:bg-yellow-400 text-[#000080] font-black text-xs px-3.5 py-1.5 rounded-lg shadow transition flex items-center gap-1">
                     <svg className="w-3 h-3 text-[#000080]" fill="none" stroke="currentColor" strokeWidth="2.2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.387a12.035 12.035 0 01-7.108-7.108c-.145-.44-.017-.927.36-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
                     </svg>
-                    Call Dispatcher
+                    Call Driver
                 </a>
             </div>
         </div>
