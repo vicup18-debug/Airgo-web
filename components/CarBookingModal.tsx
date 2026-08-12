@@ -935,7 +935,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                                                                         [bid.driverId]: e.target.value
                                                                     }))
                                                                 }
-                                                                className="w-full pl-6 pr-2 py-1.5 text-xs border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080] focus:border-transparent"
+                                                                className="w-full pl-6 pr-2 py-1.5 text-xs font-bold text-gray-900 placeholder-gray-400 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#000080] focus:border-transparent"
                                                                 autoFocus
                                                             />
                                                         </div>
