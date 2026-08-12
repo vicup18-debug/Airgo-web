@@ -300,21 +300,25 @@ export default function DriverDashboard() {
                     next[index] = updated;
                     return next;
                 } else if (updated.driverId === myUserId) {
+                    // New booking assigned to this driver — add it and switch to My Trips
                     return [updated, ...prev];
                 }
                 return prev;
             });
-            silentRefresh();
+            // If this is the client accepting our bid, switch to trips tab and notify
+            if (updated.driverId === myUserId && updated.status === 'Pending Escrow') {
+                setActiveTab('trips');
+                toast.success('🎉 Client accepted your bid! Check My Trips.', { duration: 6000, position: 'top-center' });
+            }
         });
 
         // Real-time auto-cancellation of unpaid bookings
         socket.on('booking_cancelled', (data: any) => {
             setMyBookings(prev => prev.filter(b => b._id !== data.bookingId));
-            silentRefresh();
             toast.error("An accepted trip request was cancelled due to unpaid escrow.", {
                 duration: 5000,
                 position: 'top-center',
-                icon: ''
+                icon: '⚠️'
             });
         });
 
@@ -836,8 +840,10 @@ export default function DriverDashboard() {
                                                         <p className="text-xs text-[#FFB81C] font-semibold mt-0.5 uppercase tracking-wider">{req.travelScope || 'Intra-City'}</p>
                                                     </div>
                                                     <div className="text-right">
-                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Passenger Offer</p>
-                                                        <p className="text-xl font-black text-emerald-400 mt-0.5">₦{rawPrice.toLocaleString()}</p>
+                                                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Bid Status</p>
+                                                        <p className="text-sm font-black text-emerald-400 mt-0.5">
+                                                            {hasSubmittedBid ? `Your Bid: ₦${myBid?.fare?.toLocaleString()}` : 'Open Bid'}
+                                                        </p>
                                                     </div>
                                                 </div>
 
