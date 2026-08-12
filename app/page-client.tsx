@@ -171,6 +171,15 @@ export default function HotelHomepage() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+        const hasSeenSplash = sessionStorage.getItem('airgo_has_seen_splash');
+        if (hasSeenSplash) {
+            setShowSplash(false);
+        } else {
+            sessionStorage.setItem('airgo_has_seen_splash', 'true');
+        }
+    }
+
     const userData = localStorage.getItem('airgo_user');
     if (userData) {
       const parsedUser = JSON.parse(userData);
