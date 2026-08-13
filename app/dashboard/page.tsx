@@ -120,6 +120,16 @@ export default function ClientDashboard() {
     const [hasLoadedBookings, setHasLoadedBookings] = useState(false);
     const prevBookingsRef = useRef<any[]>([]);
 
+    // ── In-app confirmation dialog (replaces browser window.confirm) ──────────
+    const [confirmDialog, setConfirmDialog] = useState<{
+        open: boolean;
+        title: string;
+        message: string;
+        confirmLabel?: string;
+        confirmColor?: string;
+        onConfirm: () => void;
+    }>({ open: false, title: '', message: '', onConfirm: () => {} });
+
     const playNotificationSound = () => {
         try {
             const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
@@ -511,61 +521,75 @@ export default function ClientDashboard() {
     };
 
     const handleConfirmStartTrip = async (bookingId: string) => {
-        if (!window.confirm("Are you sure you want to confirm that the driver has started the trip?")) {
-            return;
-        }
-        try {
-            const token = localStorage.getItem('airgo_token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/confirm-start-trip`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+        setConfirmDialog({
+            open: true,
+            title: 'Confirm Trip Started?',
+            message: 'Please confirm that the driver has arrived and the trip has started.',
+            confirmLabel: 'Yes, Confirm Start',
+            confirmColor: '#000080',
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                try {
+                    const token = localStorage.getItem('airgo_token');
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                    const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/confirm-start-trip`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        toast.success("Trip start confirmed successfully!");
+                        const userData = localStorage.getItem('airgo_user');
+                        if (userData) {
+                            fetchMyBookings(JSON.parse(userData));
+                        }
+                    } else {
+                        toast.error(data.message || "Failed to confirm trip start.");
+                    }
+                } catch (err) {
+                    toast.error("Error connecting to server.");
                 }
-            });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success("Trip start confirmed successfully!");
-                const userData = localStorage.getItem('airgo_user');
-                if (userData) {
-                    fetchMyBookings(JSON.parse(userData));
-                }
-            } else {
-                toast.error(data.message || "Failed to confirm trip start.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
-        }
+        });
     };
 
     const handleEndTrip = async (bookingId: string) => {
-        if (!window.confirm("Are you sure you want to request ending this trip? The driver will be prompted to confirm.")) {
-            return;
-        }
-        try {
-            const token = localStorage.getItem('airgo_token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/end-trip`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+        setConfirmDialog({
+            open: true,
+            title: 'End This Trip?',
+            message: 'Are you sure you want to request ending this trip? The driver will be prompted to confirm.',
+            confirmLabel: 'Yes, End Trip',
+            confirmColor: '#D97706',
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                try {
+                    const token = localStorage.getItem('airgo_token');
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                    const res = await fetch(`${apiUrl}/api/bookings/${bookingId}/end-trip`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        toast.success("Trip end request submitted. Waiting for driver confirmation.");
+                        const userData = localStorage.getItem('airgo_user');
+                        if (userData) {
+                            fetchMyBookings(JSON.parse(userData));
+                        }
+                    } else {
+                        toast.error(data.message || "Failed to request trip end.");
+                    }
+                } catch (err) {
+                    toast.error("Error connecting to server.");
                 }
-            });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success("Trip end request submitted. Waiting for driver confirmation.");
-                const userData = localStorage.getItem('airgo_user');
-                if (userData) {
-                    fetchMyBookings(JSON.parse(userData));
-                }
-            } else {
-                toast.error(data.message || "Failed to request trip end.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
-        }
+        });
     };
 
     const fetchMyBookings = async (parsedUser: any, silent = false) => {
@@ -855,26 +879,35 @@ export default function ClientDashboard() {
     };
 
     const handleCancelBooking = async (bookingId: string) => {
-        if (!window.confirm("Are you sure you want to cancel this reservation and release the locked inventory?")) return;
-        try {
-            const token = localStorage.getItem('airgo_token');
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
-            const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
+        setConfirmDialog({
+            open: true,
+            title: 'Cancel Reservation?',
+            message: 'Are you sure you want to cancel this reservation and release the locked inventory? This action cannot be undone.',
+            confirmLabel: 'Yes, Cancel Booking',
+            confirmColor: '#E53E3E',
+            onConfirm: async () => {
+                setConfirmDialog(prev => ({ ...prev, open: false }));
+                try {
+                    const token = localStorage.getItem('airgo_token');
+                    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+                    const res = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        toast.success("Reservation cancelled and inventory released!");
+                        fetchMyBookings(user);
+                    } else {
+                        toast.error(data.message || "Failed to cancel reservation.");
+                    }
+                } catch (err) {
+                    toast.error("Error connecting to server.");
                 }
-            });
-            const data = await res.json();
-            if (res.ok) {
-                toast.success("Reservation cancelled and inventory released!");
-                fetchMyBookings(user);
-            } else {
-                toast.error(data.message || "Failed to cancel reservation.");
             }
-        } catch (err) {
-            toast.error("Error connecting to server.");
-        }
+        });
     };
 
     const handleShareBooking = async (booking: any) => {
@@ -1841,6 +1874,42 @@ export default function ClientDashboard() {
                     }}
                     autoTrigger={true}
                 />
+            )}
+
+            {/* ── IN-APP CONFIRMATION DIALOG ───────────────────────────────── */}
+            {confirmDialog.open && (
+                <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}>
+                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" style={{ animation: 'slideUp 0.2s ease-out' }}>
+                        <div className="h-1.5 w-full" style={{ backgroundColor: confirmDialog.confirmColor || '#E53E3E' }} />
+                        <div className="p-6">
+                            <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: `${confirmDialog.confirmColor || '#E53E3E'}20` }}>
+                                    <svg className="w-5 h-5" fill="none" stroke={confirmDialog.confirmColor || '#E53E3E'} strokeWidth="2.5" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-black text-gray-900">{confirmDialog.title}</h3>
+                            </div>
+                            <p className="text-sm text-gray-600 leading-relaxed mb-6 pl-[52px]">{confirmDialog.message}</p>
+                            <div className="flex gap-3 justify-end">
+                                <button
+                                    onClick={() => setConfirmDialog(prev => ({ ...prev, open: false }))}
+                                    className="px-5 py-2.5 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition text-sm"
+                                >
+                                    Go Back
+                                </button>
+                                <button
+                                    onClick={confirmDialog.onConfirm}
+                                    className="px-5 py-2.5 rounded-xl font-bold text-white transition text-sm shadow-md hover:opacity-90"
+                                    style={{ backgroundColor: confirmDialog.confirmColor || '#E53E3E' }}
+                                >
+                                    {confirmDialog.confirmLabel || 'Confirm'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <style>{`@keyframes slideUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }`}</style>
+                </div>
             )}
         </div>
     );
