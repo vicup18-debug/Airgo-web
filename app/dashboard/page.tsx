@@ -1008,10 +1008,17 @@ export default function ClientDashboard() {
                                                     <div className="space-y-3">
                                                         {req.driverOffers.map((offer: any) => (
                                                             <div key={offer.driverId} className="bg-gray-50/80 border border-gray-150 p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 transition hover:shadow-sm">
-                                                                <div className="text-left">
-                                                                    <h6 className="font-bold text-sm text-gray-900">{offer.driverName}</h6>
-                                                                    <p className="text-xs text-gray-500 font-medium">{offer.vehicleDetails || 'Premium Sedan'}</p>
-                                                                    <p className="text-[9px] text-gray-400 font-bold mt-1">VIP Chauffeur Partner</p>
+                                                                <div className="text-left flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-1">
+                                                                    {offer.vehicleImage && (
+                                                                        <div className="w-16 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
+                                                                            <img src={offer.vehicleImage} alt={offer.vehicleDetails} className="w-full h-full object-cover" />
+                                                                        </div>
+                                                                    )}
+                                                                    <div>
+                                                                        <h6 className="font-bold text-sm text-gray-900">{offer.driverName}</h6>
+                                                                        <p className="text-xs text-gray-500 font-medium">{offer.vehicleDetails || 'Premium Sedan'}</p>
+                                                                        <p className="text-[9px] text-gray-400 font-bold mt-1">VIP Chauffeur Partner</p>
+                                                                    </div>
                                                                  </div>
                                                                 <div className="text-left sm:text-right flex flex-col sm:items-end gap-2 shrink-0 w-full sm:w-auto">
                                                                     <div>
@@ -1474,17 +1481,24 @@ export default function ClientDashboard() {
                                                                         ? 'bg-emerald-50/40 border-emerald-200 hover:bg-emerald-50' 
                                                                         : 'bg-blue-50/40 border-blue-100/60 hover:bg-blue-50'
                                                                 }`}>
-                                                                    <div className="flex-1">
-                                                                        <div className="flex items-center gap-2">
-                                                                            <p className="text-sm font-bold text-gray-800">{offer.driverName}</p>
-                                                                            {idx === 0 && (
-                                                                                <span className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
-                                                                                    Cheapest Bid
-                                                                                </span>
-                                                                            )}
+                                                                    <div className="flex-1 flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                                                                        {offer.vehicleImage && (
+                                                                            <div className="w-20 h-14 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 border border-gray-300">
+                                                                                <img src={offer.vehicleImage} alt={offer.vehicleDetails} className="w-full h-full object-cover" />
+                                                                            </div>
+                                                                        )}
+                                                                        <div>
+                                                                            <div className="flex items-center gap-2">
+                                                                                <p className="text-sm font-bold text-gray-800">{offer.driverName}</p>
+                                                                                {idx === 0 && (
+                                                                                    <span className="bg-emerald-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                                                                        Cheapest Bid
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                            <p className="text-xs text-gray-500 font-medium mt-0.5">{offer.vehicleDetails || 'Standard Fleet Vehicle'}</p>
+                                                                            <p className="text-xs text-gray-400 font-medium mt-1">Rating: 4.8★ | VIP Driver</p>
                                                                         </div>
-                                                                        <p className="text-xs text-gray-500 font-medium mt-0.5">{offer.vehicleDetails || 'Standard Fleet Vehicle'}</p>
-                                                                        <p className="text-xs text-gray-400 font-medium mt-1">Rating: 4.8★ | VIP Driver</p>
                                                                     </div>
                                                                     <div className="flex flex-col sm:items-end w-full sm:w-auto gap-2">
                                                                         <div className="text-left sm:text-right">
