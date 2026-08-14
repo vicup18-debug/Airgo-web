@@ -746,7 +746,7 @@ export default function DriverDashboard() {
                     <div className="space-y-6">
 
                         {/* Active Negotiations — bookings awaiting driver response to a counter */}
-                        {myBookings.filter(b => b.isOffer && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')).map(booking => {
+                        {myBookings.filter(b => b.isOffer && !['Cancelled', 'Archived'].includes(b.status) && (b.offerStatus === 'Pending Partner' || b.offerStatus === 'Pending Client')).map(booking => {
                             const clientPrice = parseFloat((booking.totalPrice || '0').replace(/[^0-9.-]+/g, ''));
                             const isPendingPartner = booking.offerStatus === 'Pending Partner';
                             return (

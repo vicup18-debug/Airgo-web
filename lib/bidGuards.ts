@@ -22,7 +22,7 @@ export function getDriverBidLockReason(
         return 'You have an ongoing trip in progress. Complete it before bidding on new rides.';
     }
 
-    if (carBookings.some((b) => b.isOffer && NEGOTIATION_STATUSES.includes(b.offerStatus))) {
+    if (carBookings.some((b) => b.isOffer && !['Cancelled', 'Archived'].includes(b.status) && NEGOTIATION_STATUSES.includes(b.offerStatus))) {
         return 'You have an active price negotiation. Resolve it first before bidding on new rides.';
     }
 
@@ -60,7 +60,7 @@ export function getClientBidLockReason(
         return 'You already have an active ride request. Cancel or complete it before starting a new one.';
     }
 
-    if (carBookings.some((b) => b.isOffer && NEGOTIATION_STATUSES.includes(b.offerStatus))) {
+    if (carBookings.some((b) => b.isOffer && !['Cancelled', 'Archived'].includes(b.status) && NEGOTIATION_STATUSES.includes(b.offerStatus))) {
         return 'You have an active price negotiation. Resolve it before starting a new ride request.';
     }
 
