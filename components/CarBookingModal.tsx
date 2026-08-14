@@ -329,7 +329,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
             let baseUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=ng&limit=5&addressdetails=1`;
             if (userCoords) {
                 const { lat, lon } = userCoords;
-                const viewbox = `${lon - 0.45},${lat + 0.45},${lon + 0.45},${lat - 0.45}`;
+                const viewbox = `${lon - 0.15},${lat + 0.15},${lon + 0.15},${lat - 0.15}`;
                 baseUrl += `&viewbox=${viewbox}&bounded=1`;
             }
             const res = await fetch(baseUrl);
@@ -499,7 +499,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                     let baseUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.fromAddress)}&countrycodes=ng&limit=1`;
                     if (userCoords) {
                         const { lat, lon } = userCoords;
-                        baseUrl += `&viewbox=${lon - 0.45},${lat + 0.45},${lon + 0.45},${lat - 0.45}&bounded=1`;
+                        baseUrl += `&viewbox=${lon - 0.15},${lat + 0.15},${lon + 0.15},${lat - 0.15}&bounded=1`;
                     }
                     let res = await fetch(baseUrl);
                     if (res.ok) {
@@ -512,7 +512,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                             if (parts.length > 1) {
                                 const shortQuery = parts[0].trim() + ', ' + parts[1].trim();
                                 let shortUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&countrycodes=ng&limit=1`;
-                                if (userCoords) shortUrl += `&viewbox=${userCoords.lon - 0.45},${userCoords.lat + 0.45},${userCoords.lon + 0.45},${userCoords.lat - 0.45}&bounded=1`;
+                                if (userCoords) shortUrl += `&viewbox=${userCoords.lon - 0.15},${userCoords.lat + 0.15},${userCoords.lon + 0.15},${userCoords.lat - 0.15}&bounded=1`;
                                 res = await fetch(shortUrl);
                                 data = await res.json();
                                 if (data && data.length > 0) finalPickupCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
@@ -529,7 +529,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                     let baseUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(bookingDetails.toAddress)}&countrycodes=ng&limit=1`;
                     if (userCoords) {
                         const { lat, lon } = userCoords;
-                        baseUrl += `&viewbox=${lon - 0.45},${lat + 0.45},${lon + 0.45},${lat - 0.45}&bounded=1`;
+                        baseUrl += `&viewbox=${lon - 0.15},${lat + 0.15},${lon + 0.15},${lat - 0.15}&bounded=1`;
                     }
                     let res = await fetch(baseUrl);
                     if (res.ok) {
@@ -541,7 +541,7 @@ export default function CarBookingModal({ isOpen, onClose, car, initialCheckIn, 
                             if (parts.length > 1) {
                                 const shortQuery = parts[0].trim() + ', ' + parts[1].trim();
                                 let shortUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(shortQuery)}&countrycodes=ng&limit=1`;
-                                if (userCoords) shortUrl += `&viewbox=${userCoords.lon - 0.45},${userCoords.lat + 0.45},${userCoords.lon + 0.45},${userCoords.lat - 0.45}&bounded=1`;
+                                if (userCoords) shortUrl += `&viewbox=${userCoords.lon - 0.15},${userCoords.lat + 0.15},${userCoords.lon + 0.15},${userCoords.lat - 0.15}&bounded=1`;
                                 res = await fetch(shortUrl);
                                 data = await res.json();
                                 if (data && data.length > 0) finalDestCoords = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
