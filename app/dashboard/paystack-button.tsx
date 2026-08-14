@@ -31,19 +31,26 @@ export default function PaystackPaymentButton({ booking, user, onSuccess, onClos
 
     const initializePayment = usePaystackPayment(config);
 
+    const hasTriggeredRef = React.useRef(false);
+
     React.useEffect(() => {
-        if (autoTrigger) {
-            initializePayment({
-                onSuccess: (ref: any) => {
-                    onSuccess(booking._id, ref.reference);
-                },
-                onClose: () => {
-                    toast.error("Payment window closed.");
-                    if (onClose) onClose();
-                }
-            });
+        if (autoTrigger && !hasTriggeredRef.current) {
+            hasTriggeredRef.current = true;
+            // Short delay to ensure Paystack script is ready
+            setTimeout(() => {
+                initializePayment({
+                    onSuccess: (ref: any) => {
+                        onSuccess(booking._id, ref.reference);
+                    },
+                    onClose: () => {
+                        toast.error("Payment window closed.");
+                        if (onClose) onClose();
+                    }
+                });
+            }, 300);
         }
-    }, [autoTrigger, booking._id, initializePayment, onSuccess, onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoTrigger]);
 
     if (autoTrigger) {
         return null;
