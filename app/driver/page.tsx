@@ -305,10 +305,17 @@ export default function DriverDashboard() {
                 }
                 return prev;
             });
-            // If this is the client accepting our bid, switch to trips tab and notify
-            if (updated.driverId === myUserId && updated.status === 'Pending Escrow') {
+            if (updated.isOffer && updated.offerStatus === 'Pending Partner' && updated.driverId === myUserId) {
+                playNotificationSound();
+                toast.success('🚕 Counter Offer Received! Client countered your bid. Respond now!', { duration: 6000, position: 'top-center' });
+                setActiveTab('dispatches');
+            } else if (
+                (updated.isOffer && updated.offerStatus === 'Accepted' && updated.driverId === myUserId) ||
+                (updated.driverId === myUserId && updated.status === 'Pending Escrow' && updated.offerStatus !== 'Pending Partner')
+            ) {
+                playNotificationSound();
                 setActiveTab('trips');
-                toast.success('🎉 Client accepted your bid! Check My Trips.', { duration: 6000, position: 'top-center' });
+                toast.success('🎉 Client accepted your bid! Check Active Trips.', { duration: 6000, position: 'top-center' });
             }
         });
 
