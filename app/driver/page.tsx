@@ -307,11 +307,14 @@ export default function DriverDashboard() {
             });
             if (updated.isOffer && updated.offerStatus === 'Pending Partner' && updated.driverId === myUserId) {
                 playNotificationSound();
-                toast.success('🚕 Counter Offer Received! Client countered your bid. Respond now!', { duration: 6000, position: 'top-center' });
+                toast.success('🎉 Counter Offer Received! Client countered your bid. Respond now!', { duration: 6000, position: 'top-center' });
+                setActiveTab('dispatches');
+            } else if (updated.isOffer && updated.offerStatus === 'Pending Client' && updated.driverId === myUserId) {
+                // Driver just sent a counter back to client. Stay on dispatches tab.
                 setActiveTab('dispatches');
             } else if (
                 (updated.isOffer && updated.offerStatus === 'Accepted' && updated.driverId === myUserId) ||
-                (updated.driverId === myUserId && updated.status === 'Pending Escrow' && updated.offerStatus !== 'Pending Partner')
+                (updated.driverId === myUserId && updated.status === 'Pending Escrow' && !updated.isOffer)
             ) {
                 playNotificationSound();
                 setActiveTab('trips');
