@@ -71,7 +71,7 @@ export default function SuperadminDashboard() {
 
     // BOOKINGS TAB SEARCH & FILTERS
     const [bookingSearchQuery, setBookingSearchQuery] = useState('');
-    const [bookingStatusFilter, setBookingStatusFilter] = useState<'All' | 'Pending Escrow' | 'Paid' | 'Approved for Disbursement' | 'Paid Out' | 'Archived'>('All');
+    const [bookingStatusFilter, setBookingStatusFilter] = useState<'All' | 'Pending Escrow' | 'Paid' | 'Approved for Disbursement' | 'Completed & Awaiting Disbursement' | 'Paid Out' | 'Archived'>('All');
 
     // CONCIERGE BOOKING CREATION STATE
     const [isNewBookingModalOpen, setIsNewBookingModalOpen] = useState(false);
@@ -1152,7 +1152,7 @@ export default function SuperadminDashboard() {
                                             <span className="absolute left-3.5 top-3 text-gray-400 text-sm"></span>
                                         </div>
                                         <div className="flex gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                                            {(['All', 'Pending Escrow', 'Paid', 'Approved for Disbursement', 'Paid Out', 'Archived'] as const).map((filter) => (
+                                            {(['All', 'Pending Escrow', 'Paid', 'Approved for Disbursement', 'Completed & Awaiting Disbursement', 'Paid Out', 'Archived'] as const).map((filter) => (
                                                 <button
                                                     key={filter}
                                                     onClick={() => setBookingStatusFilter(filter)}
@@ -1245,7 +1245,7 @@ export default function SuperadminDashboard() {
                                                                 <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                                                     booking.status === 'Pending Escrow' 
                                                                         ? 'bg-yellow-100 text-yellow-800' 
-                                                                        : booking.status === 'Approved for Disbursement'
+                                                                        : (booking.status === 'Approved for Disbursement' || booking.status === 'Completed & Awaiting Disbursement')
                                                                             ? 'bg-blue-100 text-blue-800'
                                                                             : booking.status === 'Paid'
                                                                                 ? 'bg-green-100 text-green-800'
@@ -1394,7 +1394,7 @@ export default function SuperadminDashboard() {
                                                                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                                                                     booking.status === 'Pending Escrow' 
                                                                         ? 'bg-yellow-100 text-yellow-800' 
-                                                                        : booking.status === 'Approved for Disbursement'
+                                                                        : (booking.status === 'Approved for Disbursement' || booking.status === 'Completed & Awaiting Disbursement')
                                                                             ? 'bg-blue-100 text-blue-800'
                                                                             : 'bg-green-100 text-green-800'
                                                                 }`}>
@@ -1404,14 +1404,14 @@ export default function SuperadminDashboard() {
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
                                                                  {booking.status === 'Pending Escrow' && (
-                                                                      <button onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Confirm Deposit</button>
-                                                                  )}
-                                                                  {['Paid', 'Paid - Escrow Secured', 'Completed', 'Trip Ended'].includes(booking.status) && (
-                                                                      <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
-                                                                  )}
-                                                                  {['Approved for Disbursement', 'Completed & Awaiting Disbursement'].includes(booking.status) && (
-                                                                      <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
-                                                                  )}
+                                                                     <button onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Confirm Deposit</button>
+                                                                 )}
+                                                                 {['Paid', 'Paid - Escrow Secured', 'Completed', 'Trip Ended'].includes(booking.status) && (
+                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
+                                                                 )}
+                                                                 {(booking.status === 'Approved for Disbursement' || booking.status === 'Completed & Awaiting Disbursement') && (
+                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
+                                                                 )}
                                                             </td>
                                                         </tr>
                                                         {expandedEscrowId === booking._id && (
@@ -1953,7 +1953,7 @@ export default function SuperadminDashboard() {
                                                                                                             <td className="p-3 text-right font-black text-green-700">₦{commission.toLocaleString()}</td>
                                                                                                             <td className="p-3 text-center">
                                                                                                                 <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase ${
-                                                                                                                    b.status === 'Paid' || b.status === 'Paid Out' || b.status === 'Approved for Disbursement'
+                                                                                                                    b.status === 'Paid' || b.status === 'Paid Out' || b.status === 'Approved for Disbursement' || b.status === 'Completed & Awaiting Disbursement'
                                                                                                                         ? 'bg-green-50 text-green-700'
                                                                                                                         : 'bg-yellow-50 text-yellow-700'
                                                                                                                 }`}>{b.status}</span>
