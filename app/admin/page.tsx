@@ -999,7 +999,7 @@ export default function SuperadminDashboard() {
     };
 
     const calculateTotalEscrow = () => {
-        return allBookings.filter(b => ['Paid', 'Paid - Escrow Secured', 'Approved for Disbursement'].includes(b.status)).reduce((sum, b) => {
+        return allBookings.filter(b => ['Paid', 'Paid - Escrow Secured', 'Approved for Disbursement', 'Completed & Awaiting Disbursement', 'Trip Start Pending', 'Trip Started', 'Trip End Pending', 'Completed', 'Trip Ended'].includes(b.status)).reduce((sum, b) => {
             const num = typeof b.totalPrice === 'string' ? parseInt(b.totalPrice.replace(/[^0-9]/g, '')) : b.totalPrice;
             return sum + (num || 0);
         }, 0).toLocaleString();
@@ -1404,14 +1404,14 @@ export default function SuperadminDashboard() {
                                                             <td className="p-4 text-right font-black text-[#000080]">₦{booking.totalPrice}</td>
                                                             <td className="p-4 text-center">
                                                                  {booking.status === 'Pending Escrow' && (
-                                                                     <button onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Confirm Deposit</button>
-                                                                 )}
-                                                                 {(booking.status === 'Paid' || booking.status === 'Paid - Escrow Secured') && (
-                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
-                                                                 )}
-                                                                 {booking.status === 'Approved for Disbursement' && (
-                                                                     <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
-                                                                 )}
+                                                                      <button onClick={(e) => { e.stopPropagation(); handleConfirmDirectDeposit(booking._id); }} className="bg-green-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Confirm Deposit</button>
+                                                                  )}
+                                                                  {['Paid', 'Paid - Escrow Secured', 'Completed', 'Trip Ended'].includes(booking.status) && (
+                                                                      <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Approved for Disbursement', 'Approve Payout'); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Approve Payout</button>
+                                                                  )}
+                                                                  {['Approved for Disbursement', 'Completed & Awaiting Disbursement'].includes(booking.status) && (
+                                                                      <button onClick={(e) => { e.stopPropagation(); handleUpdateEscrowStatus(booking._id, 'Paid Out', 'Disburse Payout'); }} className="bg-[#10B981] text-white px-4 py-2 rounded-lg text-xs font-black shadow-md hover:scale-105 transition">Disburse Payout</button>
+                                                                  )}
                                                             </td>
                                                         </tr>
                                                         {expandedEscrowId === booking._id && (
