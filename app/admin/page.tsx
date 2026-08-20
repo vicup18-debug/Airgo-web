@@ -56,6 +56,8 @@ const formatDisplayDate = (dateStr: string, itemType: string) => {
 
 export default function SuperadminDashboard() {
     const [user, setUser] = useState<any>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     const [activeTab, setActiveTab] = useState<'overview' | 'bookings' | 'escrow' | 'approvals' | 'fleet' | 'rooms' | 'affiliates' | 'chats'>('overview');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -1383,7 +1385,7 @@ export default function SuperadminDashboard() {
                                                             </div>
                                                         </td>
                                                     </tr>
-                                                ) : allBookings.map((booking) => (
+                                                ) : allBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((booking) => (
                                                     <React.Fragment key={booking._id}>
                                                         <tr onClick={() => toggleEscrowExpand(booking._id)} className="hover:bg-blue-50 transition cursor-pointer">
                                                             <td className="p-4">
@@ -1536,6 +1538,25 @@ export default function SuperadminDashboard() {
                                             </tbody>
                                         </table>
                                     </div>
+                                    
+                                    {/* Pagination Controls */}
+                                    {allBookings.length > itemsPerPage && (
+                                        <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+                                            {Array.from({ length: Math.ceil(allBookings.length / itemsPerPage) }, (_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setCurrentPage(i + 1)}
+                                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                                                        currentPage === i + 1
+                                                            ? 'bg-[#000080] text-white shadow-md'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    {i + 1}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
 

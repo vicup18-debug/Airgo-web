@@ -110,6 +110,8 @@ function LiveCarTracker({ booking }: { booking: any }) {
 export default function ClientDashboard() {
     const [user, setUser] = useState<any>(null);
     const [myBookings, setMyBookings] = useState<any[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
     const [myRideRequests, setMyRideRequests] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [trackingBookingId, setTrackingBookingId] = useState<string | null>(null);
@@ -1088,7 +1090,7 @@ export default function ClientDashboard() {
                                     ))}
                                 </div>
                             )}
-                            {myBookings.map((booking) => {
+                            {myBookings.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((booking) => {
                                 const allowedInvoiceStatuses = ['Paid', 'Paid - Escrow Secured', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Completed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'];
                                 const canDownloadInvoice = allowedInvoiceStatuses.includes(booking.status);
                                 const isPaidCar = booking.itemType === 'car' && ['Paid', 'Paid - Escrow Secured', 'Paid Out', 'Approved for Disbursement', 'Confirmed', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status);
@@ -1582,6 +1584,25 @@ export default function ClientDashboard() {
                                     </div>
                                 );
                             })}
+                            
+                            {/* Pagination Controls */}
+                            {myBookings.length > itemsPerPage && (
+                                <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+                                    {Array.from({ length: Math.ceil(myBookings.length / itemsPerPage) }, (_, i) => (
+                                        <button
+                                            key={i}
+                                            onClick={() => setCurrentPage(i + 1)}
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                                                currentPage === i + 1
+                                                    ? 'bg-[#000080] text-white shadow-md'
+                                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                            }`}
+                                        >
+                                            {i + 1}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
