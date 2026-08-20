@@ -305,6 +305,24 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
 
         // 3. Listen for incoming messages
         socket.on('receive_chat_message', (msg: Message) => {
+            if (msg.senderId !== currentUserId) {
+                try {
+                    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+                    if (AudioContextClass) {
+                        const ctx = new AudioContextClass();
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(659.25, ctx.currentTime);
+                        gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start();
+                        osc.stop(ctx.currentTime + 0.35);
+                    }
+                } catch (e) {}
+            }
             setMessages((prev) => {
                 const exists = prev.some(m => m._id === msg._id || (m.createdAt === msg.createdAt && m.senderId === msg.senderId && m.text === msg.text));
                 if (exists) return prev;
@@ -378,7 +396,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                 clearInterval(callTimerRef.current);
             }
         };
-    }, [isOpen, bookingId, apiUrl]);
+    }, [isOpen, bookingId, apiUrl, currentUserId]);
 
     if (!isOpen) return null;
 
@@ -446,7 +464,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                 <div className="bg-[#000080] p-4 text-white rounded-t-3xl flex justify-between items-center shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#FFB81C] text-[#000080] rounded-full flex items-center justify-center font-black shadow-inner">
-                            
+                            💬
                         </div>
                         <div>
                             <h3 className="font-black text-sm truncate max-w-[200px]">{bookingName}</h3>
@@ -463,7 +481,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                 title="Start Voice Call"
                                 className="w-8 h-8 rounded-full bg-green-500 hover:bg-green-600 text-white font-bold flex items-center justify-center transition cursor-pointer select-none"
                             >
-                                
+                                📞
                             </button>
                         )}
                         <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold flex items-center justify-center transition cursor-pointer">✕</button>
@@ -484,7 +502,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                         </div>
                     ) : messages.length === 0 ? (
                         <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-gray-400 gap-2">
-                            <span className="text-4xl"></span>
+                            <span className="text-4xl">💬</span>
                             <h4 className="font-black text-gray-700 mt-2">Start the Conversation</h4>
                             <p className="text-xs max-w-xs leading-relaxed">
                                 Chat safely regarding delivery details, check-in logistics, or support questions here on the Airgo platform.
@@ -551,7 +569,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                             <div className={`w-24 h-24 bg-[#FFB81C] text-[#000080] rounded-full flex items-center justify-center text-4xl font-black shadow-lg z-10 relative ${
                                 ['calling', 'incoming', 'connecting'].includes(callState) ? 'animate-bounce' : ''
                             }`}>
-                                
+                                📞
                             </div>
                             {/* Pulse Waves */}
                             {['calling', 'incoming', 'active'].includes(callState) && (
@@ -582,7 +600,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                         className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-xl shadow-lg transition cursor-pointer select-none"
                                         title="Decline Call"
                                     >
-                                        
+                                        ✕
                                     </button>
                                     {/* Accept Button */}
                                     <button 
@@ -591,7 +609,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                         className="w-14 h-14 bg-green-500 hover:bg-green-600 rounded-full flex items-center justify-center text-xl shadow-lg transition animate-pulse cursor-pointer select-none"
                                         title="Answer Call"
                                     >
-                                        
+                                        📞
                                     </button>
                                 </>
                             ) : (
@@ -606,7 +624,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                             }`}
                                             title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
                                         >
-                                            {isMuted ? '' : ''}
+                                            {isMuted ? '🔇' : '🎙️'}
                                         </button>
                                     )}
                                     
@@ -618,7 +636,7 @@ export default function Chatroom({ isOpen, onClose, bookingId, bookingName, curr
                                             className="w-14 h-14 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-xl shadow-lg transition cursor-pointer select-none"
                                             title="End Call"
                                         >
-                                            
+                                            ✕
                                         </button>
                                     )}
                                 </>

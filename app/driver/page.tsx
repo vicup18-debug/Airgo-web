@@ -305,7 +305,18 @@ export default function DriverDashboard() {
                 }
                 return prev;
             });
-            if (updated.isOffer && updated.offerStatus === 'Pending Partner' && updated.driverId === myUserId) {
+            if (
+                updated.driverId === myUserId &&
+                (updated.status === 'Paid - Escrow Secured' || updated.status === 'Paid')
+            ) {
+                playNotificationSound();
+                setActiveTab('trips');
+                toast.success(`💰 Payment Secured in Escrow! Client paid for ${updated.itemName}. Ready for pickup!`, {
+                    duration: 8000,
+                    position: 'top-center',
+                    icon: '💰'
+                });
+            } else if (updated.isOffer && updated.offerStatus === 'Pending Partner' && updated.driverId === myUserId) {
                 playNotificationSound();
                 toast.success('🎉 Counter Offer Received! Client countered your bid. Respond now!', { duration: 6000, position: 'top-center' });
                 setActiveTab('dispatches');
@@ -319,6 +330,28 @@ export default function DriverDashboard() {
                 playNotificationSound();
                 setActiveTab('trips');
                 toast.success('🎉 Client accepted your bid! Check Active Trips.', { duration: 6000, position: 'top-center' });
+            }
+        });
+
+        socket.on('payment_received', (booking: any) => {
+            console.log("WebSocket: payment_received on driver portal", booking);
+            if (booking.driverId === myUserId) {
+                setMyBookings(prev => {
+                    const index = prev.findIndex(b => b._id === booking._id);
+                    if (index !== -1) {
+                        const next = [...prev];
+                        next[index] = booking;
+                        return next;
+                    }
+                    return [booking, ...prev];
+                });
+                playNotificationSound();
+                setActiveTab('trips');
+                toast.success(`💰 Payment Confirmed in Escrow! Client paid for ${booking.itemName}. Prepare for pickup!`, {
+                    duration: 8000,
+                    position: 'top-center',
+                    icon: '💰'
+                });
             }
         });
 
@@ -337,6 +370,18 @@ export default function DriverDashboard() {
             setChatBookingId(data.bookingId);
             setChatBookingName(data.bookingName);
             setChatInitialOffer(data);
+            setIsChatOpen(true);
+        });
+
+        socket.on('incoming_chat_notification', (data: any) => {
+            console.log("Incoming chat notification received on driver portal:", data);
+            if (data.senderId === myUserId || data.senderRole === 'partner') return;
+            playNotificationSound();
+            toast.success(`💬 Message from ${data.senderName || 'Passenger'}: "${data.text}"`, {
+                duration: 8000
+            });
+            setChatBookingId(data.bookingId);
+            setChatBookingName(data.bookingName || 'Ride Chat');
             setIsChatOpen(true);
         });
 
@@ -615,6 +660,32 @@ export default function DriverDashboard() {
             } else {
                 const data = await response.json();
                 toast.error(data.message || "Failed to finalize trip.");
+            }
+        } catch (err) {
+            toast.error("Server connection lost.");
+        } finally {
+            setIsUpdatingTripId(null);
+        }
+    };
+
+    const handleCancelTrip = async (bookingId: string) => {
+        if (!confirm("Are you sure you want to cancel this trip?")) return;
+        setIsUpdatingTripId(bookingId);
+        const token = localStorage.getItem('airgo_token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+
+        try {
+            const response = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                toast.success("Trip cancelled successfully.");
+                silentRefresh();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                toast.error(data.message || "Failed to cancel trip.");
             }
         } catch (err) {
             toast.error("Server connection lost.");
@@ -1140,7 +1211,7 @@ export default function DriverDashboard() {
                                                             <button
                                                                 disabled={isUpdatingTripId === booking._id}
                                                                 onClick={() => handleStartTrip(booking._id)}
-                                                                className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-6 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
+                                                                className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
                                                             >
                                                                 {isUpdatingTripId === booking._id ? 'Starting...' : 'Start Trip'}
                                                             </button>
@@ -1151,9 +1222,20 @@ export default function DriverDashboard() {
                                                             <button
                                                                 disabled={isUpdatingTripId === booking._id}
                                                                 onClick={() => handleEndTrip(booking._id)}
-                                                                className="bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white px-6 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
+                                                                className="bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
                                                             >
                                                                 {isUpdatingTripId === booking._id ? 'Ending...' : 'Complete / End Trip'}
+                                                            </button>
+                                                        )}
+
+                                                        {/* Driver Cancel Trip control */}
+                                                        {booking.status !== 'Completed' && booking.status !== 'Cancelled' && (
+                                                            <button
+                                                                disabled={isUpdatingTripId === booking._id}
+                                                                onClick={() => handleCancelTrip(booking._id)}
+                                                                className="bg-gray-800 hover:bg-red-950/40 border border-gray-700 hover:border-red-600/50 text-gray-300 hover:text-red-400 px-4 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                                                            >
+                                                                {isUpdatingTripId === booking._id ? 'Cancelling...' : 'Cancel Trip'}
                                                             </button>
                                                         )}
                                                     </div>

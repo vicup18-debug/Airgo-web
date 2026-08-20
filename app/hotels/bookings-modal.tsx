@@ -528,6 +528,25 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                 </div>
                             </div>
 
+                            {/* Dynamic Refund Policy Banner */}
+                            {hotel?.isRefundable !== false ? (
+                                <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl flex gap-2 items-start">
+                                    <span className="text-amber-600 mt-0.5">🛡️</span>
+                                    <div>
+                                        <p className="text-xs font-black text-amber-800">Airgo Escrow Protection</p>
+                                        <p className="text-xs text-amber-700 mt-0.5">You are paying <strong>Airgo.ng</strong>. Valid cancellations are eligible for a <strong className="text-green-700">70% refund (₦{Math.round(getPriceBreakdown().total * 0.7).toLocaleString()})</strong>.</p>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl flex gap-2 items-start">
+                                    <span className="text-red-600 mt-0.5">⚠️</span>
+                                    <div>
+                                        <p className="text-xs font-black text-red-800">Non-Refundable Booking</p>
+                                        <p className="text-xs text-red-700 mt-0.5">This property does <strong>NOT</strong> offer refunds for cancellations.</p>
+                                    </div>
+                                </div>
+                            )}
+
                             <button
                                 type="submit"
                                 disabled={isSubmitting || getRemainingRooms(selectedRoom) <= 0}
