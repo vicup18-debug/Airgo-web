@@ -807,6 +807,15 @@ export default function ClientDashboard() {
             fetchMyBookings(parsedUser, true);
         });
 
+        socketInstance.on('booking_cancelled', (data: any) => {
+            console.log("WebSocket: Booking cancellation received on dashboard", data);
+            toast.error("A ride booking has been cancelled.", {
+                duration: 6000,
+                icon: '⚠️'
+            });
+            fetchMyBookings(parsedUser, true);
+        });
+
         socketInstance.on('incoming_call_alert', (data: any) => {
             console.log("Incoming call alert received globally on client dashboard:", data);
             setChatBookingId(data.bookingId);
