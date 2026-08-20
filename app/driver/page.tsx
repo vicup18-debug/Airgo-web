@@ -668,6 +668,32 @@ export default function DriverDashboard() {
         }
     };
 
+    const handleCancelTrip = async (bookingId: string) => {
+        if (!confirm("Are you sure you want to cancel this trip?")) return;
+        setIsUpdatingTripId(bookingId);
+        const token = localStorage.getItem('airgo_token');
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://airgo-backend.onrender.com';
+
+        try {
+            const response = await fetch(`${apiUrl}/api/bookings/${bookingId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+
+            if (response.ok) {
+                toast.success("Trip cancelled successfully.");
+                silentRefresh();
+            } else {
+                const data = await response.json().catch(() => ({}));
+                toast.error(data.message || "Failed to cancel trip.");
+            }
+        } catch (err) {
+            toast.error("Server connection lost.");
+        } finally {
+            setIsUpdatingTripId(null);
+        }
+    };
+
     // Logout controller
     const handleLogout = () => {
         localStorage.removeItem('airgo_token');
@@ -1185,7 +1211,7 @@ export default function DriverDashboard() {
                                                             <button
                                                                 disabled={isUpdatingTripId === booking._id}
                                                                 onClick={() => handleStartTrip(booking._id)}
-                                                                className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-6 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
+                                                                className="bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
                                                             >
                                                                 {isUpdatingTripId === booking._id ? 'Starting...' : 'Start Trip'}
                                                             </button>
@@ -1196,9 +1222,20 @@ export default function DriverDashboard() {
                                                             <button
                                                                 disabled={isUpdatingTripId === booking._id}
                                                                 onClick={() => handleEndTrip(booking._id)}
-                                                                className="bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white px-6 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
+                                                                className="bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white px-5 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50"
                                                             >
                                                                 {isUpdatingTripId === booking._id ? 'Ending...' : 'Complete / End Trip'}
+                                                            </button>
+                                                        )}
+
+                                                        {/* Driver Cancel Trip control */}
+                                                        {booking.status !== 'Completed' && booking.status !== 'Cancelled' && (
+                                                            <button
+                                                                disabled={isUpdatingTripId === booking._id}
+                                                                onClick={() => handleCancelTrip(booking._id)}
+                                                                className="bg-gray-800 hover:bg-red-950/40 border border-gray-700 hover:border-red-600/50 text-gray-300 hover:text-red-400 px-4 py-2.5 rounded-xl text-xs font-black tracking-wide uppercase transition shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                                                            >
+                                                                {isUpdatingTripId === booking._id ? 'Cancelling...' : 'Cancel Trip'}
                                                             </button>
                                                         )}
                                                     </div>
