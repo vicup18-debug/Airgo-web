@@ -305,7 +305,18 @@ export default function DriverDashboard() {
                 }
                 return prev;
             });
-            if (updated.isOffer && updated.offerStatus === 'Pending Partner' && updated.driverId === myUserId) {
+            if (
+                updated.driverId === myUserId &&
+                (updated.status === 'Paid - Escrow Secured' || updated.status === 'Paid')
+            ) {
+                playNotificationSound();
+                setActiveTab('trips');
+                toast.success(`💰 Payment Secured in Escrow! Client paid for ${updated.itemName}. Ready for pickup!`, {
+                    duration: 8000,
+                    position: 'top-center',
+                    icon: '💰'
+                });
+            } else if (updated.isOffer && updated.offerStatus === 'Pending Partner' && updated.driverId === myUserId) {
                 playNotificationSound();
                 toast.success('🎉 Counter Offer Received! Client countered your bid. Respond now!', { duration: 6000, position: 'top-center' });
                 setActiveTab('dispatches');
@@ -319,6 +330,28 @@ export default function DriverDashboard() {
                 playNotificationSound();
                 setActiveTab('trips');
                 toast.success('🎉 Client accepted your bid! Check Active Trips.', { duration: 6000, position: 'top-center' });
+            }
+        });
+
+        socket.on('payment_received', (booking: any) => {
+            console.log("WebSocket: payment_received on driver portal", booking);
+            if (booking.driverId === myUserId) {
+                setMyBookings(prev => {
+                    const index = prev.findIndex(b => b._id === booking._id);
+                    if (index !== -1) {
+                        const next = [...prev];
+                        next[index] = booking;
+                        return next;
+                    }
+                    return [booking, ...prev];
+                });
+                playNotificationSound();
+                setActiveTab('trips');
+                toast.success(`💰 Payment Confirmed in Escrow! Client paid for ${booking.itemName}. Prepare for pickup!`, {
+                    duration: 8000,
+                    position: 'top-center',
+                    icon: '💰'
+                });
             }
         });
 
