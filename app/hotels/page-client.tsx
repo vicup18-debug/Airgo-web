@@ -108,15 +108,21 @@ export default function HotelsPage() {
                             <div className="flex overflow-x-auto gap-6 pb-6 pt-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                                 {liveHotels.filter(h => activeCategory === "All" || (activeCategory === "Apartments" && h.partnerType === 'apartment') || (activeCategory !== "Apartments" && (h.name.toLowerCase().includes(activeCategory.toLowerCase()) || (h.description && h.description.toLowerCase().includes(activeCategory.toLowerCase()))))).map((hotel) => (
                                     <div key={hotel._id} className="min-w-[300px] md:min-w-[380px] bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-xl transition-all cursor-pointer group">
-                                        <div className="relative h-56 overflow-hidden">
-                                            <img src={hotel.image || 'https://via.placeholder.com/400'} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                                            <div className="absolute top-4 left-4 bg-white bg-opacity-90 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 backdrop-blur-md">
-                                                <svg className="w-3.5 h-3.5 text-[#FFB81C] fill-[#FFB81C]" viewBox="0 0 24 24">
-                                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-                                                </svg>
-                                                <span className="text-xs font-black text-gray-900">{hotel.rating || 'New'}</span>
+                                            <div className="relative h-56 overflow-hidden">
+                                                <img src={hotel.image || 'https://via.placeholder.com/400'} alt={hotel.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                                                <div className="absolute top-4 left-4 bg-white bg-opacity-90 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-1.5 backdrop-blur-md">
+                                                    <svg className="w-3.5 h-3.5 text-[#FFB81C] fill-[#FFB81C]" viewBox="0 0 24 24">
+                                                        <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                                                    </svg>
+                                                    <span className="text-xs font-black text-gray-900">{hotel.rating || 'New'}</span>
+                                                </div>
+                                                {hotel.isRefundable !== false && (
+                                                    <div className="absolute bottom-3 left-3 bg-green-600 bg-opacity-90 px-2.5 py-1 rounded-full flex items-center gap-1 backdrop-blur-sm">
+                                                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                                        <span className="text-[10px] font-black text-white">70% Refundable</span>
+                                                    </div>
+                                                )}
                                             </div>
-                                        </div>
                                         <div className="p-5">
                                             <h3 className="text-lg font-black text-gray-900 truncate">{hotel.name}</h3>
                                             <p className="text-sm text-gray-500 mt-1 flex items-center gap-1">
