@@ -340,6 +340,18 @@ export default function DriverDashboard() {
             setIsChatOpen(true);
         });
 
+        socket.on('incoming_chat_notification', (data: any) => {
+            console.log("Incoming chat notification received on driver portal:", data);
+            if (data.senderId === myUserId || data.senderRole === 'partner') return;
+            playNotificationSound();
+            toast.success(`💬 Message from ${data.senderName || 'Passenger'}: "${data.text}"`, {
+                duration: 8000
+            });
+            setChatBookingId(data.bookingId);
+            setChatBookingName(data.bookingName || 'Ride Chat');
+            setIsChatOpen(true);
+        });
+
         return () => {
             socket.disconnect();
         };

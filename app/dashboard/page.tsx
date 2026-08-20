@@ -785,6 +785,10 @@ export default function ClientDashboard() {
         });
 
         socketInstance.on('connect', () => {
+            const currentUid = parsedUser.id || parsedUser._id || parsedUser.userId;
+            if (currentUid) {
+                socketInstance.emit('join_user', { userId: currentUid });
+            }
             myBookings.forEach((booking: any) => {
                 if (['Pending Escrow', 'Accepted', 'Trip Started', 'Trip Start Pending', 'Trip End Pending'].includes(booking.status)) {
                     socketInstance.emit('join_booking', { bookingId: booking._id });
@@ -808,6 +812,19 @@ export default function ClientDashboard() {
             setChatBookingId(data.bookingId);
             setChatBookingName(data.bookingName);
             setChatInitialOffer(data);
+            setIsChatOpen(true);
+        });
+
+        socketInstance.on('incoming_chat_notification', (data: any) => {
+            console.log("Incoming chat notification received on client dashboard:", data);
+            const currentUid = parsedUser.id || parsedUser._id || parsedUser.userId;
+            if (data.senderId === currentUid || data.senderRole === 'client') return;
+            playNotificationSound();
+            toast.success(`💬 Message from Driver (${data.senderName || 'Driver'}): "${data.text}"`, {
+                duration: 8000
+            });
+            setChatBookingId(data.bookingId);
+            setChatBookingName(data.bookingName || 'Ride Chat');
             setIsChatOpen(true);
         });
 
