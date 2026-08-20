@@ -1322,7 +1322,7 @@ export default function ClientDashboard() {
                                                             Share Booking
                                                         </button>
                                                     )}
-                                                    {booking.status !== 'Cancelled' && booking.status !== 'Archived' && (
+                                                    {!['Cancelled', 'Archived', 'Completed', 'Completed & Disbursed', 'Paid Out', 'Refunded'].includes(booking.status) && (
                                                         <button
                                                             onClick={() => {
                                                                 setChatBookingId(booking._id);
