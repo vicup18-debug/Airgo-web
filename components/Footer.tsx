@@ -154,6 +154,13 @@ export default function Footer() {
                 </a>
               </div>
             </div>
+            
+            <div className="mt-8">
+              <h4 className="font-bold mb-4 text-[#FFB81C] uppercase tracking-wider text-sm md:text-base">Get The Airgo App</h4>
+              <a href="#" target="_blank" rel="noopener noreferrer" className="inline-block transition-transform duration-300 hover:scale-105">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Google_Play_Store_badge_EN.svg" alt="Get it on Google Play" className="h-10" />
+              </a>
+            </div>
           </div>
         </div>
         <div className="max-w-6xl mx-auto mt-6 pt-4 border-t border-blue-900 text-center text-sm text-blue-300 font-medium">
