@@ -1362,9 +1362,61 @@ export default function SuperadminDashboard() {
                                                         )}
                                                     </React.Fragment>
                                                 ))}
+                                                        </>
+                                                    );
+                                                })()}
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    {/* Bookings Pagination Controls */}
+                                    {(() => {
+                                        const filteredCount = allBookings
+                                            .filter(b => bookingStatusFilter === 'All' ? b.status !== 'Archived' : b.status === bookingStatusFilter)
+                                            .filter(b => {
+                                                if (!bookingSearchQuery) return true;
+                                                const q = bookingSearchQuery.toLowerCase();
+                                                return (b.clientName && b.clientName.toLowerCase().includes(q)) ||
+                                                       (b.clientEmail && b.clientEmail.toLowerCase().includes(q)) ||
+                                                       (b.clientPhone && b.clientPhone.toLowerCase().includes(q)) ||
+                                                       (b.itemName && b.itemName.toLowerCase().includes(q)) ||
+                                                       (b._id && b._id.toLowerCase().includes(q));
+                                            }).length;
+                                        const totalPages = Math.ceil(filteredCount / itemsPerPage);
+                                        if (totalPages <= 1) return null;
+                                        return (
+                                            <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                    disabled={currentPage === 1}
+                                                    className="px-3 h-8 rounded-full font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition"
+                                                >
+                                                    ‹
+                                                </button>
+                                                {Array.from({ length: totalPages }, (_, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => setCurrentPage(i + 1)}
+                                                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                                                            currentPage === i + 1
+                                                                ? 'bg-[#000080] text-white shadow-md'
+                                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                        }`}
+                                                    >
+                                                        {i + 1}
+                                                    </button>
+                                                ))}
+                                                <button
+                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                                    disabled={currentPage === totalPages}
+                                                    className="px-3 h-8 rounded-full font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition"
+                                                >
+                                                    ›
+                                                </button>
+                                                <span className="text-xs text-gray-500 ml-2">Page {Math.min(currentPage, totalPages)} of {totalPages} ({filteredCount} bookings)</span>
+                                            </div>
+                                        );
+                                    })()}
                                 </div>
                             )}
 
@@ -1543,61 +1595,43 @@ export default function SuperadminDashboard() {
                                                         )}
                                                     </React.Fragment>
                                                 ))}
-                                                        </>
-                                                    );
-                                                })()}
                                             </tbody>
                                         </table>
                                     </div>
                                     
-                                    {/* Pagination Controls */}
-                                    {(() => {
-                                        const filteredCount = allBookings
-                                            .filter(b => bookingStatusFilter === 'All' ? b.status !== 'Archived' : b.status === bookingStatusFilter)
-                                            .filter(b => {
-                                                if (!bookingSearchQuery) return true;
-                                                const q = bookingSearchQuery.toLowerCase();
-                                                return (b.clientName && b.clientName.toLowerCase().includes(q)) ||
-                                                       (b.clientEmail && b.clientEmail.toLowerCase().includes(q)) ||
-                                                       (b.clientPhone && b.clientPhone.toLowerCase().includes(q)) ||
-                                                       (b.itemName && b.itemName.toLowerCase().includes(q)) ||
-                                                       (b._id && b._id.toLowerCase().includes(q));
-                                            }).length;
-                                        const totalPages = Math.ceil(filteredCount / itemsPerPage);
-                                        if (totalPages <= 1) return null;
-                                        return (
-                                            <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+                                    {/* Escrow Pagination Controls */}
+                                    {allBookings.length > itemsPerPage && (
+                                        <div className="flex justify-center items-center gap-2 mt-6 pb-4">
+                                            <button
+                                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                                disabled={currentPage === 1}
+                                                className="px-3 h-8 rounded-full font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition"
+                                            >
+                                                ‹
+                                            </button>
+                                            {Array.from({ length: Math.ceil(allBookings.length / itemsPerPage) }, (_, i) => (
                                                 <button
-                                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                                    disabled={currentPage === 1}
-                                                    className="px-3 h-8 rounded-full font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition"
+                                                    key={i}
+                                                    onClick={() => setCurrentPage(i + 1)}
+                                                    className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                                                        currentPage === i + 1
+                                                            ? 'bg-[#000080] text-white shadow-md'
+                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                                    }`}
                                                 >
-                                                    ‹
+                                                    {i + 1}
                                                 </button>
-                                                {Array.from({ length: totalPages }, (_, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => setCurrentPage(i + 1)}
-                                                        className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
-                                                            currentPage === i + 1
-                                                                ? 'bg-[#000080] text-white shadow-md'
-                                                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                        }`}
-                                                    >
-                                                        {i + 1}
-                                                    </button>
-                                                ))}
-                                                <button
-                                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                                    disabled={currentPage === totalPages}
-                                                    className="px-3 h-8 rounded-full font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition"
-                                                >
-                                                    ›
-                                                </button>
-                                                <span className="text-xs text-gray-500 ml-2">Page {Math.min(currentPage, totalPages)} of {totalPages} ({filteredCount} bookings)</span>
-                                            </div>
-                                        );
-                                    })()}
+                                            ))}
+                                            <button
+                                                onClick={() => setCurrentPage(p => Math.min(Math.ceil(allBookings.length / itemsPerPage), p + 1))}
+                                                disabled={currentPage === Math.ceil(allBookings.length / itemsPerPage)}
+                                                className="px-3 h-8 rounded-full font-bold text-sm bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 transition"
+                                            >
+                                                ›
+                                            </button>
+                                            <span className="text-xs text-gray-500 ml-2">Page {currentPage} of {Math.ceil(allBookings.length / itemsPerPage)}</span>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
