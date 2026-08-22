@@ -351,6 +351,15 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                                                         <div className="flex justify-between items-start gap-2">
                                                             <h4 className="font-bold text-lg text-gray-900 leading-snug">{room.name}</h4>
                                                             <div className="flex flex-col items-end gap-1 shrink-0">
+                                                                {(room.isRefundable !== false && hotel?.isRefundable !== false) ? (
+                                                                    <span className="bg-green-50 text-green-700 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-wider border border-green-200/60">
+                                                                        🛡️ 70% Refundable
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded text-[9px] uppercase tracking-wider border border-amber-200/60">
+                                                                        ⚠️ Non-Refundable
+                                                                    </span>
+                                                                )}
                                                                 {room.discountPercentage > 0 && (
                                                                     <span className="bg-red-500 text-white font-black px-1.5 py-0.5 rounded text-[8px] uppercase tracking-wider">
                                                                         {room.discountPercentage}% OFF

@@ -546,14 +546,14 @@ export default function PartnerDashboard() {
 
     const [selectedBuildingForNew, setSelectedBuildingForNew] = useState<string>('NEW');
     const [newItem, setNewItem] = useState<any>({
-        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
+        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '', isRefundable: true
     });
 
     // EDIT INVENTORY MODAL STATE
     const [selectedInventoryForEdit, setSelectedInventoryForEdit] = useState<any>(null);
     const [isEditInventoryModalOpen, setIsEditInventoryModalOpen] = useState(false);
     const [editItemData, setEditItemData] = useState<any>({
-        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: ''
+        name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '', isRefundable: true
     });
 
 
@@ -874,7 +874,7 @@ export default function PartnerDashboard() {
                 driverPhone: newItem.driverPhone,
                 driverPassword: newItem.driverPassword
             } : {
-                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? (newItem.hotelName || newItem.name) : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, city: newItem.city, state: newItem.state, name: newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl
+                partnerId: secureId, hotelName: user.partnerType === 'apartment' ? (newItem.hotelName || newItem.name) : (user.businessName || user.name), hotelAddress: newItem.hotelAddress, city: newItem.city, state: newItem.state, name: newItem.name, netPrice: Number(newItem.netPrice), totalAllocated: Number(newItem.totalAllocated), amenities: newItem.amenities, description: newItem.description, image: finalImageUrl, images: finalImageUrls, previewImage: finalImageUrl, isRefundable: newItem.isRefundable !== false
             };
 
             const token = localStorage.getItem('airgo_token');
@@ -892,7 +892,7 @@ export default function PartnerDashboard() {
                 setIsModalOpen(false);
                 setImageFile(null);
                 setCarImageFiles([]);
-                setNewItem({ name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '' });
+                setNewItem({ name: '', netPrice: '', retailPrice: '', totalAllocated: '', amenities: '', type: '', capacity: '', features: '', hotelAddress: '', vehicleNumber: '', location: '', state: '', city: '', description: '', driverName: '', driverPhone: '', driverEmail: '', driverPassword: '', isRefundable: true });
                 fetchPartnerData(user);
             }
         } catch (error) {
@@ -925,7 +925,8 @@ export default function PartnerDashboard() {
             driverName: item.driverName || '',
             driverPhone: item.driverPhone || '',
             driverEmail: item.driverEmail || '',
-            driverPassword: ''
+            driverPassword: '',
+            isRefundable: item.isRefundable !== undefined ? item.isRefundable : true
         });
         setIsEditInventoryModalOpen(true);
     };
@@ -968,7 +969,8 @@ export default function PartnerDashboard() {
                 description: editItemData.description,
                 image: editItemData.image,
                 images: editItemData.images,
-                previewImage: editItemData.previewImage
+                previewImage: editItemData.previewImage,
+                isRefundable: editItemData.isRefundable !== false
             };
 
             const token = localStorage.getItem('airgo_token');
@@ -2515,6 +2517,26 @@ export default function PartnerDashboard() {
                                 </div>
                             )}
 
+                            {!isCarPartner && (
+                                <div className="p-3 bg-blue-50/50 rounded-2xl border border-blue-100/80 flex items-start gap-3 mt-3">
+                                    <input
+                                        type="checkbox"
+                                        id="newIsRefundable"
+                                        checked={newItem.isRefundable !== false}
+                                        onChange={(e) => setNewItem({ ...newItem, isRefundable: e.target.checked })}
+                                        className="w-4 h-4 mt-0.5 accent-[#000080] rounded cursor-pointer"
+                                    />
+                                    <div>
+                                        <label htmlFor="newIsRefundable" className="text-xs font-bold text-gray-900 cursor-pointer block">
+                                            Allow 70% Escrow Refund Policy
+                                        </label>
+                                        <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">
+                                            When checked, clients who cancel eligible bookings under Airgo policy receive a 70% refund. Uncheck if your hotel/room tier is strictly non-refundable.
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
                             <div>
                                 <label className="block text-xs font-bold text-gray-900 uppercase mb-1">Upload Photo(s) *</label>
                                 <input required type="file" multiple accept="image/*" className="w-full px-4 py-2 border rounded-xl file:mr-4 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-xs file:bg-blue-50 file:text-[#004A99] text-gray-900 bg-white" onChange={(e) => {
@@ -2639,6 +2661,26 @@ export default function PartnerDashboard() {
                                                 );
                                             })}
                                         </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {!isCarPartner && (
+                                <div className="p-3 bg-blue-50/50 rounded-2xl border border-blue-100/80 flex items-start gap-3 mt-3">
+                                    <input
+                                        type="checkbox"
+                                        id="editIsRefundable"
+                                        checked={editItemData.isRefundable !== false}
+                                        onChange={(e) => setEditItemData({ ...editItemData, isRefundable: e.target.checked })}
+                                        className="w-4 h-4 mt-0.5 accent-[#000080] rounded cursor-pointer"
+                                    />
+                                    <div>
+                                        <label htmlFor="editIsRefundable" className="text-xs font-bold text-gray-900 cursor-pointer block">
+                                            Allow 70% Escrow Refund Policy
+                                        </label>
+                                        <p className="text-[10px] text-gray-500 mt-0.5 leading-relaxed">
+                                            When checked, clients who cancel eligible bookings under Airgo policy receive a 70% refund. Uncheck if your hotel/room tier is strictly non-refundable.
+                                        </p>
                                     </div>
                                 </div>
                             )}
