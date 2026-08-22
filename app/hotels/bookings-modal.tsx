@@ -563,6 +563,9 @@ export default function BookingModal({ isOpen, onClose, hotel, initialCheckIn, i
                             >
                                 {isSubmitting ? 'Securing Booking...' : (getRemainingRooms(selectedRoom) <= 0 ? 'Sold Out For These Dates' : 'Complete Booking')}
                             </button>
+                            <p className="text-[10px] text-center text-gray-500 mt-2">
+                                By proceeding, you agree to the <Link href="/refund-policy" target="_blank" className="text-[#004A99] font-bold underline">Airgo Refund & Cancellation Policy</Link>.
+                            </p>
                         </form>
                     )}
                 </div>
